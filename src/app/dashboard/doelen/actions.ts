@@ -149,8 +149,8 @@ export async function saveWeekProgress(form: FormData) {
     const input = parseProgressForm(form, targetCount);
     await prisma.habitWeekProgress.upsert({
       where: { actionId_weekStart: { actionId, weekStart }, userId: user.id },
-      create: { userId: user.id, actionId, weekStart, targetCount, ...input },
-      update: input,
+      create: { userId: user.id, actionId, weekStart, targetCount, ...input, isRecorded: true },
+      update: { ...input, isRecorded: true },
     });
   });
 }
