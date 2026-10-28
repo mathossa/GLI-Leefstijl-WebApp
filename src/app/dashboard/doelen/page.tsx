@@ -24,7 +24,7 @@ const displayDate = (value: Date) => new Intl.DateTimeFormat("nl-NL", {
 }).format(value);
 
 function GoalFields({ goal }: { goal?: {
-  title: string; motivation: string; area: string; startDate: Date | null; endDate: Date | null;
+  id: string; title: string; motivation: string; area: string; startDate: Date | null; endDate: Date | null;
 } }) {
   return (
     <>
