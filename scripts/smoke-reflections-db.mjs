@@ -42,7 +42,22 @@ try {
   assert.equal(edit.rowCount, 0);
   const ownNotes = await db.query('SELECT "id" FROM "meeting_note" WHERE "userId"=$1', [a]);
   assert.equal(ownNotes.rowCount, 0);
-  console.log("Reflections: unique weeks, ownership scoped reads/writes and DB constraints verified.");
+
+  // An automatic week snapshot is not a user check-in until explicitly saved.
+  const goalId = randomUUID(), actionId = randomUUID(), weekId = randomUUID();
+  await db.query('INSERT INTO "goal" ("id","userId","title","motivation","area","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
+    [goalId, a, "Fictief doel", "Fictief", "BEWEGING"]);
+  await db.query('INSERT INTO "habit_action" ("id","userId","goalId","title","targetPerWeek","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
+    [actionId, a, goalId, "Fictieve actie", 3]);
+  await db.query('INSERT INTO "habit_week_progress" ("id","userId","actionId","weekStart","targetCount","updatedAt") VALUES ($1,$2,$3,$4,3,NOW())',
+    [weekId, a, actionId, "2026-10-26"]);
+  const before = await db.query('SELECT "isRecorded" FROM "habit_week_progress" WHERE "id"=$1', [weekId]);
+  assert.equal(before.rows[0].isRecorded, false, "Auto snapshot must not count as a recorded week");
+  await db.query('UPDATE "habit_week_progress" SET "isRecorded"=TRUE WHERE "id"=$1 AND "userId"=$2', [weekId, a]);
+  const after = await db.query('SELECT "isRecorded" FROM "habit_week_progress" WHERE "id"=$1', [weekId]);
+  assert.equal(after.rows[0].isRecorded, true);
+
+  console.log("Reflections: unique weeks, ownership, check-in marker and DB constraints verified.");
 } finally {
   try { await db.query("ROLLBACK"); } finally { await db.end(); }
 }
