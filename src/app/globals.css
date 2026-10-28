@@ -10,7 +10,7 @@
   --secondary: #e5eee3;
   --secondary-foreground: #315841;
   --muted: #eef1e9;
-  --muted-foreground: #6d786b;
+  --muted-foreground: #536454;
   --accent: #eaf2e6;
   --accent-foreground: #274d39;
   --border: #e7e9df;
@@ -40,7 +40,7 @@
 html { scroll-behavior: smooth; }
 body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
 button, a { -webkit-tap-highlight-color: transparent; }
-a:focus-visible, button:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 
 .wellness-pattern {
   background:
