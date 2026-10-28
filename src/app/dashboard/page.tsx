@@ -117,7 +117,7 @@ export default async function DashboardPage() {
                 </div>
               ))}
               {weekActions.length > 6 && <p className="text-xs text-muted-foreground">En nog {weekActions.length - 6} acties bij Mijn doelen.</p>}
-              {weekActions.length > 0 && <p className="pt-1 text-xs text-muted-foreground">Tik op 'Gedaan' zodra je een actie hebt uitgevoerd. Een ervaring toevoegen is altijd optioneel.</p>}
+              {weekActions.length > 0 && <p className="pt-1 text-xs text-muted-foreground">Tik op de knop Gedaan zodra je een actie hebt uitgevoerd. Een ervaring toevoegen is altijd optioneel.</p>}
             </CardContent>
           </Card>
         </section>
