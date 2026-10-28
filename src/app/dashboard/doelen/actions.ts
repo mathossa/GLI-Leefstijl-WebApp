@@ -20,6 +20,7 @@ async function finish(work: () => Promise<void>) {
     throw error;
   }
   revalidatePath("/dashboard/doelen");
+  revalidatePath("/dashboard");
   redirect(doneUrl);
 }
 

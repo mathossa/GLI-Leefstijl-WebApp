@@ -27,4 +27,4 @@
 
 **REUSE FIRST:** bestaande Next.js Server Actions, Better Auth, Prisma 7, PostgreSQL, shadcn/ui en Lucide hergebruikt. Geen extra libraries of code/assets van derden gekopieerd. Kleine domeinvalidatie en weeklogica zijn eigen projectcode onder AGPL-3.0-only.
 
-**Integratie:** de oudere Vandaag-pagina heeft nog expliciet fictieve voorbeeldgewoonten. In deze issue is de pagina **Doelen** zelf volledig persistent; vervanging van het Vandaag-overzicht moet apart met dashboardwerk (#3) worden afgestemd.
+**Integratie met #3:** de pagina **Vandaag** toont nu de eigen actieve doelen en echte voortgang van de huidige Nederlandse kalenderweek, met een lege toestand voor nieuwe accounts. De pagina **Doelen** verzorgt registratie en geschiedenis. Reflectie/Inzichten blijven expliciet fictieve voorbeelden tot #5.
