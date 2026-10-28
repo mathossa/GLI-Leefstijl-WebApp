@@ -4,7 +4,7 @@
 
 ## Status
 
-**Issue #2 (PR):** Better Auth 1.7, Admin-plugin, Prisma 7/PostgreSQL en gesloten registratie. De vier dashboardpagina's bevatten nog **fictieve data**. Werkelijke doelen en reflecties slaan we pas op in volgende issues (#4 en #5). Dit is nog geen productieversie.
+**Sinds issue #2:** Better Auth 1.7, Admin-plugin, Prisma 7/PostgreSQL en gesloten registratie zijn aanwezig. **Issue #3 (PR #12):** mobiel ontwerp, contrast en toetsenbordnavigatie worden verbeterd. De vier dashboardpagina's bevatten nog **fictieve data**. Werkelijke doelen en reflecties slaan we pas op in volgende issues (#4 en #5). Dit is nog geen productieversie.
 
 ## Lokaal op Linux / WSL
 
@@ -37,6 +37,8 @@ npm run lint
 npm run typecheck
 npm run build
 ```
+
+Next.js genereert `next-env.d.ts` automatisch. Dit bestand is daarom niet meer onderdeel van Git; `npm run typecheck` voert eerst `next typegen` uit.
 
 GitHub Actions gebruikt een tijdelijke PostgreSQL 17, voert de gecommitte migraties uit en test via HTTP onder meer afgesloten registratie, inloggen en adminisolatie.
 
