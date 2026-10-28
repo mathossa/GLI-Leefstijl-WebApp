@@ -86,3 +86,17 @@ export function ownedWhere(userId, id) {
   if (!userId || !id || id.length > 128) throw new FormInputError();
   return { id, userId };
 }
+
+// Optional reflection on one logged occurrence; recording itself is one tap.
+export const ENTRY_RATINGS = [
+  { value: "GOED", label: "Ging goed" },
+  { value: "REDELIJK", label: "Ging redelijk" },
+  { value: "LASTIG", label: "Was lastig" },
+];
+
+/** @param {FormData} form */
+export function parseEntryFeedback(form) {
+  const rating = field(form, "rating");
+  if (rating && !ENTRY_RATINGS.some((item) => item.value === rating)) throw new FormInputError();
+  return { rating: rating || null, note: bounded(field(form, "note"), 500, false) || null };
+}
