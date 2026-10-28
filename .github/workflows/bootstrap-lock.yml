@@ -1,5 +1,4 @@
-# Temporary, tightly scoped workflow for the initial npm lockfile only.
-# Remove this workflow from the PR after package-lock.json has been generated.
+# One-time workflow; removed when the reproducible lockfile is committed.
 name: Bootstrap npm lockfile (issue 1 only)
 on:
   push:
@@ -20,11 +19,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Generate initial lockfile without executing install scripts
-        if: hashFiles('package-lock.json') == ''
+      - name: Check if lockfile is needed
+        id: check
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "needs_lock=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_lock=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Resolve dependency graph without executing install scripts
+        if: steps.check.outputs.needs_lock == 'true'
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Commit generated lockfile to feature branch only
-        if: hashFiles('package-lock.json') == ''
+        if: steps.check.outputs.needs_lock == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
