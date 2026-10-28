@@ -37,3 +37,8 @@ CREATE TABLE "meeting_note" (
 CREATE INDEX "meeting_note_userId_meetingDate_idx" ON "meeting_note"("userId", "meetingDate" DESC);
 ALTER TABLE "meeting_note" ADD CONSTRAINT "meeting_note_userId_fkey"
   FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Distinguish a deliberately saved check-in from an automatic target snapshot.
+-- Pre-existing #4 rows are kept as registered for backward compatibility.
+ALTER TABLE "habit_week_progress" ADD COLUMN "isRecorded" BOOLEAN NOT NULL DEFAULT FALSE;
+UPDATE "habit_week_progress" SET "isRecorded" = TRUE;
