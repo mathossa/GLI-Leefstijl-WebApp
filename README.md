@@ -1,42 +1,34 @@
 # Mijn Leefstijl — GLI CooL
 
-> Persoonlijke leefstijl- en doelentracker. Open source onder **GNU AGPL-3.0-only**.
+> Mobile-first persoonlijke leefstijltracker, onder GNU AGPL-3.0-only.
 
-**Status (oktober 2026): architectuur en backlog opgesteld; nog geen werkende applicatie.** Geen echte persoonsgegevens toevoegen aan GitHub.
+## Status
 
-## Visie
+**Issue #1:** responsive Next.js App Router-designbasis met voorbeeldschermen. **Dit is nog geen productierijpe app.** Er zijn nog geen accounts, database, persoonlijke gegevens of persistentie. Alle voortgang en doelkaarten zijn expliciet fictieve demo-data. Zie de [roadmap](docs/ROADMAP.md).
 
-Een rustige, mobile-first app voor duurzame gedragsverandering tijdens een GLI CooL-traject. Niet primair calorieën tellen of streaks najagen: het gaat om eigen regie, kleine haalbare stappen en terugkijken.
+## Lokaal opstarten
 
-**Gebruikersomgeving**:
-- Vandaag: concrete weekacties registreren.
-- Doelen: resultaat-/gedragsdoelen, motivatie, frequentie, historie.
-- Reflectie: wekelijkse evaluaties en notities bij CooL-bijeenkomsten.
-- Inzichten: voortgang over tijd, optioneel gezondheidsmetingen.
+Node.js 22+ en npm nodig.
 
-**Beheer** (`/admin`, strikt admin-only):
-- Gebruikersbeheer via Better Auth Admin-plugin.
-- Instellingen en SMTP-relay (ook een later zelfgehoste mailserver).
-- App functioneert zonder SMTP; geen directe MX-verzending.
+```bash
+npm ci
+npm run dev
+```
 
-## Gekozen technische richting
+Open `http://localhost:3000`. De app start op `/dashboard` en heeft de tabbladen Vandaag, Doelen, Reflectie en Inzichten. `npm run lint`, `npm run typecheck` en `npm run build` zijn de kwaliteitschecks.
 
-- **Next.js App Router**, React, TypeScript, Tailwind CSS.
-- **shadcn/ui** (MIT) en **Lucide** (ISC) voor bestaande toegankelijke UI-bouwstenen.
-- **Better Auth** + Admin-plugin voor accounts, sessies en rollen; publieke registratie UIT.
-- **Prisma 7** met **PostgreSQL 17** (zie [architectuur](docs/ARCHITECTURE.md)).
-- **Nodemailer** voor uitsluitend geconfigureerde SMTP-relay.
-- **Docker Compose** voor deployment op een VPS via Portainer.
-- Tests, CI, dependency- en licentiecontrole vóór release.
+De **package-lock.json** is via een tijdelijk, inmiddels verwijderd bootstrap-proces op GitHub Actions gegenereerd. Een normale CI-run controleert nu met `npm ci`, ESLint, TypeScript en `next build` of de applicatie reproduceerbaar gebouwd kan worden.
 
-Gebruik bestaande OSS-functies, componenten en officiële generators vóór we iets zelf bouwen. De [hergebruik- en licentieregels](docs/REUSE_AND_LICENSES.md) gelden voor alle wijzigingen.
+## Architectuur / afspraken
 
-## Projectplanning
-
-Zie [de roadmap](docs/ROADMAP.md) en [GitHub Issues](https://github.com/mathossa/GLI-Leefstijl-WebApp/issues). We ontwikkelen per featurebranch en pull request; **niet direct op main**.
+- Next.js 16 App Router + TypeScript + Tailwind CSS 4.
+- UI van **shadcn/ui** (MIT, aangepast) en **Lucide** (ISC). [Copyright/notices](THIRD_PARTY_NOTICES.md).
+- Gesloten registratie en Better Auth (volgende issue), PostgreSQL en Prisma volgen later.
+- SMTP wordt alleen relay naar een zelfgeconfigureerde mailserver. Geen directe MX-mail.
+- Hosting wordt Docker Compose/Portainer op VPS.
+- Hergebruik vóór maatwerk. Lees [AGENTS.md](AGENTS.md), [architectuur](docs/ARCHITECTURE.md) en [hergebruikbeleid](docs/REUSE_AND_LICENSES.md).
+- Geen gezondheidsgegevens, gebruikersgegevens of secrets in git opslaan.
 
 ## Licentie
 
-Eigen projectcode: [GNU AGPL-3.0-only](LICENSE). Afzonderlijke upstream-componenten behouden hun eigen licentie, notices en copyright. Raadpleeg de [dependency-inventaris](docs/REUSE_AND_LICENSES.md) en lockfile zodra die is toegevoegd.
-
-De applicatie bevat geen medisch advies. Bewaar echte gezondheidsgegevens alleen in je eigen beveiligde installatie, nooit als demo-data of issuebijlage.
+Eigen code: [GNU AGPL-3.0-only](LICENSE). Afgeleide shadcn/ui-componenten houden hun upstream MIT notices. Broncode: https://github.com/mathossa/GLI-Leefstijl-WebApp.
