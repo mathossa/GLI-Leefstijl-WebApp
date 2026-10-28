@@ -17,7 +17,7 @@ npm run dev
 
 Open `http://localhost:3000`. De app start op `/dashboard` en heeft de tabbladen Vandaag, Doelen, Reflectie en Inzichten. `npm run lint`, `npm run typecheck` en `npm run build` zijn de kwaliteitschecks.
 
-> Let op: tijdens het opzetten van issue #1 kon de ontwikkelomgeving geen npm-registry bereiken. De GitHub Actions-test bepaalt of alle dependencies installeren en de code bouwt. Een volledige **package-lock.json** moet door de eerste install-check beschikbaar zijn voordat de PR wordt gemerged; gebruik daarna uitsluitend `npm ci`.
+De **package-lock.json** is via een tijdelijk, inmiddels verwijderd bootstrap-proces op GitHub Actions gegenereerd. Een normale CI-run controleert nu met `npm ci`, ESLint, TypeScript en `next build` of de applicatie reproduceerbaar gebouwd kan worden.
 
 ## Architectuur / afspraken
 
