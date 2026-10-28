@@ -17,7 +17,7 @@ export async function exportPersonalData(userId: string) {
             createdAt: true, updatedAt: true,
             weeks: {
               where: { userId }, orderBy: { weekStart: "asc" },
-              select: { weekStart: true, targetCount: true, completedCount: true, note: true, createdAt: true, updatedAt: true },
+              select: { weekStart: true, targetCount: true, completedCount: true, isRecorded: true, note: true, createdAt: true, updatedAt: true },
             },
           },
         },
