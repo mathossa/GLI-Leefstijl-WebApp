@@ -43,6 +43,10 @@ jobs:
         run: npm run db:generate
       - name: Apply checked-in migrations to temporary DB
         run: npm run db:deploy
+      - name: Validate goal inputs, limits and Amsterdam week boundaries
+        run: node --test tests/goals-domain.test.mjs
+      - name: Verify goal ownership and DB constraints
+        run: node scripts/smoke-goals-db.mjs
       - name: ESLint
         run: npm run lint
       - name: TypeScript
