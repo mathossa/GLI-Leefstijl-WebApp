@@ -39,6 +39,7 @@ export default async function DashboardPage() {
     id: action.id, title: action.title, detail: goal.title,
     done: action.weeks[0]?.completedCount ?? 0,
     target: action.weeks[0]?.targetCount ?? action.targetPerWeek,
+    canUndo: (action.weeks[0]?.entries.length ?? 0) > 0,
     entries: action.weeks[0]?.entries.map((entry) => ({
       ...entry, createdAt: entry.createdAt.toISOString(),
     })) ?? [],
@@ -110,7 +111,7 @@ export default async function DashboardPage() {
                     <p className="truncate text-xs text-muted-foreground">{habit.detail}</p>
                     <Progress value={habit.done / habit.target * 100} className="mt-2 h-1.5" aria-label={`${habit.title}: ${habit.done} van ${habit.target} uitgevoerd`}/>
                   </div>
-                  <QuickCompletion actionId={habit.id} title={habit.title} completed={habit.done} target={habit.target}/>
+                  <QuickCompletion actionId={habit.id} title={habit.title} completed={habit.done} target={habit.target} canUndo={habit.canUndo}/>
                   </div>
                   <ActionEntryFeedback entries={habit.entries} label="Hoe ging het per keer?"/>
                 </div>

@@ -2,13 +2,13 @@
 
 ## Werking
 
-- **Vandaag = doen**: elke weekactie heeft een `Gedaan`-knop die met één tik direct een uitvoering vastlegt, zonder verplichte notitie, beoordeling of formulier. De teller werkt direct bij en het weekoverzicht volgt automatisch. Zodra het weekdoel is bereikt, is de knop uitgeschakeld.
+- **Vandaag = doen**: elke weekactie heeft een `Gedaan`-knop die met één tik direct een uitvoering vastlegt, zonder verplichte notitie, beoordeling of formulier. De teller werkt direct bij en het weekoverzicht volgt automatisch. Zodra het weekdoel is bereikt, is de knop uitgeschakeld. Via `Laatste ongedaan maken` corrigeer je een verkeerde tik; alleen nieuwe individuele registraties kunnen worden teruggedraaid, geen oudere weektotalen zonder individuele entries.
 - **Mijn doelen = overzicht en beheer**: doelen en hun acties worden compact getoond. Grote invoerformulieren zijn standaard ingeklapt, onder `Nieuw doel toevoegen`, `Doel bewerken`, `Weekactie toevoegen` en `Actie bewerken`.
 - Onder **Mijn doelen** maak je persoonlijke doelen aan met motivatie, gebied en optionele datums. Wijzigingen en archiveren bewaren de historische actiegegevens.
 - Een actief doel heeft maximaal 12 actieve weekacties, een gebruiker maximaal 20 actieve doelen. Frequenties zijn 1 t/m 7 per week; een voortgangswaarde is 0 t/m de voor die week vastgelegde frequentie.
 - **De week begint maandag 00:00 in Europe/Amsterdam.** De berekening gebruikt de kalenderdatum in die zone (ook rond zomertijd/wintertijd) en slaat de maandag als PostgreSQL DATE op. Er is dus geen achtergrondjob of fysieke reset nodig.
 - Bij wijzigen van een actie wordt de oude target eerst als snapshot voor de huidige week vastgelegd. Een gewijzigde frequentie geldt vanaf de volgende maandag. Bestaande weekregistraties en notities blijven ongewijzigd.
-- Elke nieuwe tik op `Gedaan` maakt een afzonderlijk tijdgestempeld `HabitWeekEntry`-record. Bij zo'n uitvoering kun je **optioneel** kiezen hoe het ging (goed, redelijk, lastig) en een korte toelichting toevoegen. Deze feedback verandert de voortgangsteller niet.
+- Elke nieuwe tik op `Gedaan` maakt een afzonderlijk tijdgestempeld `HabitWeekEntry`-record. Bij zo'n uitvoering kun je **optioneel** kiezen hoe het ging (goed, redelijk, lastig) en een korte toelichting toevoegen. Deze feedback verandert de voortgangsteller niet. Het ongedaan maken van de laatste tik verwijdert die ene entry inclusief bijbehorende feedback; oudere weektotalen blijven staan.
 - Daarnaast is er **apart** een vrije weekreflectie per actie. Het bewaren of aanpassen daarvan overschrijft geen uitvoering of per-keerervaring.
 - Vorige geregistreerde weken blijven zichtbaar (de recentste acht per actie). Geen reset die data verwijdert. Gearchiveerde doelen en acties worden leesbaar bewaard, niet meer bewerkbaar.
 - **Bestaande registraties blijven bestaan:** de oude `completedCount`-totalen en weeknotities blijven intact. We fabriceren geen individuele uitvoeringsmomenten voor oude totalen; de lijst met individuele ervaringen start bij nieuwe afvinkingen.

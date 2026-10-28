@@ -209,3 +209,37 @@ export async function saveEntryFeedback(
   revalidatePath("/dashboard/doelen");
   return { ok: true, message: "Ervaring opgeslagen." };
 }
+
+/** Revert the latest individual tap (including its optional feedback). Never adjusts legacy aggregate-only counts. */
+export async function undoLastCompletion(actionId: string): Promise<{ ok: boolean; reason?: string }> {
+  const { user } = await requireSession();
+  try {
+    if (!actionId || actionId.length > 128) throw new FormInputError();
+    const weekStart = amsterdamMonday();
+    await prisma.$transaction(async (tx) => {
+      const week = await tx.habitWeekProgress.findFirst({
+        where: { userId: user.id, actionId, weekStart, action: { userId: user.id, archivedAt: null, goal: { status: "ACTIVE" } } },
+        select: { id: true },
+      });
+      if (!week) throw new FormInputError();
+      const last = await tx.habitWeekEntry.findFirst({
+        where: { weekId: week.id, userId: user.id },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { id: true },
+      });
+      if (!last) throw new FormInputError();
+      const removed = await tx.habitWeekEntry.deleteMany({ where: { id: last.id, userId: user.id } });
+      if (removed.count !== 1) throw new FormInputError();
+      const changed = await tx.habitWeekProgress.updateMany({
+        where: { id: week.id, userId: user.id, completedCount: { gt: 0 } },
+        data: { completedCount: { decrement: 1 } },
+      });
+      if (changed.count !== 1) throw new FormInputError();
+    }, { isolationLevel: "Serializable" });
+  } catch (error) {
+    if (error instanceof FormInputError) return { ok: false, reason: "De laatste registratie kon niet worden teruggedraaid." };
+    throw error;
+  }
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/doelen");
+  return { ok: true };
+}
