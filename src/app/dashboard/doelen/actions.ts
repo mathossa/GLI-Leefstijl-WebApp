@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import {
   amsterdamMonday, FormInputError, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS,
-  ownedWhere, parseActionForm, parseGoalForm, parseProgressForm, parseEntryFeedback,
+  ownedWhere, parseActionForm, parseGoalForm, parseEntryFeedback,
 } from "@/lib/goals-domain.mjs";
 
 const doneUrl = "/dashboard/doelen?melding=opgeslagen";
@@ -128,30 +128,6 @@ export async function archiveHabitAction(form: FormData) {
       data: { archivedAt: new Date() },
     });
     if (result.count !== 1) throw new FormInputError();
-  });
-}
-
-export async function saveWeekProgress(form: FormData) {
-  const { user } = await requireSession();
-  return finish(async () => {
-    const actionId = idFrom(form, "actionId");
-    const weekStart = amsterdamMonday();
-    const action = await prisma.habitAction.findFirst({
-      where: { ...ownedWhere(user.id, actionId), archivedAt: null, goal: { status: "ACTIVE" } },
-      select: { targetPerWeek: true },
-    });
-    if (!action) throw new FormInputError();
-    const previous = await prisma.habitWeekProgress.findFirst({
-      where: { userId: user.id, actionId, weekStart },
-      select: { targetCount: true },
-    });
-    const targetCount = previous?.targetCount ?? action.targetPerWeek;
-    const input = parseProgressForm(form, targetCount);
-    await prisma.habitWeekProgress.upsert({
-      where: { actionId_weekStart: { actionId, weekStart }, userId: user.id },
-      create: { userId: user.id, actionId, weekStart, targetCount, ...input },
-      update: input,
-    });
   });
 }
 

@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { amsterdamMonday } from "@/lib/goals-domain.mjs";
+import { QuickCompletion } from "@/components/quick-completion";
+import { ActionEntryFeedback } from "@/components/action-entry-feedback";
 
 export const metadata: Metadata = { title: "Vandaag" };
 export default async function DashboardPage() {
@@ -24,7 +26,11 @@ export default async function DashboardPage() {
         orderBy: { createdAt: "desc" },
         select: {
           id: true, title: true, targetPerWeek: true,
-          weeks: { where: { userId: user.id, weekStart }, take: 1, select: { targetCount: true, completedCount: true } },
+          weeks: { where: { userId: user.id, weekStart }, take: 1, select: {
+            targetCount: true, completedCount: true,
+            entries: { orderBy: { createdAt: "desc" }, take: 4,
+              select: { id: true, createdAt: true, rating: true, note: true } },
+          } },
         },
       },
     },
@@ -33,6 +39,9 @@ export default async function DashboardPage() {
     id: action.id, title: action.title, detail: goal.title,
     done: action.weeks[0]?.completedCount ?? 0,
     target: action.weeks[0]?.targetCount ?? action.targetPerWeek,
+    entries: action.weeks[0]?.entries.map((entry) => ({
+      ...entry, createdAt: entry.createdAt.toISOString(),
+    })) ?? [],
   })));
   const completed = weekActions.reduce((sum, action) => sum + action.done, 0);
   const planned = weekActions.reduce((sum, action) => sum + action.target, 0);
@@ -82,7 +91,7 @@ export default async function DashboardPage() {
         <section aria-labelledby="habits-heading">
           <Card className="h-full">
             <CardHeader className="flex-row items-center justify-between">
-              <div><CardTitle id="habits-heading" className="text-xl">Mijn weekacties</CardTitle><p className="mt-1 text-sm text-muted-foreground">{weekActions.length === 0 ? "Nog geen weekacties vastgelegd" : "Dit wil je deze week oefenen"}</p></div>
+              <div><CardTitle id="habits-heading" className="text-xl">Vandaag afvinken</CardTitle><p className="mt-1 text-sm text-muted-foreground">{weekActions.length === 0 ? "Nog geen weekacties vastgelegd" : "Dit wil je deze week oefenen"}</p></div>
               <Link href="/dashboard/doelen" className="flex items-center gap-1 text-sm font-semibold text-[#3f805e] hover:underline">Bekijk alles <ChevronRight size={16}/></Link>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -93,18 +102,21 @@ export default async function DashboardPage() {
                 </div>
               )}
               {weekActions.slice(0, 6).map((habit) => (
-                <div key={habit.id} className="flex items-center gap-3 rounded-2xl border border-[#e9ede4] bg-[#fffefb] p-3 sm:p-4">
+                <div key={habit.id} className="space-y-3 rounded-2xl border border-[#e9ede4] bg-[#fffefb] p-3 sm:p-4">
+                  <div className="flex flex-wrap items-center gap-3">
                   <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#eaf2e6] text-xl text-[#426e50]" aria-hidden="true"><Check size={22}/></span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{habit.title}</p>
                     <p className="truncate text-xs text-muted-foreground">{habit.detail}</p>
                     <Progress value={habit.done / habit.target * 100} className="mt-2 h-1.5" aria-label={`${habit.title}: ${habit.done} van ${habit.target} uitgevoerd`}/>
                   </div>
-                  <span className="whitespace-nowrap text-xs font-semibold text-[#406a51]">{habit.done}/{habit.target}</span>
+                  <QuickCompletion actionId={habit.id} title={habit.title} completed={habit.done} target={habit.target}/>
+                  </div>
+                  <ActionEntryFeedback entries={habit.entries} label="Hoe ging het per keer?"/>
                 </div>
               ))}
               {weekActions.length > 6 && <p className="text-xs text-muted-foreground">En nog {weekActions.length - 6} acties bij Mijn doelen.</p>}
-              {weekActions.length > 0 && <p className="pt-1 text-xs text-muted-foreground">Voortgang en notities kun je bijwerken onder Mijn doelen.</p>}
+              {weekActions.length > 0 && <p className="pt-1 text-xs text-muted-foreground">Tik op 'Gedaan' zodra je een actie hebt uitgevoerd. Een ervaring toevoegen is altijd optioneel.</p>}
             </CardContent>
           </Card>
         </section>
