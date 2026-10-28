@@ -29,31 +29,31 @@ function GoalFields({ goal }: { goal?: {
   return (
     <>
       <div>
-        <label className={labelClass} htmlFor={goal ? "goal-title-" + goal.title : "new-goal-title"}>Wat wil je bereiken?</label>
-        <input className={inputClass} id={goal ? "goal-title-" + goal.title : "new-goal-title"} name="title"
+        <label className={labelClass} htmlFor={goal ? "goal-title-" + goal.id : "new-goal-title"}>Wat wil je bereiken?</label>
+        <input className={inputClass} id={goal ? "goal-title-" + goal.id : "new-goal-title"} name="title"
           maxLength={120} required defaultValue={goal?.title} placeholder="Bijv. met meer energie de dag beginnen" />
       </div>
       <div>
-        <label className={labelClass} htmlFor={goal ? "goal-motivation-" + goal.title : "new-goal-motivation"}>Waarom is dit belangrijk voor je?</label>
-        <textarea className={inputClass} id={goal ? "goal-motivation-" + goal.title : "new-goal-motivation"}
+        <label className={labelClass} htmlFor={goal ? "goal-motivation-" + goal.id : "new-goal-motivation"}>Waarom is dit belangrijk voor je?</label>
+        <textarea className={inputClass} id={goal ? "goal-motivation-" + goal.id : "new-goal-motivation"}
           name="motivation" maxLength={1000} rows={3} required defaultValue={goal?.motivation}
           placeholder="Wat hoop je hiermee voor jezelf te veranderen?" />
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <label className={labelClass} htmlFor={goal ? "goal-area-" + goal.title : "new-goal-area"}>Leefstijlgebied</label>
-          <select className={inputClass} id={goal ? "goal-area-" + goal.title : "new-goal-area"} name="area" defaultValue={goal?.area ?? "BEWEGING"}>
+          <label className={labelClass} htmlFor={goal ? "goal-area-" + goal.id : "new-goal-area"}>Leefstijlgebied</label>
+          <select className={inputClass} id={goal ? "goal-area-" + goal.id : "new-goal-area"} name="area" defaultValue={goal?.area ?? "BEWEGING"}>
             {GOAL_AREAS.map((area) => <option key={area.value} value={area.value}>{area.label}</option>)}
           </select>
         </div>
         <div>
-          <label className={labelClass} htmlFor={goal ? "goal-start-" + goal.title : "new-goal-start"}>Startdatum (optioneel)</label>
-          <input className={inputClass} id={goal ? "goal-start-" + goal.title : "new-goal-start"}
+          <label className={labelClass} htmlFor={goal ? "goal-start-" + goal.id : "new-goal-start"}>Startdatum (optioneel)</label>
+          <input className={inputClass} id={goal ? "goal-start-" + goal.id : "new-goal-start"}
             type="date" name="startDate" defaultValue={isoDate(goal?.startDate ?? null)} />
         </div>
         <div>
-          <label className={labelClass} htmlFor={goal ? "goal-end-" + goal.title : "new-goal-end"}>Einddatum (optioneel)</label>
-          <input className={inputClass} id={goal ? "goal-end-" + goal.title : "new-goal-end"}
+          <label className={labelClass} htmlFor={goal ? "goal-end-" + goal.id : "new-goal-end"}>Einddatum (optioneel)</label>
+          <input className={inputClass} id={goal ? "goal-end-" + goal.id : "new-goal-end"}
             type="date" name="endDate" defaultValue={isoDate(goal?.endDate ?? null)} />
         </div>
       </div>
