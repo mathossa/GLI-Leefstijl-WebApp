@@ -142,6 +142,7 @@ model HabitWeekProgress {
   weekStart      DateTime    @db.Date
   targetCount    Int
   completedCount Int         @default(0)
+  isRecorded     Boolean     @default(false)
   note           String?     @db.VarChar(500)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
