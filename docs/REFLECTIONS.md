@@ -3,7 +3,7 @@
 ## Functies
 - Per gebruiker één reflectie per Amsterdamse week (maandag 00:00 t/m zondag 23:59). Minstens één van drie tekstvelden wordt ingevuld. Huidige week aanpassen, eerdere weken teruglezen en opnieuw aanpassen, de afgelopen 11 ontbrekende weken achteraf invullen.
 - CooL-bijeenkomsten: datum, titel, notities en optionele actiepunten; toevoegen, wijzigen of verwijderen.
-- Wekelijkse trend over 12 weken en maandelijkse trend over 6 kalendermaanden uit de bestaande weekregistraties van #4. Berekening: som voltooide stappen / som historische weektargets. Geen registratie = geen percentage; een week wordt aan de maand van de maandag toegekend.
+- Wekelijkse trend over 12 weken en maandelijkse trend over 6 kalendermaanden uit de bestaande weekregistraties van #4. Berekening: som voltooide stappen / som historische weektargets. Geen registratie = geen percentage; een week wordt aan de maand van de maandag toegekend. De extra indicator `isRecorded` voorkomt dat een automatisch target-snapshot door het aanpassen van de frequentie als bewust ingevulde 0%-registratie telt. Bestaande weekrows worden bij migratie als geregistreerd behouden om historische invoer niet te verbergen.
 - Eigen machineleesbare export via \`GET /api/export\`: JSON met doelen, acties en volledige weekhistorie, reflecties en bijeenkomsten. Datumvelden hebben de vorm \`YYYY-MM-DD\`. Geen sessies, wachtwoorden of andere gebruikersprofielen.
 - Geen gewicht, BMI, medische metingen of tracking. Optionele gezondheidsmetingen vallen buiten #5 en vergen vooraf een privacyreview.
 
