@@ -1,6 +1,6 @@
 {
   "name": "gli-leefstijl-webapp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "scripts": {
@@ -8,7 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "auth:create-admin": "auth create-admin",
+    "test:auth": "node scripts/smoke-auth.mjs"
   },
   "dependencies": {
     "next": "16.4.3",
@@ -19,7 +24,14 @@
     "@radix-ui/react-progress": "^1.1.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "@better-auth/prisma-adapter": "1.7.14",
+    "better-auth": "1.7.14",
+    "@prisma/client": "7.10.1",
+    "@prisma/adapter-pg": "7.10.1",
+    "pg": "8.16.3",
+    "dotenv": "16.6.1",
+    "server-only": "0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.16",
@@ -29,6 +41,10 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.2.0",
     "eslint": "^9.38.0",
-    "eslint-config-next": "16.4.3"
-  }
+    "eslint-config-next": "16.4.3",
+    "prisma": "7.10.1",
+    "auth": "1.7.14",
+    "@types/pg": "8.15.5"
+  },
+  "type": "module"
 }

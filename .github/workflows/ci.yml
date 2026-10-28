@@ -1,4 +1,4 @@
-name: Code quality
+name: Code quality and authentication security
 on:
   pull_request:
     branches: [main]
@@ -11,20 +11,54 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci_disposable_only
+          POSTGRES_DB: leefstijl
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ci -d leefstijl"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgresql://ci:ci_disposable_only@127.0.0.1:5432/leefstijl
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      BETTER_AUTH_SECRET: ci-only-a-random-looking-secret-that-is-not-used-in-production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - name: Verify reproducible dependency lockfile
-        run: test -f package-lock.json
-      - name: Install dependencies
+      - name: Install reproducible dependencies
         run: npm ci --no-audit
+      - name: Validate Prisma schema
+        run: npx prisma validate
+      - name: Generate Prisma client
+        run: npm run db:generate
+      - name: Apply checked-in migrations to temporary DB
+        run: npm run db:deploy
       - name: ESLint
         run: npm run lint
       - name: TypeScript
         run: npm run typecheck
       - name: Production build
         run: npm run build
+      - name: Verify closed registration, login, and admin isolation
+        shell: bash
+        run: |
+          export CI_ADMIN_PASSWORD="$(openssl rand -base64 36 | tr -d '/+=' | head -c 32)"
+          npx auth create-admin --email ci-admin@example.test --name "CI Admin" --role admin --password "$CI_ADMIN_PASSWORD"
+          npm run start -- -p 3000 > /tmp/leefstijl-next.log 2>&1 &
+          APP_PID=$!
+          trap 'kill "$APP_PID" || true; cat /tmp/leefstijl-next.log' EXIT
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3000/sign-in >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/smoke-auth.mjs

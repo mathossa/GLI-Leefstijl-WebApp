@@ -1,0 +1,10 @@
+// Better Auth owns the identity models. Run `npm run db:generate` and
+// `npx auth generate --yes --adapter prisma --dialect postgresql` when changing plugins.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

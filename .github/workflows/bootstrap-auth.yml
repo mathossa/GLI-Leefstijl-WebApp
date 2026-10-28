@@ -1,0 +1,56 @@
+# Bootstrap workflow limited to the issue-2 feature branch.
+# It is deleted after lockfile, generated Prisma schema and migration are committed.
+name: Bootstrap Better Auth schema and Prisma 7 migration
+on:
+  push:
+    branches: [feat/issue-2-better-auth-prisma]
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.repository == 'mathossa/GLI-Leefstijl-WebApp'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci_disposable_only
+          POSTGRES_DB: leefstijl
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ci -d leefstijl"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgresql://ci:ci_disposable_only@127.0.0.1:5432/leefstijl
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      BETTER_AUTH_SECRET: ci-only-a-random-looking-secret-that-is-not-used-in-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pin dependency graph
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate preliminary Prisma client
+        run: npx prisma generate
+      - name: Generate Better Auth models with the official CLI
+        run: npx auth generate --yes --adapter prisma --dialect postgresql
+      - name: Generate checked-in migration
+        run: npx prisma migrate dev --name initial_better_auth --create-only
+      - name: Regenerate Prisma client
+        run: npx prisma generate
+      - name: Commit generated files on feature branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json prisma/schema.prisma prisma/migrations/
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: generate official Better Auth Prisma schema and migration"
+          git push origin HEAD:feat/issue-2-better-auth-prisma

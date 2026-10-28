@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BookHeart, ChartNoAxesCombined, CircleHelp, Heart, House, Leaf, Settings2, Target } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import { BookHeart, ChartNoAxesCombined, CircleHelp, Heart, House, Leaf, LogOut, Settings2, Target } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +18,15 @@ function isActive(pathname: string, href: string) {
   return href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, userName, isAdmin }: { children: React.ReactNode; userName: string; isAdmin: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function signOut() {
+    await authClient.signOut();
+    router.replace("/sign-in");
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[260px_minmax(0,1fr)]">
@@ -36,13 +44,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
+        {isAdmin && <Link href="/admin" className="mt-3 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#486d52] hover:bg-[#dce9d9]"><Settings2 size={19}/> Beheer</Link>}
         <div className="mt-auto space-y-4 px-3">
           <div className="rounded-[20px] border border-[#d9e6d6] bg-[#f7fbf5] p-4">
             <div className="mb-2 flex items-center gap-2 text-sm font-semibold"><Heart size={17} className="text-[#67997b]" /> Zacht voor jezelf</div>
             <p className="text-xs leading-relaxed text-[#718274]">Kleine stappen kunnen een groot verschil maken. Vandaag is een nieuw begin.</p>
           </div>
           <div className="flex items-center justify-between border-t border-[#dbe5d9] pt-4 text-xs text-[#829183]">
-            <span className="flex items-center gap-2"><CircleHelp size={15} /> Demo-omgeving</span><Settings2 size={15} aria-label="Beheer volgt later" />
+            <span className="flex items-center gap-2"><CircleHelp size={15} /> Voorbeelddata</span>
+            <button type="button" onClick={signOut} title="Uitloggen" aria-label="Uitloggen" className="rounded-lg p-2 hover:bg-[#dce9d9]"><LogOut size={17}/></button>
           </div>
         </div>
       </aside>
@@ -54,7 +64,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-white"><Leaf size={20} /></span> Mijn Leefstijl
             </Link>
             <span className="hidden text-sm text-[#879284] md:block">Jouw plek om met aandacht te groeien</span>
-            <span className="rounded-full bg-[#eaf0e6] px-3 py-1.5 text-xs font-medium text-[#557563]">🌱 Voorbeelddashboard</span>
+            <div className="flex items-center gap-2">
+              <span className="hidden rounded-full bg-[#eaf0e6] px-3 py-1.5 text-xs font-medium text-[#557563] sm:block">{userName} · Demo</span>
+              {isAdmin && <Link href="/admin" className="rounded-lg p-2 text-[#557563] hover:bg-[#dce9d9] md:hidden" aria-label="Beheer"><Settings2 size={18}/></Link>}
+              <button type="button" onClick={signOut} className="rounded-lg p-2 text-[#557563] hover:bg-[#dce9d9] md:hidden" aria-label="Uitloggen"><LogOut size={19}/></button>
+            </div>
           </div>
         </header>
 

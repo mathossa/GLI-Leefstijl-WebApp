@@ -1,34 +1,55 @@
 # Mijn Leefstijl — GLI CooL
 
-> Mobile-first persoonlijke leefstijltracker, onder GNU AGPL-3.0-only.
+> Persoonlijke leefstijltracker voor kleine stappen en reflectie; open source onder GNU AGPL-3.0-only.
 
 ## Status
 
-**Issue #1:** responsive Next.js App Router-designbasis met voorbeeldschermen. **Dit is nog geen productierijpe app.** Er zijn nog geen accounts, database, persoonlijke gegevens of persistentie. Alle voortgang en doelkaarten zijn expliciet fictieve demo-data. Zie de [roadmap](docs/ROADMAP.md).
+**Issue #2 (PR):** Better Auth 1.7, Admin-plugin, Prisma 7/PostgreSQL en gesloten registratie. De vier dashboardpagina's bevatten nog **fictieve data**. Werkelijke doelen en reflecties slaan we pas op in volgende issues (#4 en #5). Dit is nog geen productieversie.
 
-## Lokaal opstarten
+## Lokaal op Linux / WSL
 
-Node.js 22+ en npm nodig.
+Vereisten: Node.js 22+, npm, Docker Engine + Compose v2 (of een bestaande lokale PostgreSQL 17).
 
 ```bash
+cp .env.example .env
+# Werk eerst POSTGRES_PASSWORD, DATABASE_URL en BETTER_AUTH_SECRET in .env bij.
+# Gebruik hetzelfde sterke wachtwoord in POSTGRES_PASSWORD en DATABASE_URL.
+# Tip: openssl rand -base64 48   (voor BETTER_AUTH_SECRET)
+
+docker compose --env-file .env -f compose.dev.yml up -d
 npm ci
+npm run db:generate
+npm run db:deploy
+npm run auth:create-admin -- --email you@example.com --name "Admin" --role admin
 npm run dev
 ```
 
-Open `http://localhost:3000`. De app start op `/dashboard` en heeft de tabbladen Vandaag, Doelen, Reflectie en Inzichten. `npm run lint`, `npm run typecheck` en `npm run build` zijn de kwaliteitschecks.
+Het Better Auth CLI-commando vraagt interactief om een wachtwoord. Vermijd `--password` op je eigen machine, zodat je wachtwoord niet in de shell history terechtkomt. De CLI markeert het account als geverifieerd zonder SMTP, volgens de officiële Better Auth-documentatie. Open [http://localhost:3000/sign-in](http://localhost:3000/sign-in), log in en ga naar het dashboard. Alleen een administrator heeft toegang tot `/admin`.
 
-De **package-lock.json** is via een tijdelijk, inmiddels verwijderd bootstrap-proces op GitHub Actions gegenereerd. Een normale CI-run controleert nu met `npm ci`, ESLint, TypeScript en `next build` of de applicatie reproduceerbaar gebouwd kan worden.
+Voor een andere poort: pas eerst `BETTER_AUTH_URL` in `.env` aan naar de exacte URL, en start `npm run dev -- -p 3001`. Gebruik dezelfde hostnaam (localhost of 127.0.0.1) consistent.
 
-## Architectuur / afspraken
+**Belangrijk:** de Compose-database is alleen voor lokale ontwikkeling, luistert uitsluitend op loopback (`127.0.0.1`) en is geen productieopzet. VPS/Portainer deployment volgt in #7.
 
-- Next.js 16 App Router + TypeScript + Tailwind CSS 4.
-- UI van **shadcn/ui** (MIT, aangepast) en **Lucide** (ISC). [Copyright/notices](THIRD_PARTY_NOTICES.md).
-- Gesloten registratie en Better Auth (volgende issue), PostgreSQL en Prisma volgen later.
-- SMTP wordt alleen relay naar een zelfgeconfigureerde mailserver. Geen directe MX-mail.
-- Hosting wordt Docker Compose/Portainer op VPS.
-- Hergebruik vóór maatwerk. Lees [AGENTS.md](AGENTS.md), [architectuur](docs/ARCHITECTURE.md) en [hergebruikbeleid](docs/REUSE_AND_LICENSES.md).
-- Geen gezondheidsgegevens, gebruikersgegevens of secrets in git opslaan.
+## Controle
 
-## Licentie
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
 
-Eigen code: [GNU AGPL-3.0-only](LICENSE). Afgeleide shadcn/ui-componenten houden hun upstream MIT notices. Broncode: https://github.com/mathossa/GLI-Leefstijl-WebApp.
+GitHub Actions gebruikt een tijdelijke PostgreSQL 17, voert de gecommitte migraties uit en test via HTTP onder meer afgesloten registratie, inloggen en adminisolatie.
+
+## Beveiliging
+
+- **Geen publieke registratie**: Better Auth `emailAndPassword.disableSignUp: true` op de server.
+- **Alle** `/dashboard/**`-routes vereisen een server-side sessiecontrole; `/admin/**` vereist expliciet adminrol. Data-API's die we later toevoegen volgen dezelfde regels, inclusief eigenaarschap.
+- Gebruikers en sessies worden beheerd door Better Auth en de officiële Admin-plugin. De eerste administrator wordt aangemaakt met de officiële CLI.
+- Zonder geconfigureerde mailserver geen wachtwoordherstel- of verificatiemail; de app stuurt geen eigen MX-mail.
+- Sleutels en databasewachtwoorden staan alleen lokaal in `.env` en nooit in Git; PostgreSQL heeft geen publieke luisterpoort.
+
+## Hergebruik en licentie
+
+Gebruik bestaande upstreamfunctionaliteit boven eigen code. Zie [AGENTS.md](AGENTS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), [REUSE_AND_LICENSES.md](docs/REUSE_AND_LICENSES.md) en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Better Auth (MIT), Prisma (Apache-2.0), shadcn/ui (MIT) en Lucide (ISC) behouden hun oorspronkelijke licenties. Eigen code: [AGPL-3.0-only](LICENSE).
+
+[GitHub issues](https://github.com/mathossa/GLI-Leefstijl-WebApp/issues) · [Broncode](https://github.com/mathossa/GLI-Leefstijl-WebApp)
