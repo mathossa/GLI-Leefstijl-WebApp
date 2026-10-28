@@ -38,7 +38,7 @@ export default async function InsightsPage() {
 
   const [progress, reflectionCount] = await Promise.all([
     prisma.habitWeekProgress.findMany({
-      where: { userId: user.id, weekStart: { gte: earliest, lte: monday } },
+      where: { userId: user.id, isRecorded: true, weekStart: { gte: earliest, lte: monday } },
       select: { weekStart: true, completedCount: true, targetCount: true },
     }),
     prisma.weeklyReflection.count({ where: { userId: user.id, weekStart: { gte: weeks[11] } } }),
