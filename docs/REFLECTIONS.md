@@ -35,4 +35,4 @@ npm run lint && npm run typecheck && npm run build
 5. Download export met beide accounts; controleer dat alleen eigen gegevens, alle historie en geen auth-velden in JSON staan.
 6. Test de export uitgelogd (401), mobiele breedte, toetsenbord, leesbaarheid en langere teksten.
 
-**Integratiebeperking:** de Vandaag-pagina toont in #4 nog expliciete demo-gewoonten; #5 maakt die pagina niet live.
+**Integratie:** de recente #4-commits hebben ook de Vandaag-pagina aan echte doel- en weekregistraties gekoppeld. #5 gebruikt dezelfde historische registratiegegevens voor trends. De wijzigingen van #4 blijven onderdeel van de onderliggende PR.
