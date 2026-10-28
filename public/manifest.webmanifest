@@ -1,0 +1,18 @@
+{
+  "name": "Mijn Leefstijl",
+  "short_name": "Leefstijl",
+  "description": "Persoonlijke doelen, kleine stappen en reflectie",
+  "lang": "nl",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f8f7f1",
+  "theme_color": "#234f40",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+# Temporary, tightly scoped workflow for the initial npm lockfile only.
+# Remove this workflow from the PR after package-lock.json has been generated.
+name: Bootstrap npm lockfile (issue 1 only)
+on:
+  push:
+    branches: [feat/issue-1-app-shell-design-system]
+
+permissions:
+  contents: write
+
+jobs:
+  lock:
+    if: github.repository == 'mathossa/GLI-Leefstijl-WebApp'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate initial lockfile without executing install scripts
+        if: hashFiles('package-lock.json') == ''
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit generated lockfile to feature branch only
+        if: hashFiles('package-lock.json') == ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: pin npm dependency graph for issue 1"
+          git push origin HEAD:feat/issue-1-app-shell-design-system

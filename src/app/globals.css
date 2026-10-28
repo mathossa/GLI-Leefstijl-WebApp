@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8f7f1;
+  --foreground: #22392d;
+  --card: #fffefb;
+  --card-foreground: #22392d;
+  --primary: #2e6b52;
+  --primary-foreground: #ffffff;
+  --secondary: #e5eee3;
+  --secondary-foreground: #315841;
+  --muted: #eef1e9;
+  --muted-foreground: #6d786b;
+  --accent: #eaf2e6;
+  --accent-foreground: #274d39;
+  --border: #e7e9df;
+  --ring: #568e6e;
+  --radius: 1.2rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --font-sans: "Inter", "Segoe UI", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+button, a { -webkit-tap-highlight-color: transparent; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+
+.wellness-pattern {
+  background:
+    radial-gradient(circle at 91% 15%, rgba(202,225,194,.45) 0 7%, transparent 7.5%),
+    radial-gradient(circle at 88% 73%, rgba(250,233,195,.5) 0 11%, transparent 11.5%),
+    linear-gradient(114deg, #e8f0e5 2%, #f6f4e9 95%);
+}
+
+.page-enter { animation: rise .32s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .page-enter { animation: none; }
+}
