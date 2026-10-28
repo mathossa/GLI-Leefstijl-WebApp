@@ -26,6 +26,8 @@ model User {
   accounts      Account[]
   goals         Goal[]
   habitActions  HabitAction[]
+  reflections   WeeklyReflection[]
+  meetingNotes  MeetingNote[]
 
   @@unique([email])
   @@map("user")
@@ -148,4 +150,37 @@ model HabitWeekProgress {
   @@unique([actionId, weekStart])
   @@index([userId, weekStart])
   @@map("habit_week_progress")
+}
+
+
+// Personal reflections are private to one user and one Amsterdam calendar week.
+model WeeklyReflection {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date
+  wentWell  String   @default("") @db.VarChar(1500)
+  difficult String   @default("") @db.VarChar(1500)
+  nextStep  String   @default("") @db.VarChar(1500)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekStart])
+  @@index([userId, weekStart(sort: Desc)])
+  @@map("weekly_reflection")
+}
+
+model MeetingNote {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meetingDate  DateTime @db.Date
+  title        String   @db.VarChar(120)
+  notes        String   @db.VarChar(4000)
+  actionPoints String?  @db.VarChar(2000)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, meetingDate(sort: Desc)])
+  @@map("meeting_note")
 }
