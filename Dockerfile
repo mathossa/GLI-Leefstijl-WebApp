@@ -3,7 +3,7 @@
 FROM node:22.23.4-bookworm-slim AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates openssl \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates openssl tar \
     && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
