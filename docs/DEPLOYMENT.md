@@ -12,7 +12,8 @@ De GitHub Actions-workflow `Code quality, secure container deployment and restor
 
 - Testbranch: `ghcr.io/mathossa/gli-leefstijl-webapp:issue7-test`.
 - Voor een specifieke geteste commit: `ghcr.io/mathossa/gli-leefstijl-webapp:sha-<40-tekens-Git-commit>`.
-- Na merge naar main: `ghcr.io/mathossa/gli-leefstijl-webapp:main` (voor echte releases liever een immutable SHA-tag gebruiken).
+- Na merge naar `main`: `ghcr.io/mathossa/gli-leefstijl-webapp:main` **en** `ghcr.io/mathossa/gli-leefstijl-webapp:latest`. Beide verwijzen naar de laatst succesvol gepubliceerde `main`-build.
+- **Let op:** `:latest` is een veranderlijke tag, geen automatische updatefunctie. Portainer downloadt een nieuwe versie pas bij een expliciete **Pull and redeploy** (met image-pull ingeschakeld). Houd GitOps auto-updates uit en maak vóór updates backups van database, foto's en secrets. Voor reproduceerbaar uitrollen blijft een `sha-<commit>` tag aanbevolen.
 
 **GHCR-pakketten zijn mogelijk standaard privé.** Als de registry een authentication error geeft, koppel in Portainer onder **Registries → Add registry → Custom registry** een GitHub Container Registry-account met minimaal `read:packages`, of maak de specifieke package bewust publiek via GitHub package settings. Deel het token nooit in chat, issues, Git of Compose. De workflow vereist dat GitHub Actions `packages: write` voor deze repository mag gebruiken. Controleer in GitHub Actions of de publish-job op de gekozen commit is geslaagd.
 
