@@ -5,10 +5,6 @@ on:
   push:
     branches: [main, feat/issue-5-reflections-insights-export]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
 

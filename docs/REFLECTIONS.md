@@ -3,7 +3,7 @@
 ## Functies
 - Per gebruiker één reflectie per Amsterdamse week (maandag 00:00 t/m zondag 23:59). Minstens één van drie tekstvelden wordt ingevuld. Huidige week aanpassen, eerdere weken teruglezen en opnieuw aanpassen, de afgelopen 11 ontbrekende weken achteraf invullen.
 - CooL-bijeenkomsten: datum, titel, notities en optionele actiepunten; toevoegen, wijzigen of verwijderen.
-- Wekelijkse trend over 12 weken en maandelijkse trend over 6 kalendermaanden uit de bestaande weekregistraties van #4. Berekening: som voltooide stappen / som historische weektargets. Geen registratie = geen percentage; een week wordt aan de maand van de maandag toegekend. De extra indicator `isRecorded` voorkomt dat een automatisch target-snapshot door het aanpassen van de frequentie als bewust ingevulde 0%-registratie telt. Bestaande weekrows worden bij migratie als geregistreerd behouden om historische invoer niet te verbergen.
+- Wekelijkse trend over 12 weken en maandelijkse trend over 6 kalendermaanden uit de bestaande weekregistraties van #4. Berekening: som voltooide stappen / som historische weektargets. Geen registratie = geen percentage; een week wordt aan de maand van de maandag toegekend. Weken met daadwerkelijk ingevulde voortgang of notities worden geteld; een automatisch snapshot telt niet mee. Bestaande #4-gegevens blijven intact.
 - Eigen machineleesbare export via `GET /api/export`: JSON met doelen, acties en volledige weekhistorie, reflecties en bijeenkomsten. Datumvelden hebben de vorm `YYYY-MM-DD`. Geen sessies, wachtwoorden of andere gebruikersprofielen.
 - Geen gewicht, BMI, medische metingen of tracking. Optionele gezondheidsmetingen vallen buiten #5 en vergen vooraf een privacyreview.
 
@@ -11,7 +11,7 @@
 Alle mutaties halen userId uitsluitend uit de server-side Better Auth sessie, en iedere read/update/delete wordt met userId gefilterd. De unieke reflectiesleutel bevat userId en weekStart. De export controleert dezelfde sessie en antwoordt zonder login met HTTP 401, met `Cache-Control: private, no-store` voor downloads. Geen nieuwe externe services of analytics.
 
 ## Migratie en terugval
-Migratie `20261029002000_weekly_reflections_meetings` voegt twee tabellen met constraints en een `isRecorded`-kolom aan de bestaande weekregistraties toe. Eerst PostgreSQL-backup en restoreprocedure testen, daarna `npm run db:deploy`. Bij rollback de nieuwe tabellen niet automatisch droppen, want ze kunnen persoonlijke notities bevatten. Branch is gebaseerd op #4 en wordt pas geïntegreerd als #4 is gemerged.
+Migratie `20261029003000_weekly_reflections_meetings` voegt twee tabellen met constraints toe, na de individuele actie-migratie van #4. Maak een backup vóór `npm run db:deploy`. De bestaande registratiegegevens worden niet aangepast.
 
 ## Reuse-first, licenties
 Bestaande Next.js Server Actions, Better Auth, Prisma 7, PostgreSQL 17, shadcn/ui (MIT), Lucide (ISC) en de timezone-helper uit #4 hergebruikt. Recharts (MIT) beoordeeld, maar voor deze kleinschalige inzichten zijn toegankelijke tekstlijsten met eenvoudige CSS-balken beter: geen nieuwe afhankelijkheid of chart-framework. Er is geen code of asset van derden gekopieerd. Alle eigen projectcode blijft AGPL-3.0-only.
@@ -36,3 +36,7 @@ npm run lint && npm run typecheck && npm run build
 6. Test de export uitgelogd (401), mobiele breedte, toetsenbord, leesbaarheid en langere teksten.
 
 **Integratie:** de recente #4-commits hebben ook de Vandaag-pagina aan echte doel- en weekregistraties gekoppeld. #5 gebruikt dezelfde historische registratiegegevens voor trends. De wijzigingen van #4 blijven onderdeel van de onderliggende PR.
+
+## Definitieve #4-integratie
+
+#5 gebruikt `HabitWeekEntry` uit #4. Een week telt voor de inzichten mee als `completedCount > 0`, er een weeknotitie bestaat, of er individuele entries zijn; een lege automatische target-snapshot telt niet mee. De eigen JSON-export bevat ook alle individuele uitvoeringen en bijbehorende optionele feedback. De actuele Vandaag- en Doelen-schermen blijven behouden.

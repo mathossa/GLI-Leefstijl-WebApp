@@ -142,18 +142,32 @@ model HabitWeekProgress {
   weekStart      DateTime    @db.Date
   targetCount    Int
   completedCount Int         @default(0)
-  isRecorded     Boolean     @default(false)
   note           String?     @db.VarChar(500)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+  entries        HabitWeekEntry[]
 
   // Each ISO/Amsterdam week has an independent immutable target snapshot.
+  @@unique([id, userId])
   @@unique([actionId, weekStart])
   @@index([userId, weekStart])
   @@map("habit_week_progress")
 }
 
+// A single quick tap creates one entry; feedback can be added independently.
+// Legacy weekly totals are retained even when no individual entries exist.
+model HabitWeekEntry {
+  id         String            @id @default(cuid())
+  userId     String
+  weekId     String
+  week       HabitWeekProgress @relation(fields: [weekId, userId], references: [id, userId], onDelete: Cascade)
+  createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  rating     String?           @db.VarChar(12)
+  note       String?           @db.VarChar(500)
 
+  @@index([userId, weekId, createdAt])
+  @@map("habit_week_entry")
+}
 // Personal reflections are private to one user and one Amsterdam calendar week.
 model WeeklyReflection {
   id        String   @id @default(cuid())

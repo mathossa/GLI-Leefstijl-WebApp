@@ -43,21 +43,19 @@ try {
   const ownNotes = await db.query('SELECT "id" FROM "meeting_note" WHERE "userId"=$1', [a]);
   assert.equal(ownNotes.rowCount, 0);
 
-  // An automatic week snapshot is not a user check-in until explicitly saved.
+  // A target snapshot is not a registration unless there was activity or a note.
   const goalId = randomUUID(), actionId = randomUUID(), weekId = randomUUID();
   await db.query('INSERT INTO "goal" ("id","userId","title","motivation","area","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
-    [goalId, a, "Fictief doel", "Fictief", "BEWEGING"]);
+    [goalId, a, "Fictief doel", "", "BEWEGING"]);
   await db.query('INSERT INTO "habit_action" ("id","userId","goalId","title","targetPerWeek","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
     [actionId, a, goalId, "Fictieve actie", 3]);
   await db.query('INSERT INTO "habit_week_progress" ("id","userId","actionId","weekStart","targetCount","updatedAt") VALUES ($1,$2,$3,$4,3,NOW())',
     [weekId, a, actionId, "2026-10-26"]);
-  const before = await db.query('SELECT "isRecorded" FROM "habit_week_progress" WHERE "id"=$1', [weekId]);
-  assert.equal(before.rows[0].isRecorded, false, "Auto snapshot must not count as a recorded week");
-  await db.query('UPDATE "habit_week_progress" SET "isRecorded"=TRUE WHERE "id"=$1 AND "userId"=$2', [weekId, a]);
-  const after = await db.query('SELECT "isRecorded" FROM "habit_week_progress" WHERE "id"=$1', [weekId]);
-  assert.equal(after.rows[0].isRecorded, true);
-
-  console.log("Reflections: unique weeks, ownership, check-in marker and DB constraints verified.");
+  const registeredSQL = 'SELECT COUNT(*)::int AS total FROM "habit_week_progress" WHERE "id"=$1 AND ("completedCount">0 OR "note" IS NOT NULL OR EXISTS (SELECT 1 FROM "habit_week_entry" WHERE "weekId"=$1))';
+  assert.equal((await db.query(registeredSQL,[weekId])).rows[0].total,0,"Automatic snapshot must not count as a registration");
+  await db.query('UPDATE "habit_week_progress" SET "completedCount"=1 WHERE "id"=$1',[weekId]);
+  assert.equal((await db.query(registeredSQL,[weekId])).rows[0].total,1,"Logged completion must count");
+  console.log("Reflections: unique weeks, ownership and registered week predicates verified.");
 } finally {
   try { await db.query("ROLLBACK"); } finally { await db.end(); }
 }

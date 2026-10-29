@@ -40,11 +40,15 @@ try {
     VALUES ($1,$2,$3,'2026-10-26',3,$4,NOW())`;
   await expectDbViolation(insertWeek, [randomUUID(), userB, actionA, 1], "23503");
   await expectDbViolation(insertWeek, [randomUUID(), userA, actionA, 4], "23514");
-  await client.query(insertWeek, [randomUUID(), userA, actionA, 2]);
+  const weekId = randomUUID();
+  await client.query(insertWeek, [weekId, userA, actionA, 2]);
+  await expectDbViolation(`INSERT INTO "habit_week_entry" ("id","userId","weekId") VALUES ($1,$2,$3)`, [randomUUID(), userB, weekId], "23503");
+  await expectDbViolation(`INSERT INTO "habit_week_entry" ("id","userId","weekId","rating") VALUES ($1,$2,$3,$4)`, [randomUUID(), userA, weekId, "ONBEKEND"], "23514");
+  await client.query(`INSERT INTO "habit_week_entry" ("id","userId","weekId","rating") VALUES ($1,$2,$3,$4)`, [randomUUID(), userA, weekId, "GOED"]);
 
   const weeksOtherUser = await client.query(`SELECT "id" FROM "habit_week_progress" WHERE "userId"=$1`, [userB]);
   assert.equal(weeksOtherUser.rowCount, 0);
-  console.log("Goal ownership FKs, per-user reads and database limits verified.");
+  console.log("Goal and per-occurrence ownership, rating and weekly limits verified.");
 } finally {
   try { await client.query("ROLLBACK"); } finally { await client.end(); }
 }

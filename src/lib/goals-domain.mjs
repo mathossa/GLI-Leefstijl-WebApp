@@ -41,7 +41,7 @@ function dateInput(value) {
 /** @param {FormData} form */
 export function parseGoalForm(form) {
   const title = bounded(field(form, "title"), 120);
-  const motivation = bounded(field(form, "motivation"), 1000);
+  const motivation = bounded(field(form, "motivation"), 1000, false);
   const area = field(form, "area");
   if (!GOAL_AREAS.some((item) => item.value === area)) throw new FormInputError();
   const startDate = dateInput(field(form, "startDate"));
@@ -85,4 +85,18 @@ export function amsterdamMonday(instant = new Date()) {
 export function ownedWhere(userId, id) {
   if (!userId || !id || id.length > 128) throw new FormInputError();
   return { id, userId };
+}
+
+// Optional reflection on one logged occurrence; recording itself is one tap.
+export const ENTRY_RATINGS = [
+  { value: "GOED", label: "Ging goed" },
+  { value: "REDELIJK", label: "Ging redelijk" },
+  { value: "LASTIG", label: "Was lastig" },
+];
+
+/** @param {FormData} form */
+export function parseEntryFeedback(form) {
+  const rating = field(form, "rating");
+  if (rating && !ENTRY_RATINGS.some((item) => item.value === rating)) throw new FormInputError();
+  return { rating: rating || null, note: bounded(field(form, "note"), 500, false) || null };
 }

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   amsterdamMonday, FormInputError, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS,
-  ownedWhere, parseActionForm, parseGoalForm, parseProgressForm,
+  ownedWhere, parseActionForm, parseGoalForm, parseProgressForm, parseEntryFeedback,
 } from "../src/lib/goals-domain.mjs";
 
 const form = (values) => {
@@ -27,6 +27,7 @@ test("Amsterdam calendar weeks reset on Monday, never on UTC midnight", () => {
 test("goal validation: title, motivation, area and optional dates", () => {
   const valid = parseGoalForm(goal({ startDate: "2026-10-28", endDate: "2026-12-01" }));
   assert.equal(valid.area, "SLAAP");
+  assert.equal(parseGoalForm(goal({ motivation: "" })).motivation, "");
   assert.equal(valid.startDate.toISOString(), "2026-10-28T00:00:00.000Z");
   assert.throws(() => parseGoalForm(goal({ title: "" })), FormInputError);
   assert.throws(() => parseGoalForm(goal({ motivation: "x".repeat(1001) })), FormInputError);
@@ -53,4 +54,11 @@ test("ownership predicates always include authenticated userId", () => {
   assert.notDeepEqual(ownedWhere("user-A", "goal-1"), ownedWhere("user-B", "goal-1"));
   assert.throws(() => ownedWhere("", "goal-1"), FormInputError);
   assert.throws(() => ownedWhere("user-A", ""), FormInputError);
+});
+
+test("individual completion feedback is optional, bounded and validated", () => {
+  assert.deepEqual(parseEntryFeedback(form({ rating: "", note: "" })), { rating: null, note: null });
+  assert.deepEqual(parseEntryFeedback(form({ rating: "GOED", note: "Rustig verlopen" })), { rating: "GOED", note: "Rustig verlopen" });
+  assert.throws(() => parseEntryFeedback(form({ rating: "ONBEKEND" })), FormInputError);
+  assert.throws(() => parseEntryFeedback(form({ note: "x".repeat(501) })), FormInputError);
 });
