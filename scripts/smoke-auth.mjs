@@ -2,7 +2,7 @@
 // Invoked only in CI against an isolated disposable PostgreSQL database.
 import assert from "node:assert/strict";
 import { randomUUID, createHash } from "node:crypto";
-import { mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdir, writeFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
 import pg from "pg";
@@ -202,6 +202,70 @@ for (const cookie of [adminCookie, memberCookie]) {
   }
 }
 console.log("Protected CooL photos and branded PDF download verified.");
+
+
+const memberId = memberSession.user.id;
+const adminId = adminSession.user.id;
+// The admin plugin must support name updates without changing login email.
+const nameUpdate = await post("/api/auth/admin/update-user", {
+  userId: memberId, data: { name: "Bijgewerkte testgebruiker" },
+}, adminCookie);
+assert.equal(nameUpdate.status, 200, "Admin must update display names");
+const memberAfterNameChange = await get("/api/auth/get-session", memberCookie);
+assert.equal((await memberAfterNameChange.json()).user.name, "Bijgewerkte testgebruiker");
+const deniedNameUpdate = await post("/api/auth/admin/update-user", {
+  userId: adminId, data: { name: "Attempted takeover" },
+}, memberCookie);
+assert.ok(deniedNameUpdate.status >= 400 && deniedNameUpdate.status < 500,
+  "Ordinary member must not update another user");
+const deniedRemove = await post("/api/auth/admin/remove-user", { userId: adminId }, memberCookie);
+assert.ok(deniedRemove.status >= 400 && deniedRemove.status < 500,
+  "Ordinary member must not remove users");
+const deniedSelfRemove = await post("/api/auth/admin/remove-user", { userId: adminId }, adminCookie);
+assert.ok(deniedSelfRemove.status >= 400 && deniedSelfRemove.status < 500,
+  "Administrator must not remove the only administrator through the underlying API");
+assert.equal((await get("/admin", adminCookie)).status, 200, "Admin must still be active");
+
+// Use a dedicated temporary private photo of the member to test file cleanup.
+// This is not user-provided data. Everything is on the disposable CI database.
+const deletionDb = new pg.Client({ connectionString: process.env.DATABASE_URL });
+const memberPhotoId = randomUUID(), memberMeetingId = randomUUID();
+const memberPhotoFolder = join(process.cwd(), ".private-uploads", createHash("sha256").update(memberId).digest("hex"));
+await deletionDb.connect();
+try {
+  await deletionDb.query(
+    'INSERT INTO "meeting_note" ("id","userId","meetingDate","title","notes","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
+    [memberMeetingId, memberId, "2026-10-26", "Delete smoke meeting", "Delete smoke note"],
+  );
+  await deletionDb.query(
+    'INSERT INTO "meeting_photo" ("id","userId","meetingId","fileName") VALUES ($1,$2,$3,$4)',
+    [memberPhotoId, memberId, memberMeetingId, "deletion-test.webp"],
+  );
+  await mkdir(memberPhotoFolder, { recursive: true, mode: 0o700 });
+  await writeFile(join(memberPhotoFolder, memberPhotoId + ".webp"),
+    await sharp({ create: { width: 8, height: 8, channels: 3, background: "#ffffff" } }).webp().toBuffer(),
+    { mode: 0o600 });
+} finally { await deletionDb.end(); }
+
+const removed = await post("/api/auth/admin/remove-user", { userId: memberId }, adminCookie);
+assert.equal(removed.status, 200, "Admin must be able to permanently remove a regular user");
+const checkDeleted = new pg.Client({ connectionString: process.env.DATABASE_URL });
+await checkDeleted.connect();
+try {
+  for (const [table, name] of [
+    ["user","id"],["session","userId"],["account","userId"],["goal","userId"],
+    ["weekly_reflection","userId"],["meeting_note","userId"],["meeting_photo","userId"],
+  ]) {
+    const count = await checkDeleted.query(
+      `SELECT COUNT(*)::int AS total FROM "${table}" WHERE "${name}"=$1`,[memberId],
+    );
+    assert.equal(count.rows[0].total,0, `Deleted account must leave no ${table} rows`);
+  }
+} finally { await checkDeleted.end(); }
+await assert.rejects(stat(memberPhotoFolder),{ code: "ENOENT" },
+  "Private meeting photo directory must be erased when deleting account");
+expectsRedirect(await get("/dashboard", memberCookie));
+console.log("Admin rename and permanent user deletion: roles, DB cascades, sessions and photos verified.");
 
 const logout = await post("/api/auth/sign-out", {}, adminCookie);
 assert.ok(logout.ok, "Logout must work");
