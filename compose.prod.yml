@@ -59,6 +59,10 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
       SMTP_ENCRYPTION_KEY: ${SMTP_ENCRYPTION_KEY:-}
+      # Private CooL photos from #5 must survive image/container replacement.
+      PRIVATE_UPLOAD_DIR: /app/private-uploads
+    volumes:
+      - leefstijl_private_uploads:/app/private-uploads
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -86,6 +90,7 @@ services:
 
 volumes:
   leefstijl_pg_data:
+  leefstijl_private_uploads:
 
 networks:
   database:
