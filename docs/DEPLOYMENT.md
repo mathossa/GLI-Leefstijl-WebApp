@@ -1,14 +1,14 @@
 # Productie op een VPS met Docker Compose en Portainer (#7)
 
-> Alleen voor **Portainer Docker Standalone**, niet Swarm. Deze PR introduceert nog geen echte VPS-deployment of automatisch bijgewerkte productieomgeving. Eerst #5/#6 reviewen, deze PR mergen, backups maken en een proefdeploy uitvoeren.
+> Alleen voor **Portainer Docker Standalone**, niet Swarm. Deze PR introduceert nog geen echte VPS-deployment of automatisch bijgewerkte productieomgeving. Eerst de inmiddels gemergede #5 integreren en de lopende #6 reviewen; pas daarna deze PR mergen, backups maken en een proefdeploy uitvoeren.
 
 ## Keuzes en architectuur
 
 - Multi-stage Dockerfile: dependencies + Next.js 16 standalone build, non-root runtime, afzonderlijk Prisma v7 migrator/Better Auth beheerimage. Node.js 22.23.4/bookworm-slim, PostgreSQL 17.11/alpine3.24 expliciet gepind op versie (voor volledig immutable deployment registry digest pinnen).
-- Compose: app + PostgreSQL + **eenmalige migrator**. PostgreSQL heeft alleen een intern netwerk, geen gepubliceerd poortnummer en een persistent named volume. De app zit daarnaast op het **bestaande** external reverse-proxy-netwerk. Alleen de TLS-proxy is publiek.
+- Compose: app + PostgreSQL + **eenmalige migrator**. PostgreSQL heeft alleen een intern netwerk, geen gepubliceerd poortnummer en een persistent named volume. De **privéfoto's uit #5** staan op een tweede persistent named volume (\`leefstijl_private_uploads\`) onder \`/app/private-uploads\`, buiten de webroot en schrijfbaar voor de niet-root appgebruiker. De app zit daarnaast op het **bestaande** external reverse-proxy-netwerk. Alleen de TLS-proxy is publiek.
 - Migrator draait 'prisma migrate deploy' nadat PostgreSQL gezond is; de app start pas na succesvolle exitcode 0 van migrator. Er is **geen** 'prisma db push' en geen migratie tijdens webserverstart.
 - GET /api/health is ongeauthenticeerde readiness, voert alleen 'SELECT 1' uit op de database en retourneert uitsluitend 'ok' of 'unavailable' met no-store. De Docker healthcheck bevraagt deze endpoint intern.
-- Logging met rotatie; geen gevoelige data in healthchecks. Geen port mapping op de webapp. SMTP is volledig optioneel (na #6).
+- Logging met rotatie; geen gevoelige data in healthchecks of afbeeldingen in Docker-buildcontext. Geen port mapping op de webapp. SMTP is volledig optioneel (na #6).
 
 ## Stap 1 — Proxy en secrets voorbereiden
 
@@ -50,7 +50,7 @@ Wil je zelf versietags gebruiken, zet bijvoorbeeld APP_IMAGE=mijn-leefstijl:2026
 1. Ga naar **Stacks → Add stack**, kies Docker Standalone → **Web editor**.
 2. Plak de inhoud van **compose.prod.yml** (NIET compose.build.yml).
 3. Vul de variabelen uit je lokale .env.prod in bij **Environment variables** in Portainer; je kunt ze ook vanuit een beveiligd bestand importeren. Controleer dat ze niet als letterlijke tekst in een publieke Git-commit terechtkomen.
-4. De images moeten aanwezig zijn op hetzelfde Docker-host-endpoint, of als vooraf gepushte registry-images bereikbaar zijn. Controleer dat Portainer geen onbedoelde oude of lokale image uit een andere release gebruikt.
+4. De images moeten aanwezig zijn op hetzelfde Docker-host-endpoint, of als vooraf gepushte registry-images bereikbaar zijn. Maak **nooit** gebruik van \`down -v\`: dat verwijdert zowel database- als fotovolume. Controleer dat Portainer geen onbedoelde oude of lokale image uit een andere release gebruikt.
 5. Deploy de stack. De Postgres-container wordt healthy, de migrator voert de versiebeheer-migraties uit en **alleen bij succes** start de webapp.
 6. Configureer de bestaande HTTPS-proxy naar **app:3000** op het externe proxy-netwerk (de werkelijke DNS-naam van de container hangt van je stackproject af; controleer de netwerkaliases). Configureer TLS en correcte Host / X-Forwarded-Proto.
 7. Test externe login en lokaal in de appcontainer de readinesscheck.
@@ -71,22 +71,25 @@ Zorg dat de PostgreSQL service draait. Registratie blijft publiek gesloten.
 
 ## Stap 5 — Backups en restoretest
 
-Het script hieronder maakt een consistente PostgreSQL custom-format dump (inclusief Better Auth accounts en leefstijlgegevens), met rechten 0600 en SHA-256. Backups bevatten **gevoelige persoonsgegevens**: encrypt off-host, beperk toegang, zet een bewaartermijn en verwijder oude backups volgens je beleid. Maak ook een **afzonderlijke, beveiligde backup van de runtime-secrets**, in het bijzonder de SMTP-encryptiesleutel. Een DB-backup alleen herstelt niet de SMTP-credentials wanneer de decryptiesleutel weg is.
+Het databasescript hieronder maakt een consistente PostgreSQL custom-format dump (inclusief Better Auth accounts en leefstijlgegevens), met rechten 0600 en SHA-256. **Een DB-dump bevat geen foto's.** Maak in hetzelfde rustige onderhouds-/backupvenster ook een archief van het tweede private uploadvolume. Vermijd wijzigingen/uploads terwijl beide bestanden worden vastgelegd om inconsistentie tussen metadata en foto-bestanden te voorkomen. Backups bevatten **gevoelige persoonsgegevens**: encrypt off-host, beperk toegang, zet een bewaartermijn en verwijder oude backups volgens je beleid. Maak ook een **afzonderlijke, beveiligde backup van de runtime-secrets**, in het bijzonder de SMTP-encryptiesleutel. Een DB-backup alleen herstelt niet de SMTP-credentials wanneer de decryptiesleutel weg is.
 
 ~~~sh
 # Op VPS: productie-DB dump naar ./backups, zonder de applicatie te stoppen
 ./scripts/backup-db.sh .env.prod ./backups
-# Expliciete hersteltest naar een kortlevende, netwerkloze PostgreSQL 17-container
+# Back-up van het afzonderlijke persistente private fotovolume
+./scripts/backup-private-uploads.sh .env.prod ./backups
+# Expliciete hersteltests, nooit op de productie-DB of het productie-fotovolume
 ./scripts/test-restore.sh ./backups/leefstijl-YYYYMMDDTHHMMSSZ.dump
+./scripts/test-restore-private-uploads.sh ./backups/leefstijl-uploads-YYYYMMDDTHHMMSSZ.tar.gz
 ~~~
 
-**De restoretest verandert de productie-DB niet.** Controleer in het herstelverslag dat de kern- en migratietabellen aanwezig zijn. Draai deze proef na de eerste backup, daarna ten minste periodiek en vóór grote upgrades. Een succesvolle dump alleen is GEEN bewezen restore. Een cron/systemd timer voor regelmatige backups is een operator-keuze; verifieer altijd dat uploads naar off-host opslag werkelijk lukken en test herstel daaruit.
+**Beide restoretests veranderen de productie-DB en het privéfotovolume niet.** De uploadhersteltest pakt het fotoarchief uit in een tijdelijke directory die na de proef wordt verwijderd. Bewaar de DB-backup, foto-backup en checksums als één samenhangende herstelset; test een volledige herstelprocedure met fictieve data op een afzonderlijke stack. Controleer in het herstelverslag dat de kern- en migratietabellen aanwezig zijn. Draai deze proef na de eerste backup, daarna ten minste periodiek en vóór grote upgrades. Een succesvolle dump alleen is GEEN bewezen restore. Een cron/systemd timer voor regelmatige backups is een operator-keuze; verifieer altijd dat uploads naar off-host opslag werkelijk lukken en test herstel daaruit.
 
-Bij een echte disaster restore: stop de app, maak een snapshot van de huidige situatie, herstel eerst in een **aparte** database/stack, controleer het juiste schema en de data, en wijs pas daarna de applicatie naar de herstelde database. Gebruik geen directe destructieve 'pg_restore --clean' op productie via het automatische testscript. Raak het Docker volume niet aan met 'down -v'.
+Bij een echte disaster restore: stop de app, maak een snapshot van de huidige situatie, herstel eerst in een **aparte** database/stack **én een apart privéfotovolume**, controleer de metadata/foto-koppeling en het juiste schema, en wijs pas daarna de applicatie naar de herstelde database en uploadopslag. Gebruik geen directe destructieve 'pg_restore --clean' op productie via het automatische testscript. Raak het Docker volume niet aan met 'down -v'.
 
 ## Stap 6 — Release en rollback
 
-Voor **elke** upgrade: maak een verse backup, test herstel, archiveer de bijbehorende encryptiesleutels, bouw/push beide images van hetzelfde gereviewde commit, controleer migraties en deploy daarna pas. Voer healthcheck, login, gebruikersisolatie en reflectie-/doelhistoriecontroles uit.
+Voor **elke** upgrade: maak een verse **database- én foto-backup**, test herstel, archiveer de bijbehorende encryptiesleutels, bouw/push beide images van hetzelfde gereviewde commit, controleer migraties en deploy daarna pas. Voer healthcheck, login, gebruikersisolatie en reflectie-/doelhistoriecontroles uit.
 
 Bij een mislukte migratie **niet** zomaar de oude image tegen een gewijzigde database terugzetten: beoordeel schema-compatibiliteit. Herstel, indien nodig, de geverifieerde backup in een aparte database en volg een gecontroleerd omschakelplan. Bij code-only fouten zonder incompatibele migraties kun je de vorige image tags terugplaatsen. Stop nooit databases met 'docker compose down -v'.
 
@@ -94,4 +97,4 @@ Bij een mislukte migratie **niet** zomaar de oude image tegen een gewijzigde dat
 
 - Hergebruikt: officiële Docker Node/Postgres images, Next.js standalone output, Compose v2 healthchecks/dependency ordering, Prisma 7 migrate deploy, Better Auth CLI. Geen extra runtime-dependencies en geen extra diensten voor monitoring/backups.
 - Licentie: bestaande AGPL-3.0-only projectcode, Docker/Prisma/Node ecosysteemlicenties behouden. CI produceert licentie-inventaris (met handmatige review voor copyleft/attributie) en voert audit van productieafhankelijkheden uit.
-- Nog te doen bij echte VPS-ingebruikname: TLS-proxy details verifiëren, secretmanagement/beveiligde off-site backup inrichten, hersteloefening met (fictieve) proefdata uitvoeren en security review van de VPS. Geen productie-credentials in Git.
+- Nog te doen bij echte VPS-ingebruikname: #5 migraties/foto-opslag en #6 SMTP-migratie/secret op de samengevoegde branch testen; TLS-proxy-details verifiëren, secretmanagement/beveiligde **off-site database- én foto-backup** inrichten, volledige hersteloefening met (fictieve) proefdata uitvoeren en security review van de VPS. Geen productie-credentials in Git.
