@@ -80,10 +80,13 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
       <section className="space-y-3 rounded-[24px] border border-[#dce7d8] bg-[#edf4e9] p-5">
         <h2 className="font-bold text-[#254736]">Mijn gegevens exporteren</h2>
         <p className="text-sm text-[#607468]">Download jouw doelen, acties, individuele ervaringen, reflecties en CooL-notities als JSON.</p>
-        <a href="/api/export" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#2f7353] px-4 text-sm font-semibold text-white hover:bg-[#285e46]">
-          <Download size={18} aria-hidden="true"/> Download mijn gegevens <ChevronRight size={16} aria-hidden="true"/>
+        <a href="/api/export/pdf" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#2f7353] px-4 text-sm font-semibold text-white hover:bg-[#285e46]">
+          <Download size={18} aria-hidden="true"/> PDF-overzicht voor delen <ChevronRight size={16} aria-hidden="true"/>
         </a>
-        <p className="text-xs text-[#6a7b6c]">Dit bestand bevat persoonlijke informatie. Bewaar het veilig.</p>
+        <a href="/api/export" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#a3bea8] bg-white px-4 text-sm font-semibold text-[#2f7353] hover:bg-[#f7faf4]">
+          <Download size={18} aria-hidden="true"/> Volledige JSON-export <ChevronRight size={16} aria-hidden="true"/>
+        </a>
+        <p className="text-xs text-[#6a7b6c]">De PDF is een deelbaar overzicht zonder privéfoto’s. De JSON bevat je volledige historie. Bewaar beide veilig.</p>
       </section>
     </div>
   );
