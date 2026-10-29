@@ -50,6 +50,9 @@ Vul onder **Environment variables** de waarden uit `deploy/portainer.env.example
 | `BETTER_AUTH_URL` | Exacte externe `https://`-testhostnaam |
 | `BETTER_AUTH_SECRET` | Afzonderlijke cryptografisch willekeurige lange sleutel (min. 32 tekens) |
 | `SMTP_ENCRYPTION_KEY` | Mag leeg blijven bij een nieuwe testomgeving **zonder opgeslagen SMTP-wachtwoord** |
+| `BOOTSTRAP_ADMIN_EMAIL` | Optioneel voor **eenmalige** eerste admin, bijv. `beheerder@voorbeeld.nl` |
+| `BOOTSTRAP_ADMIN_NAME` | Optioneel, samen met e-mail en wachtwoord invullen, bijv. `Beheerder` |
+| `BOOTSTRAP_ADMIN_PASSWORD` | Optioneel, uniek tijdelijk wachtwoord van minimaal 12 tekens; **niet** in Git zetten |
 
 **Bestaande gegevens migreren?** Nooit zomaar nieuwe `BETTER_AUTH_SECRET` of `SMTP_ENCRYPTION_KEY` gebruiken: behoud de oorspronkelijke sleutels en zorg eerst voor een consistente backup.
 
@@ -59,13 +62,13 @@ Druk op **Deploy the stack**. Verwacht **precies twee containers**: `app` en `po
 
 In **NPM → Hosts → Proxy Hosts → Add Proxy Host** stel je `Scheme: http`, `Forward Hostname: mijn-leefstijl-web`, `Forward Port: 3000` in. Schakel websockets en Force SSL in en gebruik een geldig certificaat. De externe DNS-host moet bij `BETTER_AUTH_URL` passen. Test vervolgens `https://jouw-host/api/health` (antwoord `ok`).
 
-Voor het eerste account ga je in **Portainer → Containers → Mijn Leefstijl app → Console**, kies `/bin/sh`, en voer interactief uit:
+**Geen Portainer-console nodig:** vul bij de eerste uitrol onder **Stacks → mijn-leefstijl → Editor / Environment variables** tijdelijk `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_NAME` en `BOOTSTRAP_ADMIN_PASSWORD` in. Voer daarna **Pull and redeploy / Update the stack** uit met de nieuwste geteste GHCR-image (als het dezelfde tag `issue7-test` is, zorg dat de nieuwe image opnieuw wordt gepulld).
 
-```sh
-npm run auth:create-admin -- --email beheerder@voorbeeld.nl --name "Beheerder" --role admin
-```
+De startup voert eerst `prisma migrate deploy` uit, controleert vervolgens dat de Better Auth-`user`-tabel **leeg** is, en gebruikt alleen dan de officiële Better Auth `create-admin`-CLI. De e-mail wordt standaard geverifieerd. Bij reeds bestaande gebruikers wordt de bootstrap **overgeslagen**: er worden geen rollen toegekend of wachtwoorden gewijzigd. Een onvolledig ingevulde set variabelen of een mislukte aanmaak stopt de appstart. In de logs verschijnt slechts een algemene melding, **geen wachtwoord**.
 
-Vervang het adres door je eigen beheermailadres. De Better Auth-CLI vraagt om het wachtwoord; typ dat in de Portainer-console, nooit als stackvariable. Test login, doelen, reflecties, gebruikersbeheer en privéfoto's met uitsluitend fictieve gegevens.
+Log in via HTTPS, controleer het adminportaal, **verwijder direct alle drie BOOTSTRAP_ADMIN_* variabelen uit Portainer** en redeploy de stack zodat de Docker-containerconfiguratie ze niet meer bevat. Bewaar het wachtwoord voortaan uitsluitend in je wachtwoordmanager. De Portainer-stackvariabelen zijn **niet hetzelfde als Docker secrets**: beheerders van Portainer/Docker kunnen deze waarden zien en tijdens de eerste aanmaak is het wachtwoord kort zichtbaar als CLI-procesargument. Gebruik dit uitsluitend voor de eerste bootstrap, niet als permanent beheersysteem. Maak backups en test met fictieve gegevens voordat je persoonsgegevens opslaat.
+
+**Alternatief:** wie een werkende containerconsole heeft, kan ook de bestaande officiële CLI blijven gebruiken: `npm run auth:create-admin -- --email beheerder@voorbeeld.nl --name "Beheerder" --role admin`.
 
 ### Niet vergeten: backups vóór echte persoonsgegevens
 
@@ -149,7 +152,9 @@ Voor de aanbevolen Portainer-only deployment gebruik je de door GitHub Actions g
 
 ### Eerste beheeraccount
 
-Na succesvolle migraties gebruik je dezelfde appcontainer voor de officiële Better Auth CLI. Voer dit interactief uit; zet wachtwoorden niet in shell history:
+**Portainer-only aanpak:** gebruik de optionele eenmalige `BOOTSTRAP_ADMIN_*` variabelen uit stap D hierboven. Na succesvolle login verwijderen en de containers opnieuw uitrollen. Bij bestaande gebruikers worden de variabelen bewust genegeerd; gebruik voor herstel een geautoriseerde beheermethode in plaats van de bootstrap opnieuw te activeren.
+
+**Alternatieve shell-aanpak:** gebruik alleen als een interactieve console wel werkt; zet wachtwoorden niet in shell history:
 
 ```sh
 docker compose --env-file .env.prod -f compose.prod.yml \
