@@ -34,3 +34,12 @@
 **REUSE FIRST:** bestaande Next.js Server Actions, Better Auth, Prisma 7, PostgreSQL, shadcn/ui en Lucide hergebruikt. Geen extra libraries of code/assets van derden gekopieerd. Kleine domeinvalidatie en weeklogica zijn eigen projectcode onder AGPL-3.0-only.
 
 **Integratie met #3:** de pagina **Vandaag** verzorgt dagelijkse one-tap registratie en toont eigen doelen en voortgang van de huidige Nederlandse kalenderweek, met een lege toestand voor nieuwe accounts. **Doelen** is het compacte overzicht met uitgeklapt beheer, per-uitvoeringfeedback en weekreflectie. De aparte Reflectie/Inzichten-pagina's blijven expliciet fictieve voorbeelden tot #5.
+
+## Mobiel ontwerp (goedgekeurde conceptweergave)
+
+- De drie weekcijfers zijn op telefoonbreedte compact naast elkaar zichtbaar.
+- Iedere weekactie toont bovenaan in kleine letters de **doelnaam** en daaronder de actie; een duidelijk groen **vinkje** registreert direct, de **terugdraaipijl** herstelt de laatste tik.
+- Een tik op de actienaam opent een **native HTML-dialog** als bottom-sheet op mobiel en een gecentreerde modal op grotere schermen. De sheet ondersteunt ESC, backdrop-click, toetsenbordfocus en zichtbare sluitknop; geen extra JS/UI-library nodig.
+- In de sheet kies je desgewenst goed/redelijk/lastig en een notitie bij een van de recente uitvoeringen. Het sluiten zonder opslaan verandert de bestaande registratie niet.
+- Het overzicht toont geen reeks opengeklapte review-formulieren: alleen de actiekaart. De registratie blijft één tik en feedback is optioneel.
+- Test het ontwerp op 320px/375px/390px/430px, bij 200% zoom en met uitsluitend toetsenbord (focus, dialog-open/close en review opslaan), plus per ongeluk afvinken en terugdraaien.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Frown, Meh, MessageCircle, Smile, X } from "lucide-react";
 import { saveEntryFeedback, type EntryFeedbackState } from "@/app/dashboard/doelen/actions";
@@ -79,10 +79,10 @@ export function ActionReviewSheet({ actionTitle, goalTitle, entries }: {
   const [entryId, setEntryId] = useState(entries[0]?.id ?? "");
 
   const selected = entries.find(entry => entry.id === entryId) ?? entries[0];
-  const onSaved = () => {
+  const onSaved = useCallback(() => {
     dialog.current?.close();
     router.refresh();
-  };
+  }, [router]);
 
   function open() {
     setEntryId(entries[0]?.id ?? "");
@@ -94,7 +94,7 @@ export function ActionReviewSheet({ actionTitle, goalTitle, entries }: {
       <button type="button" onClick={open}
         className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left outline-offset-4 transition-colors hover:text-[#276448]"
         aria-label={`Bekijk ${actionTitle} en beoordeel een uitgevoerde actie`}>
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f1e8] text-[#377859]" aria-hidden="true">
+        <span className="hidden size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f1e8] text-[#377859] min-[390px]:flex" aria-hidden="true">
           <MessageCircle size={21} strokeWidth={1.8}/>
         </span>
         <span className="min-w-0 flex-1">
