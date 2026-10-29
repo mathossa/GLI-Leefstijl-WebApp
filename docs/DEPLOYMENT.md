@@ -77,10 +77,10 @@ Het databasescript hieronder maakt een consistente PostgreSQL custom-format dump
 # Op VPS: productie-DB dump naar ./backups, zonder de applicatie te stoppen
 ./scripts/backup-db.sh .env.prod ./backups
 # Back-up van het afzonderlijke persistente private fotovolume
-./scripts/backup-private-uploads.sh .env.prod ./backups
+bash ./scripts/backup-private-uploads.sh .env.prod ./backups
 # Expliciete hersteltests, nooit op de productie-DB of het productie-fotovolume
 ./scripts/test-restore.sh ./backups/leefstijl-YYYYMMDDTHHMMSSZ.dump
-./scripts/test-restore-private-uploads.sh ./backups/leefstijl-uploads-YYYYMMDDTHHMMSSZ.tar.gz
+bash ./scripts/test-restore-private-uploads.sh ./backups/leefstijl-uploads-YYYYMMDDTHHMMSSZ.tar.gz
 ~~~
 
 **Beide restoretests veranderen de productie-DB en het privéfotovolume niet.** De uploadhersteltest pakt het fotoarchief uit in een tijdelijke directory die na de proef wordt verwijderd. Bewaar de DB-backup, foto-backup en checksums als één samenhangende herstelset; test een volledige herstelprocedure met fictieve data op een afzonderlijke stack. Controleer in het herstelverslag dat de kern- en migratietabellen aanwezig zijn. Draai deze proef na de eerste backup, daarna ten minste periodiek en vóór grote upgrades. Een succesvolle dump alleen is GEEN bewezen restore. Een cron/systemd timer voor regelmatige backups is een operator-keuze; verifieer altijd dat uploads naar off-host opslag werkelijk lukken en test herstel daaruit.
