@@ -208,7 +208,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
               <p className="text-sm text-[#5f7665]">{formattedDate(meeting.meetingDate)}</p>
               {meeting.notes && <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#304b3a]">{meeting.notes}</p>}
               <section className="space-y-3">
-                <h3 className="text-sm font-bold text-[#2b523a]">Foto's van je aantekeningen ({meeting.photos.length}/5)</h3>
+                <h3 className="text-sm font-bold text-[#2b523a]">Foto’s van je aantekeningen ({meeting.photos.length}/5)</h3>
                 {meeting.photos.length > 0 && (
                   <ul className="grid grid-cols-2 gap-3">
                     {meeting.photos.map((photo) => (
