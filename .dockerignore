@@ -20,3 +20,6 @@ backups
 *.p12
 .DS_Store
 Thumbs.db
+
+# Never bake private CooL meeting photos into images.
+.private-uploads/
