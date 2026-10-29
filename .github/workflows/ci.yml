@@ -142,8 +142,8 @@ jobs:
           docker compose -f compose.prod.yml exec -T app sh -c 'test -w "$PRIVATE_UPLOAD_DIR" && printf ci-volume-persistence > "$PRIVATE_UPLOAD_DIR/ci-upload-probe.txt"'
           docker compose -f compose.prod.yml restart app
           docker compose -f compose.prod.yml exec -T app sh -c 'test -s "$PRIVATE_UPLOAD_DIR/ci-upload-probe.txt"'
-          ./scripts/backup-private-uploads.sh "$tempdir/.env.prod" "$tempdir/backups"
-          ./scripts/test-restore-private-uploads.sh "$tempdir/backups/"*.tar.gz
+          bash ./scripts/backup-private-uploads.sh "$tempdir/.env.prod" "$tempdir/backups"
+          bash ./scripts/test-restore-private-uploads.sh "$tempdir/backups/"*.tar.gz
           tar -xOf "$tempdir/backups/"*.tar.gz ./ci-upload-probe.txt | grep -qx ci-volume-persistence
       - name: Remove disposable CI stack and network
         if: always()
