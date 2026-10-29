@@ -22,8 +22,13 @@ docker run -d --rm --network none --name "$NAME" \
   -e POSTGRES_DB=restore_test \
   postgres:17.11-alpine3.24 >/dev/null
 READY=0
-for _ in $(seq 1 60); do
-  if docker exec "$NAME" pg_isready -q -U restore_test -d restore_test >/dev/null 2>&1; then
+# The official Postgres entrypoint starts a temporary server and stops it
+# during initdb. Wait for initialization to complete before testing readiness,
+# otherwise pg_isready may return true just before a controlled shutdown.
+for _ in $(seq 1 90); do
+  LOGS="$(docker logs "$NAME" 2>&1 || true)"
+  if [[ "$LOGS" == *"PostgreSQL init process complete; ready for start up."* ]] &&
+     docker exec "$NAME" pg_isready -q -U restore_test -d restore_test >/dev/null 2>&1; then
     READY=1
     break
   fi
