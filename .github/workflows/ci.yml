@@ -94,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate shell backup/restore scripts
-        run: bash -n scripts/backup-db.sh scripts/test-restore.sh
+        run: bash -n scripts/backup-db.sh scripts/test-restore.sh scripts/backup-private-uploads.sh scripts/test-restore-private-uploads.sh
       - name: Create disposable reverse-proxy network
         run: docker network create ci-proxy
       - name: Validate Compose config with CI-only secrets
@@ -138,6 +138,13 @@ jobs:
           EOF
           ./scripts/backup-db.sh "$tempdir/.env.prod" "$tempdir/backups"
           ./scripts/test-restore.sh "$tempdir/backups/"*.dump
+          # Only synthetic CI content: verify non-root upload volume and restore path.
+          docker compose -f compose.prod.yml exec -T app sh -c 'test -w "$PRIVATE_UPLOAD_DIR" && printf ci-volume-persistence > "$PRIVATE_UPLOAD_DIR/ci-upload-probe.txt"'
+          docker compose -f compose.prod.yml restart app
+          docker compose -f compose.prod.yml exec -T app sh -c 'test -s "$PRIVATE_UPLOAD_DIR/ci-upload-probe.txt"'
+          ./scripts/backup-private-uploads.sh "$tempdir/.env.prod" "$tempdir/backups"
+          ./scripts/test-restore-private-uploads.sh "$tempdir/backups/"*.tar.gz
+          tar -xOf "$tempdir/backups/"*.tar.gz ./ci-upload-probe.txt | grep -qx ci-volume-persistence
       - name: Remove disposable CI stack and network
         if: always()
         shell: bash
