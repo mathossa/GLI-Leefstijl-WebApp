@@ -35,11 +35,17 @@
 
 **Integratie met #3:** de pagina **Vandaag** verzorgt dagelijkse one-tap registratie en toont eigen doelen en voortgang van de huidige Nederlandse kalenderweek, met een lege toestand voor nieuwe accounts. **Doelen** is het compacte overzicht met uitgeklapt beheer, per-uitvoeringfeedback en weekreflectie. De aparte Reflectie/Inzichten-pagina's blijven expliciet fictieve voorbeelden tot #5.
 
-## Mobiel ontwerp (goedgekeurde conceptweergave)
+## Definitief mobiel ontwerp (#4)
 
-- De drie weekcijfers zijn op telefoonbreedte compact naast elkaar zichtbaar.
-- Iedere weekactie toont bovenaan in kleine letters de **doelnaam** en daaronder de actie; een duidelijk groen **vinkje** registreert direct, de **terugdraaipijl** herstelt de laatste tik.
-- Een tik op de actienaam opent een **native HTML-dialog** als bottom-sheet op mobiel en een gecentreerde modal op grotere schermen. De sheet ondersteunt ESC, backdrop-click, toetsenbordfocus en zichtbare sluitknop; geen extra JS/UI-library nodig.
-- In de sheet kies je desgewenst goed/redelijk/lastig en een notitie bij een van de recente uitvoeringen. Het sluiten zonder opslaan verandert de bestaande registratie niet.
-- Het overzicht toont geen reeks opengeklapte review-formulieren: alleen de actiekaart. De registratie blijft één tik en feedback is optioneel.
-- Test het ontwerp op 320px/375px/390px/430px, bij 200% zoom en met uitsluitend toetsenbord (focus, dialog-open/close en review opslaan), plus per ongeluk afvinken en terugdraaien.
+- **Eén motiverende zin** in de welkomstkaart; geen tweede motiverende balk onderaan en geen herhalende aanmoedigingen in de zijbalk.
+- **Drie compacte statistiekkaarten** in één rij, ook vanaf 320px. Titels en aantallen mogen niet uit hun kaarten lopen.
+- **Vandaag afvinken** toont alleen de actietitel, voluit over de gehele kaartbreedte (met regelafbreking waar nodig). De doelnaam staat bewust niet op de startpagina maar wel in de review-popup.
+- De tweede rij heeft links `x/y deze week` met een progressbar, rechts twee grote knoppen: de terugdraaipijl en het groene vinkje. Tellers tonen direct de optimistische waarde; de server bewaakt eigenaarschap en limieten.
+- Tikken op de actietitel opent de bestaande native `<dialog>`: op mobiel een bottom-sheet, op desktop een modal. Er zijn geen uitlegzinnen zoals ‘Tik voor je ervaring’ nodig.
+- **Even stilstaan** wordt een enkele compacte link naar de reflectiepagina, zonder uitgebreide voorbeeldreflectie of herhaalde motiverende tekst.
+- De lijst toont *alle* actuele weekacties, niet uitsluitend de eerste zes. Registratie blijft op Vandaag mogelijk zonder naar Doelen te navigeren.
+- Oude demo-labels in header/zijbalk verwijderd. De bestaande Better Auth-controles en gescheiden beheeromgeving blijven intact.
+
+### Handmatige acceptatie
+
+Controleer 320px, 375px, 390px en 430px breedte, plus tablet en desktop. Nergens horizontaal scrollen of afgekapte titels, KPI's of knoppen. Probeer een actietitel met minimaal 80 tekens, zoom naar 200%, toets Tab/Enter/Escape in het reviewscherm, registreer tweemaal, draai een keer terug, voeg optionele feedback toe, herlaad de pagina en verifieer de opgeslagen data.

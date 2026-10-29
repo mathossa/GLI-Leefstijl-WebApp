@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { BookHeart, ChartNoAxesCombined, CircleHelp, Heart, House, Leaf, LogOut, Settings2, Target } from "lucide-react";
+import { BookHeart, ChartNoAxesCombined, House, Leaf, LogOut, Settings2, Target } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,18 +48,14 @@ export function AppShell({ children, userName, isAdmin }: { children: React.Reac
         </nav>
         {isAdmin && <Link href="/admin" className="mt-3 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#486d52] hover:bg-[#dce9d9]"><Settings2 size={19}/> Beheer</Link>}
         <div className="mt-auto space-y-4 px-3">
-          <div className="rounded-[20px] border border-[#d9e6d6] bg-[#f7fbf5] p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold"><Heart size={17} className="text-[#67997b]" /> Zacht voor jezelf</div>
-            <p className="text-xs leading-relaxed text-[#4c6550]">Kleine stappen kunnen een groot verschil maken. Vandaag is een nieuw begin.</p>
-          </div>
           <div className="flex items-center justify-between border-t border-[#dbe5d9] pt-4 text-xs text-[#4c6550]">
-            <span className="flex items-center gap-2"><CircleHelp size={15} /> Voorbeelddata</span>
+            <span className="font-medium">Mijn account</span>
             <button type="button" onClick={signOut} title="Uitloggen" aria-label="Uitloggen" className="rounded-lg p-2 hover:bg-[#dce9d9]"><LogOut size={17}/></button>
           </div>
         </div>
       </aside>
 
-      <div className="min-w-0">
+      <div className="min-w-0 w-full">
         <header className="sticky top-0 z-20 border-b border-[#ecece4]/90 bg-[#f8f7f1]/95 px-5 py-4 backdrop-blur-sm sm:px-8 lg:px-12">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
             <Link href="/dashboard" className="flex items-center gap-2 font-bold text-[#315b44] md:hidden">
@@ -67,14 +63,14 @@ export function AppShell({ children, userName, isAdmin }: { children: React.Reac
             </Link>
             <span className="hidden text-sm text-[#506955] md:block">Jouw plek om met aandacht te groeien</span>
             <div className="flex items-center gap-2">
-              <span className="hidden rounded-full bg-[#eaf0e6] px-3 py-1.5 text-xs font-medium text-[#557563] sm:block">{userName} · Demo</span>
+              <span className="hidden rounded-full bg-[#eaf0e6] px-3 py-1.5 text-xs font-medium text-[#557563] sm:block">{userName}</span>
               {isAdmin && <Link href="/admin" className="rounded-lg p-2 text-[#557563] hover:bg-[#dce9d9] md:hidden" aria-label="Beheer"><Settings2 size={18}/></Link>}
               <button type="button" onClick={signOut} className="rounded-lg p-2 text-[#557563] hover:bg-[#dce9d9] md:hidden" aria-label="Uitloggen"><LogOut size={19}/></button>
             </div>
           </div>
         </header>
 
-        <main id="main" className="page-enter mx-auto max-w-6xl px-5 pb-32 pt-7 sm:px-8 md:pb-12 lg:px-12 lg:pt-9">
+        <main id="main" className="page-enter mx-auto w-full min-w-0 max-w-6xl px-4 pb-28 pt-5 sm:px-8 md:pb-12 lg:px-12 lg:pt-9">
           {children}
         </main>
       </div>

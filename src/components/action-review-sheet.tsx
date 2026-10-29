@@ -32,12 +32,12 @@ function ReviewForm({ entry, onSaved }: { entry: EntryView; onSaved: () => void 
   }, [state, onSaved]);
 
   return (
-    <form action={submit} className="space-y-5">
+    <form action={submit} className="space-y-4">
       <input type="hidden" name="entryId" value={entry.id}/>
       <input type="hidden" name="rating" value={rating}/>
-      <fieldset>
-        <legend className="mb-3 text-sm font-medium text-[#415d4c]">Hoe ging het deze keer?</legend>
-        <div className="grid grid-cols-3 gap-2.5">
+      <fieldset className="min-w-0">
+        <legend className="sr-only">Beoordeling van deze uitvoering</legend>
+        <div className="grid grid-cols-3 gap-2">
           {ratingOptions.map(({ value, label, icon: Icon }) => (
             <button type="button" key={value} onClick={() => setRating(current => current === value ? "" : value)}
               aria-pressed={rating === value}
@@ -63,7 +63,6 @@ function ReviewForm({ entry, onSaved }: { entry: EntryView; onSaved: () => void 
       <Button type="submit" disabled={pending} className="h-12 w-full rounded-2xl text-base">
         {pending ? "Opslaan…" : "Ervaring opslaan"}
       </Button>
-      <p className="text-center text-xs text-muted-foreground">Een beoordeling is nooit verplicht. Je registratie blijft ook zonder ervaring bewaard.</p>
     </form>
   );
 }
@@ -92,21 +91,15 @@ export function ActionReviewSheet({ actionTitle, goalTitle, entries }: {
   return (
     <>
       <button type="button" onClick={open}
-        className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left outline-offset-4 transition-colors hover:text-[#276448]"
-        aria-label={`Bekijk ${actionTitle} en beoordeel een uitgevoerde actie`}>
-        <span className="hidden size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f1e8] text-[#377859] min-[390px]:flex" aria-hidden="true">
-          <MessageCircle size={21} strokeWidth={1.8}/>
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[10px] font-bold uppercase tracking-[.12em] text-[#5c806b]">{goalTitle}</span>
-          <span className="mt-0.5 block truncate text-base font-bold text-[#203e30] sm:text-lg">{actionTitle}</span>
-          <span className="mt-1 flex items-center gap-1 text-xs text-[#607669]">Tik voor je ervaring <ChevronRight size={13} aria-hidden="true"/></span>
-        </span>
+        className="group flex min-h-10 w-full min-w-0 items-start justify-between gap-3 rounded-xl text-left outline-offset-4 transition-colors hover:text-[#276448]"
+        aria-label={`Bekijk ervaringen voor ${actionTitle}`}>
+        <span className="min-w-0 flex-1 break-words text-base font-bold leading-snug text-[#203e30] sm:text-lg">{actionTitle}</span>
+        <ChevronRight size={18} className="mt-0.5 shrink-0 text-[#668875] transition-transform group-hover:translate-x-0.5" aria-hidden="true"/>
       </button>
 
       <dialog ref={dialog} aria-labelledby={titleId} className="review-dialog"
         onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
-        <div className="mx-auto mb-5 mt-3 h-1.5 w-12 rounded-full bg-[#dae2dc] sm:hidden" aria-hidden="true"/>
+        <div className="mx-auto mb-4 mt-3 h-1.5 w-12 rounded-full bg-[#dae2dc] sm:hidden" aria-hidden="true"/>
         <div className="px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-2 sm:px-7 sm:pb-7 sm:pt-7">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -125,7 +118,7 @@ export function ActionReviewSheet({ actionTitle, goalTitle, entries }: {
           {selected ? (
             <>
               <h3 className="mb-1 text-2xl font-bold tracking-tight text-[#203c2e]">Hoe ging het?</h3>
-              <p className="mb-5 text-sm text-[#61776a]">Hoe was het om deze actie uit te voeren?</p>
+              <div className="mb-4"/>
               {entries.length > 1 && (
                 <div className="mb-5">
                   <label htmlFor={titleId + "-entry"} className="mb-1 block text-xs font-semibold text-[#546c5d]">Welke uitvoering?</label>
