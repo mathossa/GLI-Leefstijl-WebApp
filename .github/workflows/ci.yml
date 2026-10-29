@@ -119,6 +119,25 @@ jobs:
             exit 1
           fi
           echo "Standalone app and database readiness passed"
+      - name: Verify PostgreSQL backup and isolated restore
+        shell: bash
+        run: |
+          umask 077
+          tempdir="$(mktemp -d)"
+          trap 'rm -rf "$tempdir"' EXIT
+          cat > "$tempdir/.env.prod" <<EOF
+          APP_IMAGE=$APP_IMAGE
+          MIGRATOR_IMAGE=$MIGRATOR_IMAGE
+          PROXY_NETWORK=$PROXY_NETWORK
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          POSTGRES_DB=$POSTGRES_DB
+          DATABASE_URL=$DATABASE_URL
+          BETTER_AUTH_URL=$BETTER_AUTH_URL
+          BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
+          EOF
+          ./scripts/backup-db.sh "$tempdir/.env.prod" "$tempdir/backups"
+          ./scripts/test-restore.sh "$tempdir/backups/"*.dump
       - name: Remove disposable CI stack and network
         if: always()
         shell: bash
