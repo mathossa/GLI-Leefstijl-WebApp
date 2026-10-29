@@ -11,6 +11,7 @@ import {
   saveWeekReflection, updateGoal, updateHabitAction,
 } from "@/app/dashboard/doelen/actions";
 import { GOAL_AREAS, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS } from "@/lib/goals-domain.mjs";
+import { isoWeekLabel } from "@/lib/week-labels.mjs";
 
 type WeekView = {
   id: string;
@@ -72,9 +73,7 @@ const experienceTime = (date: string) => new Intl.DateTimeFormat("nl-NL", {
 const shortDate = (iso: string) => new Intl.DateTimeFormat("nl-NL", {
   day: "numeric", month: "short", timeZone: "UTC",
 }).format(new Date(iso + "T00:00:00Z"));
-const weekLabel = (iso: string) => new Intl.DateTimeFormat("nl-NL", {
-  day: "numeric", month: "short", year: "numeric", timeZone: "UTC",
-}).format(new Date(iso + "T00:00:00Z"));
+const weekLabel = isoWeekLabel;
 const dates = (goal: GoalView) => {
   if (!goal.startDate && !goal.endDate) return null;
   return [goal.startDate ? shortDate(goal.startDate) : "–", goal.endDate ? shortDate(goal.endDate) : "–"].join(" – ");
@@ -208,7 +207,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
     <div className="mx-auto min-w-0 max-w-4xl space-y-6">
       <header className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight text-[#203d30]">Mijn doelen</h1>
-        <p className="text-sm text-[#647768]">Jouw doelen en weekacties op één plek.</p>
+        <p className="text-sm text-[#647768]">{isoWeekLabel(currentWeek)}</p>
       </header>
 
       {message === "opgeslagen" && <p role="status" className="rounded-2xl bg-[#e8f3e5] p-3 text-sm text-[#2c5d40]">Wijzigingen opgeslagen.</p>}
@@ -327,7 +326,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
                           <span className="min-w-0 flex-1 break-words font-semibold">{a.title}</span>
                           <ChevronRight size={17} className="shrink-0" aria-hidden="true"/>
                         </span>
-                        <span className="mt-1.5 block text-xs tabular-nums text-[#5a745f]">{p.completed} / {p.target} deze week</span>
+                        <span className="mt-1.5 block text-xs tabular-nums text-[#5a745f]">{p.completed} / {p.target} · {isoWeekLabel(currentWeek)}</span>
                         <span className="mt-3 block"><Bar value={percent(p.completed,p.target)}/></span>
                       </button>
                     );
@@ -371,7 +370,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
               <div className="rounded-2xl border border-[#e4eae2] bg-[#f8faf6] p-5">
                 <p className="mb-1 text-sm text-[#597061]">{goal.title}</p>
                 <p className="text-2xl font-bold tabular-nums text-[#244b35]">{progress.completed} / {progress.target}</p>
-                <p className="mb-3 text-xs text-[#5c7661]">Deze week</p>
+                <p className="mb-3 text-xs text-[#5c7661]">{isoWeekLabel(currentWeek)}</p>
                 <Bar value={percent(progress.completed,progress.target)}/>
               </div>
               <button type="button" onClick={() => open({ kind: "experiences", goalId: goal.id, actionId: action.id })}

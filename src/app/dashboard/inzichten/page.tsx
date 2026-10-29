@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { amsterdamMonday } from "@/lib/goals-domain.mjs";
 import { amsterdamDate, dateOnly, summarizeCompletion } from "@/lib/reflections-domain.mjs";
+import { isoWeekLabel } from "@/lib/week-labels.mjs";
 import { InsightsOverview } from "@/components/insights-overview";
 
 export const metadata: Metadata = { title: "Inzichten" };
@@ -38,9 +39,8 @@ export default async function InsightsPage() {
       (item) => dateOnly(item.weekStart).slice(0, 7) === dateOnly(date).slice(0, 7))),
   }));
   const registeredWeeks = weekly.filter((entry) => entry.completion.percentage !== null).length;
-  const formatWeek = new Intl.DateTimeFormat("nl-NL", { timeZone: "UTC", day: "numeric", month: "short" });
   const formatMonth = new Intl.DateTimeFormat("nl-NL", { timeZone: "UTC", month: "long", year: "numeric" });
   return <InsightsOverview registeredWeeks={registeredWeeks} reflectionCount={reflectionCount}
-    weeks={weekly.map(({ date, completion }) => ({ label: "Week " + formatWeek.format(date), ...completion }))}
+    weeks={weekly.map(({ date, completion }) => ({ label: isoWeekLabel(date), ...completion }))}
     months={monthly.map(({ date, completion }) => ({ label: formatMonth.format(date), ...completion }))}/>;
 }

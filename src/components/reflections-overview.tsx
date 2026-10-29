@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { isoWeekLabel } from "@/lib/week-labels.mjs";
 import Image from "next/image";
 import { ArrowLeft, BookHeart, CalendarDays, ChevronLeft, ChevronRight, ClipboardPenLine, Plus, ImagePlus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -90,7 +91,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
           <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f2e5] text-[#37704e]"><BookHeart size={23} aria-hidden="true"/></span>
           <span className="min-w-0 flex-1">
             <span className="block font-bold text-[#2d4e3a]">{thisWeek ? "Mijn weekreflectie" : "Even stilstaan"}</span>
-            <span className="mt-1 block text-xs text-[#607567]">Week van {formattedDate(currentWeek)}</span>
+            <span className="mt-1 block text-xs text-[#607567]">{isoWeekLabel(currentWeek)}</span>
             {thisWeek && <span className="mt-1.5 block truncate text-sm text-[#69776c]">{summary(thisWeek.wentWell || thisWeek.difficult || thisWeek.nextStep)}</span>}
           </span>
           <ChevronRight size={20} className="shrink-0 text-[#6e8975]" aria-hidden="true"/>
@@ -118,10 +119,8 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
           {weeks.slice(1).map((week) => (
             <button type="button" key={week} onClick={() => open({ kind: "reflection", weekStart: week })}
               className="flex min-h-20 min-w-28 shrink-0 snap-start flex-col justify-between gap-2 rounded-2xl border border-[#dce8db] bg-white px-3 py-3 text-left transition-colors hover:bg-[#eaf4e9] focus-visible:outline-[#2e7651]"
-              aria-label={`Reflectie van week ${formattedDate(week)}`}>
-              <span className="text-xs font-semibold text-[#345741]">{new Intl.DateTimeFormat("nl-NL", {
-                day: "numeric", month: "short", timeZone: "UTC",
-              }).format(new Date(week + "T00:00:00Z"))}</span>
+              aria-label={`Reflectie ${isoWeekLabel(week)}`}>
+              <span className="text-xs font-semibold text-[#345741]">{isoWeekLabel(week)}</span>
               <span className="flex items-center gap-1.5 text-[11px] text-[#667a6c]">
                 <span className={`size-2 rounded-full ${recorded.has(week) ? "bg-[#3c9265]" : "bg-[#d2ded3]"}`} aria-hidden="true"/>
                 {recorded.has(week) ? "Ingevuld" : "Leeg"}
@@ -171,7 +170,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
 
           {mode?.kind === "reflection" && (
             <form key={mode.weekStart} action={saveReflection} className="space-y-4">
-              <p className="text-sm text-[#5e7866]">Week van {formattedDate(mode.weekStart)}</p>
+              <p className="text-sm text-[#5e7866]">{isoWeekLabel(mode.weekStart)}</p>
               <input name="weekStart" type="hidden" value={mode.weekStart}/>
               {([
                 ["wentWell", "Wat ging goed?", entry?.wentWell],
