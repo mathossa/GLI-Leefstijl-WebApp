@@ -33,6 +33,28 @@ Vul in .env.prod:
 
 Laat Portainer/Compose-secretwaarden niet in screenshots, issues of debuglogs terechtkomen. Scherm de VPS, Portainer, backups en Docker socket strikt af.
 
+## Nginx Proxy Manager: bestaand netwerk hergebruiken
+
+Je hebt **geen extra Nginx-container** nodig. De stack maakt precies drie containers (`app`, `postgres` en de kortlopende `migrate`), twee named volumes en één intern DB-netwerk. Het proxy-netwerk is **extern**: dat is hetzelfde bestaande Docker-netwerk waarop je Nginx Proxy Manager draait.
+
+1. Open **Portainer → Containers → jouw Nginx Proxy Manager-container → Connected networks** en noteer het **user-defined bridge-netwerk** waarop NPM draait. Gebruik die *werkelijke* naam als `PROXY_NETWORK` bij de Mijn Leefstijl-stack. Staat NPM alleen op het standaard `bridge`-netwerk, maak dan een dedicated user-defined bridge en voeg die als **external network** toe aan de NPM-stack, zodat dit ook na het recreëren van NPM behouden blijft. Pas de netwerkconfig van de bestaande NPM-stack zorgvuldig aan; de container moet bereikbaar blijven op zijn huidige publieke poorten.
+2. Start Mijn Leefstijl met `PROXY_NETWORK` gelijk aan dat netwerk. De webapp heeft op dit externe netwerk de **vaste alias `mijn-leefstijl-web`**, onafhankelijk van een veranderende containernaam of IP. PostgreSQL en migrator krijgen geen toegang tot het proxy-netwerk.
+3. Ga in **Nginx Proxy Manager → Hosts → Proxy Hosts → Add Proxy Host** en stel in:
+
+   | Veld | Waarde |
+   | --- | --- |
+   | Domain Names | Je eigen subdomein, exact als in `BETTER_AUTH_URL` |
+   | Scheme | `http` |
+   | Forward Hostname / IP | `mijn-leefstijl-web` |
+   | Forward Port | `3000` |
+   | Websockets Support | Aan |
+   | SSL | Bestaand certificaat of Let's Encrypt; **Force SSL** aan |
+
+   Publiceer **geen** extra app- of PostgreSQL-poorten. De NPM-container verzorgt via zijn bestaande poorten 80/443 de externe HTTPS-toegang.
+4. Controleer vanuit de NPM-container of `mijn-leefstijl-web` via Docker DNS te vinden is. Zonder gedeeld user-defined netwerk kunnen de containers elkaar niet bereiken. Controleer daarna `https://jouw-subdomein/api/health` (antwoord `ok`) en de loginpagina. Zorg dat het bijbehorende DNS A/AAAA-record naar de juiste VPS wijst.
+
+Bij meerdere omgevingen op hetzelfde proxy-netwerk (bijv. test/prod) moet de alias per omgeving **uniek** worden gemaakt. Test eerst met fictieve accounts en de uiteindelijke HTTPS-hostnaam voordat je productiegegevens migreert. DNS of proxyhost configureren zorgt niet voor een automatische deployment.
+
 ## Stap 2 — Images bouwen op de VPS
 
 Een Portainer Stack in de webeditor heeft niet vanzelf toegang tot de Git build context. Bouw daarom eerst de twee images uit **dezelfde checkout** op de host (of publiceer beide via CI in een private registry). De lokale build-override is alleen voor CLI/CI; niet plakken in Portainer.
@@ -52,7 +74,7 @@ Wil je zelf versietags gebruiken, zet bijvoorbeeld APP_IMAGE=mijn-leefstijl:2026
 3. Vul de variabelen uit je lokale .env.prod in bij **Environment variables** in Portainer; je kunt ze ook vanuit een beveiligd bestand importeren. Controleer dat ze niet als letterlijke tekst in een publieke Git-commit terechtkomen.
 4. De images moeten aanwezig zijn op hetzelfde Docker-host-endpoint, of als vooraf gepushte registry-images bereikbaar zijn. Maak **nooit** gebruik van `down -v`: dat verwijdert zowel database- als fotovolume. Controleer dat Portainer geen onbedoelde oude of lokale image uit een andere release gebruikt.
 5. Deploy de stack. De Postgres-container wordt healthy, de migrator voert de versiebeheer-migraties uit en **alleen bij succes** start de webapp.
-6. Configureer de bestaande HTTPS-proxy naar **app:3000** op het externe proxy-netwerk (de werkelijke DNS-naam van de container hangt van je stackproject af; controleer de netwerkaliases). Configureer TLS en correcte Host / X-Forwarded-Proto.
+6. **Nginx Proxy Manager**: maak onder **Hosts → Proxy Hosts → Add Proxy Host** een host voor de exact ingestelde `BETTER_AUTH_URL`. Gebruik **Scheme: http**, **Forward Hostname/IP: mijn-leefstijl-web**, **Forward Port: 3000**, **Websockets Support: on**. Onder **SSL** selecteer je een bestaand geldig certificaat of vraag je via Let's Encrypt een certificaat aan; zet **Force SSL** aan. NPM stuurt de gebruikelijke Host en X-Forwarded-Proto-headers door. Zet geen publiek 3000/5432-portmapping aan.
 7. Test externe login en lokaal in de appcontainer de readinesscheck.
 
 Let op: migrator blijft na succesvolle uitvoering als **exited (0)** zichtbaar; dat is normaal. Na een redeploy kan die opnieuw draaien. Prisma migrate deploy past uitsluitend nieuwe migraties toe. **Geen stack auto-update zonder gecontroleerde backup vooraf.**

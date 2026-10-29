@@ -111,6 +111,22 @@ jobs:
         run: docker network create ci-proxy
       - name: Validate Compose config with CI-only secrets
         run: docker compose -f compose.prod.yml -f compose.build.yml config --quiet
+      - name: Verify stable Nginx Proxy Manager network alias and isolation
+        run: |
+          docker compose -f compose.prod.yml -f compose.build.yml config --format json > /tmp/leefstijl-compose.json
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const c = JSON.parse(readFileSync("/tmp/leefstijl-compose.json", "utf8"));
+            assert.ok(c.services.app.networks.proxy.aliases.includes("mijn-leefstijl-web"));
+            assert.ok(!("proxy" in c.services.postgres.networks));
+            assert.ok(!("proxy" in c.services.migrate.networks));
+            assert.equal(c.networks.database.internal, true);
+            assert.equal(c.networks.proxy.external, true);
+            for (const service of ["app", "postgres", "migrate"]) {
+              assert.ok(!c.services[service].ports?.length);
+            }
+          '
       - name: Build app and migration images (production stages)
         run: docker compose -f compose.prod.yml -f compose.build.yml build
       - name: Apply migrations in one-shot container and wait for healthy application
