@@ -47,3 +47,9 @@ npm run lint && npm run typecheck && npm run build
 - Per week zijn **wat ging goed, wat was lastig en volgende stap** te bewerken; ten minste één antwoord volstaat. Eerdere ontbrekende weken zijn via één keuzescherm invulbaar.
 - Bijeenkomst toevoegen/bewerken en notities/actiepunten bekijken gebeurt via een sheet. Verwijderen vraagt bevestiging.
 - De CI voert een echte HTTP-exporttest uit: 401 zonder login, een export voor administrator en gewone gebruiker, verifiëren dat hun gegevens niet mengen en dat individuele uitvoeringsfeedback, reflecties en bijeenkomstnotities wel in de JSON staan, maar authvelden niet.
+
+## Inzichten, mobile-first
+
+De inzichtenpagina toont nu twee compacte totalen, **Weken met activiteiten** en **Weekreflecties**. Een segmented control wisselt direct tussen de laatste 12 kalenderweken en de laatste 6 kalendermaanden, zonder lange dubbele lijsten. Ontbrekende registraties krijgen ‘Geen gegevens’ in plaats van 0%; de per-week/per-maand-balken tonen uitsluitend opgeslagen actievoortgang. Eigen JSON-export staat als afzonderlijk onderdeel onderaan.
+
+Er zijn geen externe analyticsdiensten, medische aannames of nieuwe grafieklibraries toegevoegd. De persoonsgegevens blijven op de eigen PostgreSQL-database.

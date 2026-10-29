@@ -4,7 +4,7 @@
 
 ## Status
 
-**Sinds issue #2:** Better Auth 1.7, Admin-plugin, Prisma 7/PostgreSQL en gesloten registratie zijn aanwezig. **Issue #3 (PR #12):** mobiel ontwerp, contrast en toetsenbordnavigatie worden verbeterd. De pagina's **Vandaag** en **Mijn doelen** tonen persoonlijke doelen, weekacties en registraties uit PostgreSQL (#4); individuele uitvoeringen kunnen optioneel een ervaring bevatten. De aparte Reflectie- en Inzichtenpagina's bevatten nog **fictieve data** tot issue #5. Dit is nog geen productieversie.
+Mijn Leefstijl bevat een mobile-first dashboard, beveiligde login met Better Auth, doelen en eenklikregistratie (#1–#4). **Issue #5 is in voorbereiding voor review in PR #14**: wekelijkse reflecties, CooL-bijeenkomstnotities, echte week-/maandinzichten en een privé JSON-export. Alle persoonlijke gegevens worden opgeslagen in PostgreSQL via Prisma. Dit is nog geen productieversie; SMTP, VPS/Portainer en verdere privacy-/securityhardening volgen in #6–#8.
 
 ## Lokaal op Linux / WSL
 
@@ -40,7 +40,7 @@ npm run build
 
 Next.js genereert `next-env.d.ts` automatisch. Dit bestand is daarom niet meer onderdeel van Git; `npm run typecheck` voert eerst `next typegen` uit.
 
-GitHub Actions gebruikt een tijdelijke PostgreSQL 17, voert de gecommitte migraties uit en test via HTTP onder meer afgesloten registratie, inloggen en adminisolatie.
+GitHub Actions gebruikt een tijdelijke PostgreSQL 17, voert de gecommitte migraties uit en test via HTTP onder meer afgesloten registratie, inloggen, adminisolatie en de gebruikersgebonden export.
 
 ## Beveiliging
 
