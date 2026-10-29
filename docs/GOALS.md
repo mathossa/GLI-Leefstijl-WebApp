@@ -59,3 +59,11 @@ Controleer 320px, 375px, 390px en 430px breedte, plus tablet en desktop. Nergens
 - Motivatie is optioneel geworden, passend bij het goedgekeurde ontwerp; oude doelen blijven ongewijzigd.
 - Ervaringen uit de meest recente geregistreerde weken blijven beschikbaar om te bekijken en te bewerken; het review-overzicht gebruikt de al bestaande feedbackcomponent.
 - Mobiele acceptatie: 320/375/390/430px, scrollen in een open sheet, met Escape sluiten, terugnavigatie, aanmaken/bewerken/archiveren en gegevens na herladen. `Vandaag` mag visueel en functioneel niet veranderen.
+
+## UX polish — 29 oktober 2026
+
+- **Leefstijlgebied** kies je nu met zes goed aantikbare gekleurde knoppen (Beweging, Voeding, Slaap, Ontspanning, Sociaal, Anders), geen dropdown. De bestaande enum en PostgreSQL-data blijven intact. De gekozen waarde gaat als verborgen veld door dezelfde gevalideerde Server Action.
+- **Ervaringen** opent direct een lijst met individuele uitvoeringen uit recente weken, inclusief lokale datum/tijd, beoordeling en notitie. Er zitten geen extra uitklapbare `details`-lagen meer tussen.
+- Tik op een uitvoering om de **Hoe ging het?**-view te openen: drie gezichtjes voor goed / redelijk / lastig, plus optionele notitie, en één bewaarbutton. Terug gaat naar de ervaringenlijst; succesvol opslaan ververst de data.
+- De bestaande Vandaag-review gebruikt dezelfde gedeelde beoordelingsknoppen. Bewaarlogica en gebruikersisolatie blijven bij Better Auth / Prisma; geen schemawijzigingen of dependencies.
+- Handmatig te testen: gebiedsselectie bij aanmaken én bewerken, bewaren, ervaringenlijst met meerdere weken, openen/bewerken van een ervaring, Escape/terug, 320px-430px en 200% zoom.

@@ -19,7 +19,7 @@ const ratingOptions: { value: Rating; label: string; icon: typeof Smile }[] = [
   { value: "LASTIG", label: "Was lastig", icon: Frown },
 ];
 
-function ReviewForm({ entry, onSaved }: { entry: EntryView; onSaved: () => void }) {
+export function EntryReviewForm({ entry, onSaved }: { entry: EntryView; onSaved: () => void }) {
   const [state, submit, pending] = useActionState(saveEntryFeedback, initial);
   const [rating, setRating] = useState<Rating>(
     entry.rating === "GOED" || entry.rating === "REDELIJK" || entry.rating === "LASTIG"
@@ -43,7 +43,11 @@ function ReviewForm({ entry, onSaved }: { entry: EntryView; onSaved: () => void 
               aria-pressed={rating === value}
               className={`flex min-h-25 flex-col items-center justify-center gap-2 rounded-2xl border p-2 text-center text-xs font-semibold transition-colors sm:min-h-29 sm:text-sm ${
                 rating === value
-                  ? "border-[#2e7757] bg-[#e6f1e6] text-[#25583f] ring-1 ring-[#2e7757]"
+                  ? value === "GOED"
+                    ? "border-[#89bba0] bg-[#e6f2e8] text-[#215d3d] ring-1 ring-[#89bba0]"
+                    : value === "REDELIJK"
+                      ? "border-[#e2c38c] bg-[#fff3de] text-[#9b6825] ring-1 ring-[#e2c38c]"
+                      : "border-[#ebb0aa] bg-[#fff0ef] text-[#a73434] ring-1 ring-[#ebb0aa]"
                   : "border-[#dfe7df] bg-white text-[#4b6257] hover:bg-[#f5f8f3]"
               }`}>
               <Icon size={27} strokeWidth={1.8} aria-hidden="true"/>
@@ -130,7 +134,7 @@ export function ActionReviewSheet({ actionTitle, goalTitle, entries }: {
                   </select>
                 </div>
               )}
-              <ReviewForm key={selected.id} entry={selected} onSaved={onSaved}/>
+              <EntryReviewForm key={selected.id} entry={selected} onSaved={onSaved}/>
             </>
           ) : (
             <div className="space-y-3 rounded-2xl bg-[#f2f6ef] p-5">

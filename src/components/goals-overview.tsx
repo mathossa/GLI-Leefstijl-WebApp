@@ -1,9 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Archive, ArrowLeft, CalendarDays, Check, ChevronDown, ChevronRight, CircleDot, ClipboardList, History, Leaf, Pencil, Plus, Target, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Activity, Archive, ArrowLeft, CalendarDays, ChevronDown, ChevronRight, ClipboardList, Ellipsis, Frown, Footprints, Heart, History, Meh, Moon, Pencil, Plus, Smile, Target, Utensils, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ActionEntryFeedback, type EntryView } from "@/components/action-entry-feedback";
+import type { EntryView } from "@/components/action-entry-feedback";
+import { EntryReviewForm } from "@/components/action-review-sheet";
 import {
   archiveGoal, archiveHabitAction, createGoal, createHabitAction,
   saveWeekReflection, updateGoal, updateHabitAction,
@@ -44,11 +46,29 @@ type View =
   | { kind: "action"; goalId: string; actionId: string }
   | { kind: "edit-action"; goalId: string; actionId: string }
   | { kind: "week-note"; goalId: string; actionId: string }
-  | { kind: "experiences"; goalId: string; actionId: string };
+  | { kind: "experiences"; goalId: string; actionId: string }
+  | { kind: "edit-experience"; goalId: string; actionId: string; entryId: string };
 
 const inputClass = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#cfdecf] bg-white px-3.5 py-3 text-sm text-[#263e30]";
 const labelClass = "block text-sm font-semibold text-[#345343]";
 const labelForArea = (key: string) => GOAL_AREAS.find((item) => item.value === key)?.label ?? "Anders";
+const areaStyles = {
+  BEWEGING: { icon: Footprints, idle: "bg-[#e8f5e9] text-[#276a4d]", active: "border-[#81b796] bg-[#d9eedf] text-[#21583e]" },
+  VOEDING: { icon: Utensils, idle: "bg-[#fff3df] text-[#a66619]", active: "border-[#efbf7d] bg-[#ffedcd] text-[#885115]" },
+  SLAAP: { icon: Moon, idle: "bg-[#eaf0ff] text-[#426cae]", active: "border-[#a3b9e7] bg-[#e1eafb] text-[#305a9a]" },
+  ONTSPANNING: { icon: Heart, idle: "bg-[#f6eafa] text-[#875cad]", active: "border-[#c8a8dd] bg-[#efe0f7] text-[#754aa0]" },
+  SOCIAAL: { icon: Users, idle: "bg-[#fff0ef] text-[#af5e58]", active: "border-[#e9b2ad] bg-[#f9e3e1] text-[#91453e]" },
+  ANDERS: { icon: Ellipsis, idle: "bg-[#f0f2f1] text-[#4e6260]", active: "border-[#abbdb6] bg-[#e0e8e3] text-[#425a4e]" },
+} as const;
+const experienceStyle = {
+  GOED: { icon: Smile, text: "Ging goed", color: "bg-[#e8f5eb] text-[#24734e]" },
+  REDELIJK: { icon: Meh, text: "Redelijk", color: "bg-[#fff4df] text-[#ad7629]" },
+  LASTIG: { icon: Frown, text: "Lastig", color: "bg-[#fff0ee] text-[#b74443]" },
+} as const;
+const experienceTime = (date: string) => new Intl.DateTimeFormat("nl-NL", {
+  timeZone: "Europe/Amsterdam", weekday: "short", day: "numeric",
+  month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+}).format(new Date(date));
 const shortDate = (iso: string) => new Intl.DateTimeFormat("nl-NL", {
   day: "numeric", month: "short", timeZone: "UTC",
 }).format(new Date(iso + "T00:00:00Z"));
@@ -76,6 +96,7 @@ function Bar({ value }: { value: number }) {
 
 function GoalFields({ goal }: { goal?: GoalView }) {
   const prefix = goal?.id ?? "new";
+  const [selectedArea, setSelectedArea] = useState(goal?.area ?? "BEWEGING");
   return (
     <>
       <div>
@@ -88,12 +109,27 @@ function GoalFields({ goal }: { goal?: GoalView }) {
         <textarea id={`goal-motivation-${prefix}`} name="motivation" maxLength={1000} rows={3}
           className={inputClass} defaultValue={goal?.motivation ?? ""} placeholder="Waarom is dit doel belangrijk voor je?"/>
       </div>
-      <div>
-        <label htmlFor={`goal-area-${prefix}`} className={labelClass}>Leefstijlgebied</label>
-        <select id={`goal-area-${prefix}`} name="area" className={inputClass} defaultValue={goal?.area ?? "BEWEGING"}>
-          {GOAL_AREAS.map((area) => <option key={area.value} value={area.value}>{area.label}</option>)}
-        </select>
-      </div>
+      <fieldset>
+        <legend className={labelClass}>Leefstijlgebied</legend>
+        <input type="hidden" name="area" value={selectedArea}/>
+        <div className="mt-2 grid grid-cols-2 gap-2.5">
+          {GOAL_AREAS.map((area) => {
+            const style = areaStyles[area.value as keyof typeof areaStyles];
+            const Icon = style.icon;
+            const chosen = selectedArea === area.value;
+            return (
+              <button key={area.value} type="button" onClick={() => setSelectedArea(area.value)}
+                aria-pressed={chosen}
+                className={`flex min-h-14 min-w-0 items-center justify-center gap-2 rounded-xl border p-2 text-center text-xs font-semibold transition-colors sm:text-sm ${
+                  chosen ? style.active + " ring-1 ring-current/20" : "border-transparent " + style.idle + " hover:brightness-95"
+                }`}>
+                <Icon className="size-5 shrink-0" aria-hidden="true"/>
+                <span className="min-w-0 break-words">{area.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label htmlFor={`goal-start-${prefix}`} className={labelClass}>Startdatum <span className="block text-xs font-normal">(optioneel)</span></label>
@@ -114,6 +150,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
   message: string | null;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const router = useRouter();
   const [view, setView] = useState<View | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const active = goals.filter((goal) => goal.status === "ACTIVE");
@@ -135,6 +172,10 @@ export function GoalsOverview({ goals, currentWeek, message }: {
       return;
     }
     if (view.kind === "action") { open({ kind: "goal", goalId: view.goalId }); return; }
+    if (view.kind === "edit-experience") {
+      open({ kind: "experiences", goalId: view.goalId, actionId: view.actionId });
+      return;
+    }
     open({ kind: "action", goalId: view.goalId, actionId: view.actionId });
   }
 
@@ -143,6 +184,14 @@ export function GoalsOverview({ goals, currentWeek, message }: {
   const progress = action ? currentProgress(action, currentWeek) : null;
   const entries = action?.weeks.flatMap((week) => week.entries)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt)) ?? [];
+  const selectedEntry = view?.kind === "edit-experience" ?
+    entries.find((entry) => entry.id === view.entryId) : null;
+  const handleReviewSaved = useCallback(() => {
+    setView((old) => old?.kind === "edit-experience"
+      ? { kind: "experiences", goalId: old.goalId, actionId: old.actionId }
+      : old);
+    router.refresh();
+  }, [router]);
 
   let title = "Nieuw doel toevoegen";
   if (view?.kind === "goal") title = goal?.title ?? "Doel";
@@ -152,6 +201,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
   if (view?.kind === "edit-action") title = "Weekactie bewerken";
   if (view?.kind === "week-note") title = "Weekreflectie";
   if (view?.kind === "experiences") title = "Ervaringen";
+  if (view?.kind === "edit-experience") title = "Hoe ging het?";
   const canBack = view && !["goal", "new-goal"].includes(view.kind);
 
   return (
@@ -236,7 +286,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
 
           {view?.kind === "new-goal" && (
             <form action={createGoal} className="space-y-4">
-              <GoalFields/>
+              <GoalFields key="new"/>
               <Button type="submit" disabled={active.length >= MAX_ACTIVE_GOALS} className="h-12 w-full">Doel toevoegen</Button>
             </form>
           )}
@@ -244,7 +294,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
           {view?.kind === "edit-goal" && goal && (
             <form action={updateGoal} className="space-y-4">
               <input type="hidden" name="goalId" value={goal.id}/>
-              <GoalFields goal={goal}/>
+              <GoalFields key={goal.id} goal={goal}/>
               <Button type="submit" className="h-12 w-full">Wijzigingen opslaan</Button>
             </form>
           )}
@@ -380,11 +430,51 @@ export function GoalsOverview({ goals, currentWeek, message }: {
             </form>
           )}
 
-          {view?.kind === "experiences" && action && (
-            <div className="space-y-4">
-              <p className="text-sm text-[#5d7163]">{action.title}</p>
-              <ActionEntryFeedback entries={entries} label="Geregistreerde ervaringen"/>
-              <p className="text-xs text-[#6c7c6f]">Een uitvoering registreren doe je direct op Vandaag.</p>
+          {view?.kind === "experiences" && action && goal && (
+            <div className="space-y-3">
+              <p className="pb-2 text-sm text-[#5d7163]">{action.title}</p>
+              {entries.length === 0 ? (
+                <p className="rounded-2xl bg-[#f2f6f0] p-4 text-sm text-[#597160]">Nog geen individuele ervaringen opgeslagen.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {entries.map((entry) => {
+                    const rating = entry.rating && entry.rating in experienceStyle
+                      ? experienceStyle[entry.rating as keyof typeof experienceStyle] : null;
+                    const Icon = rating?.icon ?? Activity;
+                    return (
+                      <li key={entry.id}>
+                        <button type="button"
+                          onClick={() => open({ kind: "edit-experience", goalId: goal.id, actionId: action.id, entryId: entry.id })}
+                          aria-label={`Bekijk ervaring van ${experienceTime(entry.createdAt)}`}
+                          className="flex min-h-22 w-full items-center gap-3 rounded-2xl border border-[#e4e9e2] bg-white px-3.5 py-3.5 text-left transition-colors hover:border-[#a7cdb3]">
+                          <span className={`flex size-12 shrink-0 items-center justify-center rounded-full ${rating?.color ?? "bg-[#f0f3ef] text-[#597265]"}`}>
+                            <Icon size={24} aria-hidden="true"/>
+                          </span>
+                          <span className="min-w-0 flex-1 space-y-1">
+                            <span className="block text-sm font-medium text-[#2e4738]">{experienceTime(entry.createdAt)}</span>
+                            <span className="block text-sm text-[#5e7164]">
+                              {rating?.text ?? "Nog niet beoordeeld"}
+                              {entry.note ? " · " + entry.note : ""}
+                            </span>
+                          </span>
+                          <ChevronRight className="size-5 shrink-0 text-[#6a8370]" aria-hidden="true"/>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {view?.kind === "edit-experience" && action && selectedEntry && (
+            <div className="space-y-5">
+              <p className="text-sm text-[#586e60]">{action.title}</p>
+              <div className="flex items-center gap-2 rounded-xl border border-[#e1e8df] bg-[#fafbf8] px-4 py-3 text-sm text-[#315242]">
+                <CalendarDays className="size-4 shrink-0" aria-hidden="true"/>
+                {experienceTime(selectedEntry.createdAt)}
+              </div>
+              <EntryReviewForm key={selectedEntry.id} entry={selectedEntry} onSaved={handleReviewSaved}/>
             </div>
           )}
         </div>
