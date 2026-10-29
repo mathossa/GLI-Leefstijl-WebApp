@@ -64,3 +64,11 @@ Er zijn geen externe analyticsdiensten, medische aannames of nieuwe grafieklibra
 - Een bijeenkomst kan zonder getypte notitie worden aangemaakt als er een foto wordt bewaard. Foto's kunnen meteen bij het aanmaken of later vanuit de bijeenkomst worden toegevoegd/verwijderd.
 - **OCR nog niet geactiveerd**. Onderzochte opties: PaddleOCR (Apache-2.0, eerste kandidaat voor handschrift), TrOCR (Microsoft/Hugging Face, gespecialiseerde handschriftherkenning met modellicenties afzonderlijk te toetsen), Tesseract.js (Apache-2.0, vooral drukwerk; eigen FAQ raadt handschrift af). Aanbevolen later proces: optioneel lokaal OCR uitvoeren > herkende tekst controleren > gebruiker laat expliciet overnemen naar de notitie. Geen externe cloudupload van privéfoto's.
 - De CI test nu private fotolevering (zonder login 401, ander account 404), de complete eigen JSON-export en werkelijke PDF-response voor twee ingelogde gebruikers, plus alle eerdere veiligheidstests.
+
+## Ontwerp B: PDF en ISO-weken (goedgekeurd)
+
+- Deelbare PDF in de **frisse, speelse B-stijl**: rustige ivoor-achtergrond, mintkleurige header met weeknummer en donut, **één pastelkleurige kaart per actief doel**, alle weekacties en hun huidige aantallen/progressbars direct onder het doel. De kaarten worden in groepen van maximaal vier acties gesplitst wanneer een doel te groot is; er wordt geen actie afgekapt.
+- Een aparte sectie **Terugblik & reflectie** toont alleen daadwerkelijk geregistreerde weken (geen `Geen gegevens`-rijen), en daarna de echte weekreflecties en CooL-bijeenkomsten als gekleurde, dynamisch paginerende kaarten. Bij langere tekst worden vervolgkaarten gebruikt; originele privéfoto’s blijven bewust buiten de deelbare PDF.
+- Niet-relevante bijzinnen, `Over dit verslag` en lege reflectiesecties zijn verwijderd. De export bevat een compacte samenvatting, geen medische conclusies.
+- Dezelfde centrale `isoWeekLabel`-helper toont **`Week NN · ISO-jaar`** in Vandaag, Mijn doelen, Reflectie, Inzichten en de PDF. ISO-weekjaar volgt de donderdagregel, ook wanneer bijvoorbeeld 30 december al bij week 1 van het nieuwe jaar hoort.
+- CI controleert week 53, jaarwisselingen, zomer-/wintertijd en een synthetische PDF met drie actieve doelen; de echte PDF-response wordt geopend met `pdf-lib`.

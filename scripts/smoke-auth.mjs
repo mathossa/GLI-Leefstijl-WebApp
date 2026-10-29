@@ -6,6 +6,7 @@ import { mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
 import pg from "pg";
+import { PDFDocument } from "pdf-lib";
 
 const base = process.env.BETTER_AUTH_URL || "http://127.0.0.1:3000";
 const origin = new URL(base).origin;
@@ -74,6 +75,8 @@ try {
   const memberId = memberSession.user.id;
   for (const [id, userId, title] of [
     [randomUUID(), adminId, "CI-ADMIN-PRIVATE-GOAL"],
+    [randomUUID(), adminId, "CI-ADMIN-SLAAP-GOAL"],
+    [randomUUID(), adminId, "CI-ADMIN-VOEDING-GOAL"],
     [randomUUID(), memberId, "CI-MEMBER-PRIVATE-GOAL"],
   ]) {
     await connection.query(
@@ -129,7 +132,8 @@ assert.ok(adminExport.goals.some(g => g.title === "CI-ADMIN-PRIVATE-GOAL"));
 assert.ok(!adminExport.goals.some(g => g.title === "CI-MEMBER-PRIVATE-GOAL"));
 assert.ok(memberExport.goals.some(g => g.title === "CI-MEMBER-PRIVATE-GOAL"));
 assert.ok(!memberExport.goals.some(g => g.title === "CI-ADMIN-PRIVATE-GOAL"));
-assert.ok(adminExport.goals[0].actions[0].weeks[0].entries[0].note === "CI-PRIVATE-ENTRY-NOTE");
+assert.ok(adminExport.goals.find(g => g.title === "CI-ADMIN-PRIVATE-GOAL").actions[0].weeks[0].entries[0].note === "CI-PRIVATE-ENTRY-NOTE");
+assert.equal(adminExport.goals.filter(g => g.status === "ACTIVE").length, 3, "PDF fixture includes three active goals");
 assert.equal(adminExport.reflections[0].wentWell, "CI-PRIVATE-REFLECTION");
 assert.equal(adminExport.meetings[0].notes, "CI-PRIVATE-MEETING-NOTE");
 assert.equal(memberExport.reflections.length, 0);
@@ -158,8 +162,13 @@ for (const cookie of [adminCookie, memberCookie]) {
   assert.equal(pdfResult.status, 200, "Signed-in PDF export must succeed");
   assert.equal(pdfResult.headers.get("content-type"), "application/pdf");
   assert.match(pdfResult.headers.get("cache-control"), /no-store/);
-  const prefix = Buffer.from(await pdfResult.arrayBuffer()).subarray(0, 5).toString("ascii");
-  assert.equal(prefix, "%PDF-", "PDF must be a valid PDF document");
+  const pdfBytes = Buffer.from(await pdfResult.arrayBuffer());
+  assert.equal(pdfBytes.subarray(0, 5).toString("ascii"), "%PDF-", "PDF must be a valid PDF document");
+  const report = await PDFDocument.load(pdfBytes);
+  assert.ok(report.getPageCount() >= 1, "PDF must have pages");
+  if (cookie === adminCookie) {
+    assert.ok(report.getPageCount() >= 2, "Three-goal PDF report must paginate with reflections");
+  }
 }
 console.log("Protected CooL photos and branded PDF download verified.");
 

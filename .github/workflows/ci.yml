@@ -45,6 +45,8 @@ jobs:
         run: npm run db:deploy
       - name: Validate goal inputs, limits and Amsterdam week boundaries
         run: node --test tests/goals-domain.test.mjs
+      - name: Validate ISO week labels at New Year and DST
+        run: node --test tests/week-labels.test.mjs
       - name: Validate reflection inputs and Amsterdam calendar dates
         run: node --test tests/reflections-domain.test.mjs
       - name: Verify reflection database constraints

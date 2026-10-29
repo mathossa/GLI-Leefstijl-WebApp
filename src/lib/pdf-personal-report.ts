@@ -105,7 +105,8 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
     box(M,37,29,29,green,8);
     circle(M+14,51,6,white);stroke(M+11,57,M+19,45,green,2.5);
     text("MIJN LEEFSTIJL",M+40,57,10.7,bold,green);
-    text(dateText(new Date()),W-M,78,9,regular,grey); // aligned below by footer, far right
+    const reportDate=dateText(new Date());
+    text(reportDate,W-M-regular.widthOfTextAtSize(safe(reportDate),9),78,9,regular,grey);
     y=105;
   };
   const next=()=>pageFrame();
@@ -174,13 +175,13 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       const badge=goal.area.toUpperCase();
       const badgeWidth=Math.max(77,Math.min(112,bold.widthOfTextAtSize(safe(badge),8)+22));
       const nameLines=lines(goal.title,bold,15,CW-62-badgeWidth);
-      const header=Math.max(31,nameLines.length*18);
+      const header=Math.max(24,nameLines.length*18);
       const rowInfo=group.map(a=>{
         const titleLines=lines(a.title,regular,10,CW-145);
-        return {action:a,titleLines,height:titleLines.length*13+14};
+        return {action:a,titleLines,height:titleLines.length*12+11};
       });
       const rowsHeight=rowInfo.reduce((n,r)=>n+r.height,0);
-      const height=19+header+12+rowsHeight+37;
+      const height=13+header+7+rowsHeight+30;
       ensure(height+12);
       const top=y;
       box(M,top,CW,height,palette.fill,18);
@@ -189,21 +190,21 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       nameLines.forEach((line,i)=>text(line,M+45,top+30+i*18,15,bold,dark));
       labelPill(badge,W-M-badgeWidth-16,top+16,palette.ink,badgeWidth);
       if(ci>0)text("vervolg",M+45,top+30+header,8.5,regular,grey);
-      let rowTop=top+19+header+10;
+      let rowTop=top+13+header+7;
       for(const item of rowInfo){
         const p=progressFor(item.action);
-        item.titleLines.forEach((line,i)=>{if(line)text(line,M+19,rowTop+9+i*13,10,regular,dark);});
+        item.titleLines.forEach((line,i)=>{if(line)text(line,M+19,rowTop+7+i*12,10,regular,dark);});
         const score=`${p.done} / ${p.target}`;
-        text(score,W-M-20-bold.widthOfTextAtSize(score,10),rowTop+9,10,bold,palette.ink);
-        bar(M+19,rowTop+item.titleLines.length*13+5,CW-38,
+        text(score,W-M-20-bold.widthOfTextAtSize(score,10),rowTop+7,10,bold,palette.ink);
+        bar(M+19,rowTop+item.titleLines.length*12+1,CW-38,
           p.target?100*p.done/p.target:0,palette.ink,4.4);
         rowTop+=item.height;
       }
-      stroke(M+19,top+height-31,W-M-19,top+height-31,line,.7);
+      stroke(M+19,top+height-25,W-M-19,top+height-25,line,.7);
       const gp=actions.reduce((acc,a)=>({done:acc.done+progressFor(a).done,target:acc.target+progressFor(a).target}),{done:0,target:0});
-      text(isoWeekLabel(thisWeek),M+19,top+height-13,8.5,regular,grey);
+      text(isoWeekLabel(thisWeek),M+19,top+height-10,8.5,regular,grey);
       const summary=gp.target?`${gp.done} / ${gp.target}  (${Math.round(100*gp.done/gp.target)}%)`:"Nog geen weekacties";
-      text(summary,W-M-20-bold.widthOfTextAtSize(summary,9),top+height-13,9,bold,palette.ink);
+      text(summary,W-M-20-bold.widthOfTextAtSize(summary,9),top+height-10,9,bold,palette.ink);
       y+=height+11;
     }
   }
@@ -259,10 +260,18 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       segments.push({value:field.caption.toUpperCase(),font:bold,size:9,ink:accent,leading:19});
       segments.push(...createTextRows(field.value));
     }
-    if(!segments.length)return;
+    if(!segments.length) {
+      // Meeting with private photos but no transcribed notes remains visible.
+      ensure(69);
+      box(M,y,CW,62,fill,17);
+      textLines(title,M+17,y+30,CW-34,12,bold,dark,17);
+      y+=74;
+      return;
+    }
     let cursor=0,part=0;
     while(cursor<segments.length){
-      const titleLines=lines(title,bold,12,CW-130);
+      const suffix=part?" (vervolg)":"";
+      const titleLines=lines(title+suffix,bold,12,CW-130);
       const header=42+titleLines.length*17;
       if(y>H-190)next();
       const space=H-73-y;
@@ -276,8 +285,7 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       const height=header+sliceHeight+15;
       ensure(height+11);
       box(M,y,CW,height,fill,18);
-      const suffix=part?" (vervolg)":"";
-      const headingLines=lines(title+suffix,bold,12,CW-130);
+      const headingLines=titleLines;
       headingLines.forEach((l,i)=>text(l,M+18,y+27+i*17,12,bold,dark));
       let top=y+header;
       for(const row of segments.slice(cursor,cursor+amount)){
