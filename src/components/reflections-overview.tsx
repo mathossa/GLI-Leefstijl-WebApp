@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowLeft, BookHeart, CalendarDays, ChevronRight, ClipboardPenLine, Plus, Trash2, X } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, BookHeart, CalendarDays, ChevronLeft, ChevronRight, ClipboardPenLine, Plus, ImagePlus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { saveReflection, deleteReflection, createMeeting, updateMeeting, deleteMeeting } from "@/app/dashboard/reflectie/actions";
+import { saveReflection, deleteReflection, createMeeting, updateMeeting, deleteMeeting, uploadMeetingPhoto, deleteMeetingPhoto } from "@/app/dashboard/reflectie/actions";
 
 export type ReflectionView = {
   weekStart: string;
@@ -17,10 +18,10 @@ export type MeetingView = {
   title: string;
   notes: string;
   actionPoints: string | null;
+  photos: { id: string; fileName: string }[];
 };
 type Mode =
   | { kind: "reflection"; weekStart: string }
-  | { kind: "choose-week" }
   | { kind: "meeting-new" }
   | { kind: "meeting"; id: string }
   | { kind: "meeting-edit"; id: string };
@@ -39,15 +40,15 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
   currentWeek: string; reflections: ReflectionView[]; meetings: MeetingView[]; message: string | null;
 }) {
   const modal = useRef<HTMLDialogElement>(null);
+  const weekStrip = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<Mode | null>(null);
   const thisWeek = reflections.find((item) => item.weekStart === currentWeek);
-  const history = reflections.filter((item) => item.weekStart !== currentWeek);
   const recorded = new Set(reflections.map((item) => item.weekStart));
-  const missingWeeks = Array.from({ length: 11 }, (_, i) => {
+  const weeks = Array.from({ length: 52 }, (_, i) => {
     const d = new Date(currentWeek + "T00:00:00Z");
-    d.setUTCDate(d.getUTCDate() - (i + 1) * 7);
+    d.setUTCDate(d.getUTCDate() - i * 7);
     return d.toISOString().slice(0, 10);
-  }).filter((date) => !recorded.has(date));
+  });
 
   function open(next: Mode) {
     setMode(next);
@@ -60,7 +61,6 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
   }
   function back() {
     if (mode?.kind === "meeting-edit") open({ kind: "meeting", id: mode.id });
-    else if (mode?.kind === "reflection" && mode.weekStart !== currentWeek && !recorded.has(mode.weekStart)) open({kind:"choose-week"});
     else close();
   }
   const entry = mode?.kind === "reflection" ?
@@ -68,10 +68,9 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
   const meeting = mode && "id" in mode ?
     meetings.find((item) => item.id === mode.id) : null;
   const title = mode?.kind === "reflection" ? "Weekreflectie" :
-    mode?.kind === "choose-week" ? "Eerdere week" :
     mode?.kind === "meeting-new" ? "Nieuwe bijeenkomst" :
     mode?.kind === "meeting-edit" ? "Bijeenkomst bewerken" : "Bijeenkomst";
-  const showBack = mode?.kind === "meeting-edit" || (mode?.kind === "reflection" && !entry && mode.weekStart !== currentWeek);
+  const showBack = mode?.kind === "meeting-edit";
 
   return (
     <div className="mx-auto min-w-0 max-w-4xl space-y-6">
@@ -98,25 +97,35 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
         </button>
       </section>
 
-      <section className="space-y-3" aria-labelledby="reflection-history">
+      <section aria-labelledby="week-selection" className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="reflection-history" className="text-lg font-bold text-[#274836]">Eerdere reflecties</h2>
-          {missingWeeks.length > 0 && (
-            <button type="button" onClick={() => open({kind:"choose-week"})} className="text-sm font-semibold text-[#2c7050]">
-              + Vorige week
+          <h2 id="week-selection" className="text-lg font-bold text-[#274836]">Andere weken</h2>
+          <div className="flex items-center gap-1">
+            <button type="button" aria-label="Verder terug in de weken"
+              onClick={() => weekStrip.current?.scrollBy({ left: 264, behavior: "smooth" })}
+              className="flex size-10 items-center justify-center rounded-xl bg-[#eaf2e8] text-[#2f6246]">
+              <ChevronRight size={19} aria-hidden="true"/>
             </button>
-          )}
+            <button type="button" aria-label="Terug naar recente weken"
+              onClick={() => weekStrip.current?.scrollBy({ left: -264, behavior: "smooth" })}
+              className="flex size-10 items-center justify-center rounded-xl bg-[#eaf2e8] text-[#2f6246]">
+              <ChevronLeft size={19} aria-hidden="true"/>
+            </button>
+          </div>
         </div>
-        {history.length === 0 && <p className="text-sm text-[#657769]">Nog geen eerdere reflecties.</p>}
-        <div className="space-y-2.5">
-          {history.map((item) => (
-            <button key={item.weekStart} type="button" onClick={() => open({kind:"reflection",weekStart:item.weekStart})}
-              className="flex w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#e4eae1] bg-white px-4 py-3.5 text-left">
-              <span className="min-w-0">
-                <span className="block font-semibold text-[#2b4a37]">Week van {formattedDate(item.weekStart)}</span>
-                <span className="mt-1 block truncate text-xs text-[#68796c]">{summary(item.wentWell || item.difficult || item.nextStep)}</span>
+        <div ref={weekStrip} className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-2"
+          role="group" aria-label="Kies een eerdere week">
+          {weeks.slice(1).map((week) => (
+            <button type="button" key={week} onClick={() => open({ kind: "reflection", weekStart: week })}
+              className="flex min-h-20 min-w-28 shrink-0 snap-start flex-col justify-between gap-2 rounded-2xl border border-[#dce8db] bg-white px-3 py-3 text-left transition-colors hover:bg-[#eaf4e9] focus-visible:outline-[#2e7651]"
+              aria-label={`Reflectie van week ${formattedDate(week)}`}>
+              <span className="text-xs font-semibold text-[#345741]">{new Intl.DateTimeFormat("nl-NL", {
+                day: "numeric", month: "short", timeZone: "UTC",
+              }).format(new Date(week + "T00:00:00Z"))}</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-[#667a6c]">
+                <span className={`size-2 rounded-full ${recorded.has(week) ? "bg-[#3c9265]" : "bg-[#d2ded3]"}`} aria-hidden="true"/>
+                {recorded.has(week) ? "Ingevuld" : "Leeg"}
               </span>
-              <ChevronRight size={18} className="shrink-0" aria-hidden="true"/>
             </button>
           ))}
         </div>
@@ -160,17 +169,6 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
             <button type="button" onClick={close} aria-label="Sluiten" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#526f5b]"><X size={21}/></button>
           </header>
 
-          {mode?.kind === "choose-week" && (
-            <div className="space-y-2">
-              {missingWeeks.map((week) => (
-                <button key={week} type="button" onClick={() => open({kind:"reflection",weekStart:week})}
-                  className="flex min-h-12 w-full items-center justify-between rounded-xl border border-[#e2e9df] bg-white px-4 text-sm font-medium text-[#365a43]">
-                  Week van {formattedDate(week)} <ChevronRight size={17} aria-hidden="true"/>
-                </button>
-              ))}
-            </div>
-          )}
-
           {mode?.kind === "reflection" && (
             <form key={mode.weekStart} action={saveReflection} className="space-y-4">
               <p className="text-sm text-[#5e7866]">Week van {formattedDate(mode.weekStart)}</p>
@@ -208,7 +206,45 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
           {mode?.kind === "meeting" && meeting && (
             <div className="space-y-5">
               <p className="text-sm text-[#5f7665]">{formattedDate(meeting.meetingDate)}</p>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#304b3a]">{meeting.notes}</p>
+              {meeting.notes && <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#304b3a]">{meeting.notes}</p>}
+              <section className="space-y-3">
+                <h3 className="text-sm font-bold text-[#2b523a]">Foto's van je aantekeningen ({meeting.photos.length}/5)</h3>
+                {meeting.photos.length > 0 && (
+                  <ul className="grid grid-cols-2 gap-3">
+                    {meeting.photos.map((photo) => (
+                      <li key={photo.id} className="overflow-hidden rounded-2xl border border-[#dfe8df] bg-white">
+                        <a href={`/api/meeting-photos/${photo.id}`} target="_blank" rel="noopener noreferrer"
+                          aria-label={`Bekijk ${photo.fileName}`} className="block">
+                          <Image src={`/api/meeting-photos/${photo.id}`} alt={photo.fileName}
+                            width={256} height={256} unoptimized
+                            className="h-32 w-full object-contain bg-[#f5f7f3]"/>
+                        </a>
+                        <form action={deleteMeetingPhoto} onSubmit={(event) => {
+                          if (!window.confirm("Deze foto verwijderen?")) event.preventDefault();
+                        }} className="p-2">
+                          <input type="hidden" name="id" value={photo.id}/>
+                          <button type="submit" className="min-h-10 w-full rounded-xl border border-[#e7d8d4] text-xs font-semibold text-[#a53f3e]">
+                            <Trash2 size={14} className="mr-1 inline" aria-hidden="true"/> Verwijderen
+                          </button>
+                        </form>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {meeting.photos.length < 5 && (
+                  <form action={uploadMeetingPhoto} className="space-y-2 rounded-2xl bg-[#edf5e9] p-4">
+                    <input type="hidden" name="id" value={meeting.id}/>
+                    <label htmlFor="meeting-new-photo" className="flex items-center gap-2 text-sm font-semibold text-[#315e42]">
+                      <ImagePlus size={19} aria-hidden="true"/> Foto toevoegen
+                    </label>
+                    <input id="meeting-new-photo" type="file" name="photo" required
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      className="block w-full min-w-0 text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-[#305a42]"/>
+                    <p className="text-xs text-[#5c7464]">Maximaal 8 MB per foto. Alle foto's zijn privé.</p>
+                    <Button type="submit" size="sm" className="w-full">Foto bewaren</Button>
+                  </form>
+                )}
+              </section>
               {meeting.actionPoints && <div className="rounded-xl bg-[#eaf2e6] p-4">
                 <h3 className="mb-1 text-sm font-semibold">Actiepunten</h3>
                 <p className="whitespace-pre-wrap text-sm text-[#43634c]">{meeting.actionPoints}</p>
@@ -262,14 +298,21 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
         </div>
       </div>
       <div>
-        <label htmlFor={`meeting-notes-${prefix}`} className={label}>Wat neem je mee?</label>
-        <textarea id={`meeting-notes-${prefix}`} name="notes" required rows={4} maxLength={4000} className={field}
+        <label htmlFor={`meeting-notes-${prefix}`} className={label}>Wat neem je mee? <span className="font-normal text-[#657a6a]">(optioneel)</span></label>
+        <textarea id={`meeting-notes-${prefix}`} name="notes" rows={4} maxLength={4000} className={field}
           defaultValue={meeting?.notes ?? ""}/>
       </div>
       <div>
         <label htmlFor={`meeting-actions-${prefix}`} className={label}>Actiepunten <span className="font-normal text-[#687d6e]">(optioneel)</span></label>
         <textarea id={`meeting-actions-${prefix}`} name="actionPoints" rows={3} maxLength={2000} className={field}
           defaultValue={meeting?.actionPoints ?? ""}/>
+      <div>
+        <label htmlFor={`meeting-photo-${prefix}`} className={label}>Foto van je schrift of papier <span className="font-normal text-[#657a6a]">(optioneel)</span></label>
+        <input id={`meeting-photo-${prefix}`} type="file" name="photo"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          className="mt-2 block w-full min-w-0 text-sm file:mr-2 file:rounded-xl file:border-0 file:bg-[#edf4ea] file:px-3 file:py-2 file:text-[#28583d]"/>
+        <p className="mt-1 text-xs text-[#647669]">Geen tekst overtypen nodig. Maximaal 8 MB per foto.</p>
+      </div>
       </div>
     </>
   );

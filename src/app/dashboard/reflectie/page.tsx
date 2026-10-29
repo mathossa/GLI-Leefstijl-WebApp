@@ -19,7 +19,8 @@ export default async function ReflectionPage({
     }),
     prisma.meetingNote.findMany({
       where: { userId: user.id }, orderBy: [{ meetingDate: "desc" }, { createdAt: "desc" }], take: 100,
-      select: { id: true, meetingDate: true, title: true, notes: true, actionPoints: true },
+      select: { id: true, meetingDate: true, title: true, notes: true, actionPoints: true,
+        photos: { where: { userId: user.id }, orderBy: { createdAt: "asc" }, select: { id: true, fileName: true } } },
     }),
   ]);
   const data: ReflectionView[] = reflections.map((item) => ({
@@ -31,6 +32,7 @@ export default async function ReflectionPage({
   const appointments: MeetingView[] = meetings.map((item) => ({
     id: item.id, meetingDate: dateOnly(item.meetingDate),
     title: item.title, notes: item.notes, actionPoints: item.actionPoints,
+    photos: item.photos.map((photo) => ({ id: photo.id, fileName: photo.fileName })),
   }));
   return <ReflectionsOverview currentWeek={dateOnly(week)} reflections={data}
     meetings={appointments} message={(await searchParams).melding ?? null}/>;
