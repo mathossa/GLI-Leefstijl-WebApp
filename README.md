@@ -4,7 +4,7 @@
 
 ## Status
 
-Mijn Leefstijl bevat een mobile-first dashboard, beveiligde login met Better Auth, doelen en eenklikregistratie (#1–#4). **Issue #5 is in voorbereiding voor review in PR #14**: wekelijkse reflecties, CooL-bijeenkomstnotities, echte week-/maandinzichten en een privé JSON-export. Alle persoonlijke gegevens worden opgeslagen in PostgreSQL via Prisma. Dit is nog geen productieversie; SMTP, VPS/Portainer en verdere privacy-/securityhardening volgen in #6–#8.
+Mijn Leefstijl bevat een mobile-first dashboard, beveiligde login met Better Auth, doelen en eenklikregistratie (#1–#4). **Issue #5 is in voorbereiding voor review in PR #14**: wekelijkse reflecties, CooL-bijeenkomstnotities, echte week-/maandinzichten en een privé JSON-export, een deelbaar PDF-overzicht en privéfoto's bij CooL-bijeenkomsten. Alle persoonlijke gegevens worden opgeslagen in PostgreSQL via Prisma. Dit is nog geen productieversie; SMTP, VPS/Portainer en verdere privacy-/securityhardening volgen in #6–#8.
 
 ## Lokaal op Linux / WSL
 
@@ -29,6 +29,13 @@ Het Better Auth CLI-commando vraagt interactief om een wachtwoord. Vermijd `--pa
 Voor een andere poort: pas eerst `BETTER_AUTH_URL` in `.env` aan naar de exacte URL, en start `npm run dev -- -p 3001`. Gebruik dezelfde hostnaam (localhost of 127.0.0.1) consistent.
 
 **Belangrijk:** de Compose-database is alleen voor lokale ontwikkeling, luistert uitsluitend op loopback (`127.0.0.1`) en is geen productieopzet. VPS/Portainer deployment volgt in #7.
+
+### Privéfoto's en exports (#5)
+
+- Bij **Reflectie → CooL-bijeenkomsten** kun je bij een bijeenkomst een foto van je papieren notities uploaden, zonder die eerst over te typen. Uploads (maximaal 5 per bijeenkomst, elk 8 MB) worden via `sharp` opnieuw gecodeerd naar WebP, zonder EXIF/GPS, en staan uitsluitend in de private map `.private-uploads/` of het ingestelde `PRIVATE_UPLOAD_DIR`.
+- Bij **Inzichten** kun je een deelbare, vormgegeven **PDF** of een volledige machineleesbare **JSON** downloaden. De PDF bevat recente samenvattingen en bewust geen privéfoto's; JSON bevat alle historie inclusief fotometadata, maar geen afbeeldingsbestanden.
+- **Voor de VPS is een persistent privévolume verplicht.** Database- en bestandsbackups zijn beide nodig, omdat PostgreSQL alleen de fotometadata bevat. Zonder zo'n volume gaan geüploade foto's bij containervervanging verloren. Zie `docs/REFLECTIONS.md`.
+- OCR van handschrift staat nog niet aan. Onderzoek naar geschikte OSS-modellen is gedocumenteerd in `docs/REUSE_AND_LICENSES.md`.
 
 ## Controle
 
