@@ -19,3 +19,9 @@ Additieve migratie: 20261029005000_admin_smtp_settings. Deze laat alle bestaande
 Geautomatiseerd: node --experimental-strip-types --test tests/admin-smtp.test.mjs; daarnaast lint, typecheck, build en bestaande auth-smoke-tests via CI. Voor handmatige review: /admin openen als admin en lid, relay uit/aan, poort 25 afwijzen, optioneel wachtwoord bewaren, eigen testmail, cooldown, foutieve TLS en geen secrets in network responses.
 
 REUSE FIRST: Better Auth Admin-plugin (MIT), Nodemailer 10.2.1 (MIT-0; https://nodemailer.com/license), bestaande shadcn/ui (MIT), Next.js Server Actions en Node.js native crypto. Geen eigen SMTP-protocol of gebruikerssessies geschreven.
+
+## Gerichte, privacyveilige SMTP-diagnostiek
+
+Bij een mislukte testmail toont het adminpaneel nu een *veilige categorie* (ontbrekende relayconfig, niet-ontsleutelbare credentials, DNS, verbinding, SMTP-auth, TLS-certificaat of geweigerd bericht). De serverlog toont uitsluitend de geallowliste foutcode, categorie en optionele numerieke SMTP-status, **nooit het ruwe Nodemailer-errorobject, SMTP-response, host, adressen of wachtwoorden**. De vijfminutencooldown geldt ook na een mislukte verbinding.
+
+Voordat je de test opnieuw uitvoert: bevestig dat `SMTP_ENCRYPTION_KEY` bestaat in de draaiende Node-server. Als de sleutel ná het opslaan van een SMTP-wachtwoord is vervangen, moet je de oorspronkelijke sleutel herstellen of het SMTP-wachtwoord opnieuw opslaan. Wijzig de sleutel niet zomaar wanneer bestaande credentials nog nodig zijn.

@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/session";
 import { encryptSmtpPassword } from "@/lib/smtp-crypto";
 import { parseMailInput } from "@/lib/smtp-validation";
 import { sendConfiguredTestMail } from "@/lib/smtp";
+import { smtpErrorDetails } from "@/lib/smtp-diagnostics";
 
 export type SmtpActionState = { status: "idle" | "success" | "error"; message: string };
 
@@ -62,8 +63,14 @@ export async function sendSmtpTest(_previous: SmtpActionState, _form: FormData):
     await sendConfiguredTestMail(session.user.email);
     await prisma.adminAudit.create({ data: { actorId: session.user.id, action: "smtp.test.sent" } });
     return { status: "success", message: "Testbericht verzonden naar je eigen beheeraccount." };
-  } catch {
+  } catch (error) {
+    const diagnostic = smtpErrorDetails(error);
+    // Never log raw SMTP errors: Nodemailer can include addresses, relay text
+    // or parts of authentication details in its error.message/response.
+    console.warn("[smtp-test] failure", {
+      kind: diagnostic.kind, code: diagnostic.code, responseCode: diagnostic.responseCode,
+    });
     await prisma.adminAudit.create({ data: { actorId: session.user.id, action: "smtp.test.failed" } });
-    return { status: "error", message: "SMTP-test mislukt. Controleer de relayverbinding en de ingestelde gegevens." };
+    return { status: "error", message: diagnostic.publicMessage };
   }
 }
