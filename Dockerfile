@@ -33,7 +33,8 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
-RUN mkdir -p /app/.next && chown -R node:node /app/.next
+ENV PRIVATE_UPLOAD_DIR=/app/private-uploads
+RUN mkdir -p /app/.next /app/private-uploads && chown -R node:node /app/.next /app/private-uploads
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
