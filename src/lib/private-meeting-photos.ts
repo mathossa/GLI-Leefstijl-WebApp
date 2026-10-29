@@ -94,9 +94,3 @@ export async function storeMeetingPhoto(
     throw error;
   }
 }
-
-/** Called after Better Auth finishes deleting an account, not before. */
-export async function deleteAllUserPhotoFiles(userId: string) {
-  const { rm } = await import("node:fs/promises");
-  await rm(userFolder(userId), { recursive: true, force: true });
-}

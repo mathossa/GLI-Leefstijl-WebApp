@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin } from "better-auth/plugins";
 import { prisma } from "./prisma";
-import { deleteAllUserPhotoFiles } from "./private-meeting-photos";
+import { deleteAllUserPhotoFiles } from "./user-photo-cleanup";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
