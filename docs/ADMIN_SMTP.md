@@ -33,3 +33,7 @@ Het gebruikersoverzicht heeft nu een eigen mobiele `Naam wijzigen`-sheet en een 
 Verwijderen vereist het **exact intypen van het e-mailadres** en een nieuwe server-side admin- en eigenaarcontrole. Een admin kan zichzelf niet verwijderen; voor andere beheeraccounts moeten eerst de beheerrechten worden ingetrokken. De gewone Better Auth `admin.removeUser` verzorgt het daadwerkelijke hard delete, met cascades van accounts, sessies, doelen, individuele registraties, reflecties, bijeenkomstnotities en bijbehorende foto-metadata. Een server-side Better Auth database-deletehook blokkeert verwijdering van huidige beheerders via alle API-paden, en ruimt na succesvolle verwijdering de private fotomap van het account op. Het auditlog registreert de actie zonder persoons- of gezondheidsgegevens.
 
 **Let op:** verwijderingen zijn permanent. Herstel van per ongeluk verwijderde gegevens kan alleen via eigen database- en bestandsbackups. De bestaande admin-/gebruikersaanmaak- en SMTP-functies blijven intact.
+
+## Bugfix na mobiele review: normale namen kunnen worden opgeslagen
+
+De eerste client-side validatie in de Naam wijzigen-sheet had een dubbel ge-escapete Unicode-regex. Die keurde ook normale letters af, waaronder letters in 'Mathijs'. De validatie gebruikt nu een centrale, getest helperfunctie zonder regex-escape-ambiguïteit. De 120-tekengrens blijft gelden; lege namen en controlekarakters worden afgewezen. Handmatige controle: wijzig zowel de eigen weergavenaam als die van een testgebruiker, sla op en controleer dat het overzicht de nieuwe naam toont.

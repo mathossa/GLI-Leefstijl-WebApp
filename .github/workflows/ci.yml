@@ -53,6 +53,8 @@ jobs:
         run: node scripts/smoke-reflections-db.mjs
       - name: Verify goal ownership and DB constraints
         run: node scripts/smoke-goals-db.mjs
+      - name: Validate administrator display name input
+        run: node --test tests/admin-user-validation.test.mjs
       - name: SMTP encryption and relay input safety tests
         run: node --experimental-strip-types --test tests/admin-smtp.test.mjs
       - name: Verify SMTP DB constraints and test cooldown

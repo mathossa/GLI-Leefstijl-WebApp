@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X } from "lucide-react";
 import { deleteManagedUser } from "@/app/admin/actions";
+import { normalizeDisplayName } from "@/lib/admin-user-validation.mjs";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 type AdminUser = { id: string; name: string; email: string; role?: string | null; banned?: boolean | null };
@@ -64,8 +65,8 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
   async function renameUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected || busy) return;
-    const value = newName.trim();
-    if (!value || value.length > 120 || /[\\u0000-\\u001f\\u007f]/.test(value)) {
+    const value = normalizeDisplayName(newName);
+    if (value === null) {
       setError("Vul een geldige naam van maximaal 120 tekens in."); return;
     }
     setBusy(true); setError(""); setNotice("");
@@ -195,7 +196,7 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
               <label className="block space-y-2 text-sm font-semibold">
                 Naam
                 <input autoFocus required minLength={1} maxLength={120} className={field}
-                  value={newName} onChange={event => setNewName(event.target.value)}/>
+                  value={newName} onChange={event => { setNewName(event.target.value); setError(""); }}/>
               </label>
               <Button type="submit" disabled={busy || !newName.trim()} className="h-12 w-full">
                 {busy ? "Opslaan…" : "Naam opslaan"}
