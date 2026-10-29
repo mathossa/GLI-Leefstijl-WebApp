@@ -70,11 +70,6 @@ export async function createPersonalPdf(data: PersonalData, name: string): Promi
     y = HEIGHT - 89;
   }
   function need(h: number) { if (y - h < 65) newPage(); }
-  function lineText(value: string, size = 10, font = regular, color = textColor, x=M) {
-    need(size + 7);
-    page.drawText(safe(value), { x, y, size, font, color });
-    y -= size + 8;
-  }
   function paragraph(value: string, opts: {size?:number; font?:PDFFont; color?:typeof textColor; indent?:number} = {}) {
     if (!value?.trim()) return;
     const size = opts.size ?? 10;

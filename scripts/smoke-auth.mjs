@@ -1,7 +1,10 @@
 // Small HTTP-level smoke suite for the Better Auth API and Next.js access checks.
 // Invoked only in CI against an isolated disposable PostgreSQL database.
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
+import { mkdir, writeFile, rm } from "node:fs/promises";
+import { join } from "node:path";
+import sharp from "sharp";
 import pg from "pg";
 
 const base = process.env.BETTER_AUTH_URL || "http://127.0.0.1:3000";
@@ -64,6 +67,7 @@ const memberSession = await (await get("/api/auth/get-session", memberCookie)).j
 assert.ok(adminSession?.user?.id && memberSession?.user?.id);
 
 const connection = new pg.Client({ connectionString: process.env.DATABASE_URL });
+let privatePhotoId = "", privatePhotoFolder = "";
 await connection.connect();
 try {
   const adminId = adminSession.user.id;
@@ -96,10 +100,21 @@ try {
     'INSERT INTO "weekly_reflection" ("id","userId","weekStart","wentWell","updatedAt") VALUES ($1,$2,$3,$4,NOW())',
     [randomUUID(), adminId, "2026-10-26", "CI-PRIVATE-REFLECTION"],
   );
+  const meetingId = randomUUID();
   await connection.query(
     'INSERT INTO "meeting_note" ("id","userId","meetingDate","title","notes","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
-    [randomUUID(), adminId, "2026-10-26", "CI meeting", "CI-PRIVATE-MEETING-NOTE"],
+    [meetingId, adminId, "2026-10-26", "CI meeting", "CI-PRIVATE-MEETING-NOTE"],
   );
+  privatePhotoId = randomUUID();
+  await connection.query(
+    'INSERT INTO "meeting_photo" ("id","userId","meetingId","fileName") VALUES ($1,$2,$3,$4)',
+    [privatePhotoId, adminId, meetingId, "Fictieve-scannotitie.png"],
+  );
+  const hash = createHash("sha256").update(adminId).digest("hex");
+  privatePhotoFolder = join(process.cwd(), ".private-uploads", hash);
+  await mkdir(privatePhotoFolder, { recursive: true, mode: 0o700 });
+  const fake = await sharp({ create: { width: 12, height: 12, channels: 3, background: "#e2eee1" } }).webp().toBuffer();
+  await writeFile(join(privatePhotoFolder, privatePhotoId + ".webp"), fake, { mode: 0o600 });
 } finally {
   await connection.end();
 }
@@ -126,6 +141,27 @@ for (const report of [adminExport, memberExport]) {
   }
 }
 console.log("Private JSON export verified: 401 for anonymous, owner isolation, entries, reflections, meetings.");
+
+// The browser cannot fetch any other user's private attachment.
+assert.equal((await get("/api/meeting-photos/" + privatePhotoId)).status, 401);
+assert.equal((await get("/api/meeting-photos/" + privatePhotoId, memberCookie)).status, 404);
+const ownerPhoto = await get("/api/meeting-photos/" + privatePhotoId, adminCookie);
+assert.equal(ownerPhoto.status, 200);
+assert.equal(ownerPhoto.headers.get("content-type"), "image/webp");
+assert.match(ownerPhoto.headers.get("cache-control"), /no-store/);
+assert.equal(adminExport.meetings[0].photos[0].fileName, "Fictieve-scannotitie.png");
+await rm(join(privatePhotoFolder, privatePhotoId + ".webp"), { force: true });
+
+assert.equal((await get("/api/export/pdf")).status, 401, "PDF without login must return 401");
+for (const cookie of [adminCookie, memberCookie]) {
+  const pdfResult = await get("/api/export/pdf", cookie);
+  assert.equal(pdfResult.status, 200, "Signed-in PDF export must succeed");
+  assert.equal(pdfResult.headers.get("content-type"), "application/pdf");
+  assert.match(pdfResult.headers.get("cache-control"), /no-store/);
+  const prefix = Buffer.from(await pdfResult.arrayBuffer()).subarray(0, 5).toString("ascii");
+  assert.equal(prefix, "%PDF-", "PDF must be a valid PDF document");
+}
+console.log("Protected CooL photos and branded PDF download verified.");
 
 const logout = await post("/api/auth/sign-out", {}, adminCookie);
 assert.ok(logout.ok, "Logout must work");
