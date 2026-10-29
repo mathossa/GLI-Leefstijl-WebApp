@@ -24,6 +24,8 @@ model User {
   banExpires    DateTime?
   sessions      Session[]
   accounts      Account[]
+  goals         Goal[]
+  habitActions  HabitAction[]
 
   @@unique([email])
   @@map("user")
@@ -76,4 +78,91 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum GoalArea {
+  BEWEGING
+  VOEDING
+  SLAAP
+  ONTSPANNING
+  SOCIAAL
+  ANDERS
+}
+
+enum GoalStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Goal {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String       @db.VarChar(120)
+  motivation String       @db.VarChar(1000)
+  area       GoalArea
+  status     GoalStatus   @default(ACTIVE)
+  startDate  DateTime?    @db.Date
+  endDate    DateTime?    @db.Date
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  actions    HabitAction[]
+
+  // Composite ownership is enforced by the DB for child actions.
+  @@unique([id, userId])
+  @@index([userId, status])
+  @@map("goal")
+}
+
+model HabitAction {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId        String
+  goal          Goal                @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  title         String              @db.VarChar(120)
+  targetPerWeek Int
+  archivedAt    DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  weeks         HabitWeekProgress[]
+
+  @@unique([id, userId])
+  @@index([userId, goalId])
+  @@map("habit_action")
+}
+
+model HabitWeekProgress {
+  id             String      @id @default(cuid())
+  userId         String
+  actionId       String
+  action         HabitAction @relation(fields: [actionId, userId], references: [id, userId], onDelete: Cascade)
+  weekStart      DateTime    @db.Date
+  targetCount    Int
+  completedCount Int         @default(0)
+  note           String?     @db.VarChar(500)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  entries        HabitWeekEntry[]
+
+  // Each ISO/Amsterdam week has an independent immutable target snapshot.
+  @@unique([id, userId])
+  @@unique([actionId, weekStart])
+  @@index([userId, weekStart])
+  @@map("habit_week_progress")
+}
+
+// A single quick tap creates one entry; feedback can be added independently.
+// Legacy weekly totals are retained even when no individual entries exist.
+model HabitWeekEntry {
+  id         String            @id @default(cuid())
+  userId     String
+  weekId     String
+  week       HabitWeekProgress @relation(fields: [weekId, userId], references: [id, userId], onDelete: Cascade)
+  createdAt  DateTime          @default(now()) @db.Timestamptz(3)
+  rating     String?           @db.VarChar(12)
+  note       String?           @db.VarChar(500)
+
+  @@index([userId, weekId, createdAt])
+  @@map("habit_week_entry")
 }

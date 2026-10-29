@@ -4,7 +4,7 @@
 
 ## Status
 
-**Sinds issue #2:** Better Auth 1.7, Admin-plugin, Prisma 7/PostgreSQL en gesloten registratie zijn aanwezig. **Issue #3 (PR #12):** mobiel ontwerp, contrast en toetsenbordnavigatie worden verbeterd. De vier dashboardpagina's bevatten nog **fictieve data**. Werkelijke doelen en reflecties slaan we pas op in volgende issues (#4 en #5). Dit is nog geen productieversie.
+**Sinds issue #2:** Better Auth 1.7, Admin-plugin, Prisma 7/PostgreSQL en gesloten registratie zijn aanwezig. **Issue #3 (PR #12):** mobiel ontwerp, contrast en toetsenbordnavigatie worden verbeterd. De pagina's **Vandaag** en **Mijn doelen** tonen persoonlijke doelen, weekacties en registraties uit PostgreSQL (#4); individuele uitvoeringen kunnen optioneel een ervaring bevatten. De aparte Reflectie- en Inzichtenpagina's bevatten nog **fictieve data** tot issue #5. Dit is nog geen productieversie.
 
 ## Lokaal op Linux / WSL
 

@@ -1,99 +1,121 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, Check, ChevronRight, CircleCheck, Leaf, Sparkles, Sun, Target, TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { demoHabits } from "@/lib/demo-data";
+import { ArrowRight, ChevronRight, CircleCheck, Leaf, Sun, Target, TrendingUp } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
+import { amsterdamMonday } from "@/lib/goals-domain.mjs";
+import { QuickCompletion } from "@/components/quick-completion";
+import { ActionReviewSheet } from "@/components/action-review-sheet";
 
 export const metadata: Metadata = { title: "Vandaag" };
-const completed = demoHabits.reduce((sum, h) => sum + h.done, 0);
-const planned = demoHabits.reduce((sum, h) => sum + h.target, 0);
-const overall = Math.round(completed / planned * 100);
-
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const { user } = await requireSession();
+  const weekStart = amsterdamMonday();
+  // The user's own active goals and weekly snapshots, never shared demo data.
+  const goals = await prisma.goal.findMany({
+    where: { userId: user.id, status: "ACTIVE" },
+    orderBy: { createdAt: "desc" },
+    select: {
+      title: true,
+      actions: {
+        where: { userId: user.id, archivedAt: null },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true, title: true, targetPerWeek: true,
+          weeks: { where: { userId: user.id, weekStart }, take: 1, select: {
+            targetCount: true, completedCount: true,
+            entries: { orderBy: { createdAt: "desc" }, take: 8,
+              select: { id: true, createdAt: true, rating: true, note: true } },
+          } },
+        },
+      },
+    },
+  });
+  const weekActions = goals.flatMap((goal) => goal.actions.map((action) => ({
+    id: action.id, title: action.title, detail: goal.title,
+    done: action.weeks[0]?.completedCount ?? 0,
+    target: action.weeks[0]?.targetCount ?? action.targetPerWeek,
+    canUndo: (action.weeks[0]?.entries.length ?? 0) > 0,
+    entries: action.weeks[0]?.entries.map((entry) => ({
+      ...entry, createdAt: entry.createdAt.toISOString(),
+    })) ?? [],
+  })));
+  const completed = weekActions.reduce((sum, action) => sum + action.done, 0);
+  const planned = weekActions.reduce((sum, action) => sum + action.target, 0);
+  const overall = planned > 0 ? Math.round(completed / planned * 100) : null;
   return (
-    <div className="space-y-7">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[.18em] text-[#506d59]">Mijn overzicht</p>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Goed dat je er bent <span aria-hidden="true">☀️</span></h1>
-          <p className="mt-2 text-sm text-muted-foreground">Elke kleine stap brengt je dichter bij wat belangrijk voor je is.</p>
+    <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-3 sm:space-y-6">
+      <section aria-labelledby="today-heading" className="wellness-pattern relative min-w-0 overflow-hidden rounded-[26px] border border-[#e2ebdf] px-5 py-7 sm:px-8 sm:py-9">
+        <div className="relative z-10 max-w-[95%] space-y-2 sm:max-w-[75%]">
+          <h1 id="today-heading" className="text-[1.65rem] font-bold leading-tight tracking-tight text-[#234735] sm:text-4xl">
+            Goed dat je er bent <span aria-hidden="true">👋</span>
+          </h1>
+          <p className="text-sm leading-relaxed text-[#526d5b]">Kleine stappen in je eigen tempo.</p>
+          {goals.length === 0 && <Link href="/dashboard/doelen" className="inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-[#265f45] underline underline-offset-4">Maak je eerste doel <ArrowRight size={16} aria-hidden="true"/></Link>}
         </div>
-        <Badge variant="outline" className="gap-2 bg-white/80 py-2"><CalendarDays size={14} /> Voorbeeldweek</Badge>
-      </div>
-
-      <section className="wellness-pattern relative overflow-hidden rounded-[28px] border border-[#e5ecdc] px-6 py-7 sm:px-9 sm:py-9" aria-labelledby="welcome-title">
-        <div className="relative z-10 max-w-full space-y-3 sm:max-w-[72%]">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#557e60]"><Sparkles size={15}/> Jouw groei telt</span>
-          <h2 id="welcome-title" className="text-2xl font-bold leading-tight tracking-tight sm:text-3xl">Ruimte voor jouw <span className="text-[#367451]">kleine stappen</span></h2>
-          <p className="max-w-sm text-sm leading-relaxed text-[#496b51]">Niet perfect, wel vooruit. Focus op wat vandaag mogelijk is.</p>
-          <Button asChild size="sm" className="mt-2"><Link href="/dashboard/doelen">Bekijk mijn doelen <ArrowRight size={16}/></Link></Button>
-        </div>
-        <div className="pointer-events-none absolute -bottom-6 -right-7 hidden size-44 sm:flex items-center justify-center rounded-full bg-[#cfe6ce]/70 sm:-bottom-8 sm:right-12 sm:size-56">
-          <div className="flex size-32 rotate-[-15deg] items-center justify-center rounded-full bg-[#e4eee0] sm:size-40"><Leaf size={94} strokeWidth={1} className="text-[#679b76] sm:size-28" /></div>
+        <div className="pointer-events-none absolute -bottom-12 -right-12 hidden size-48 items-center justify-center rounded-full bg-[#cfe4c9]/65 sm:flex sm:size-56" aria-hidden="true">
+          <Leaf size={110} strokeWidth={1.2} className="-rotate-12 text-[#79a483]"/>
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-3" aria-label="Overzicht van de week">
-        <Card className="flex-row items-center gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e7f3e6] text-[#4e9671]"><Target size={22}/></span>
-          <div><p className="text-2xl font-bold">{demoHabits.length}</p><p className="text-xs text-muted-foreground">Actieve gewoontes</p></div>
+      <section aria-label="Overzicht van de week" className="grid min-w-0 grid-cols-3 gap-2.5 sm:gap-4">
+        <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f2e6] text-[#3c936b] sm:size-11"><Target size={20}/></span>
+            <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{goals.length}</strong>
+          </div>
+          <p className="text-[11px] leading-tight text-[#53685a] sm:text-xs">Actieve doelen</p>
         </Card>
-        <Card className="flex-row items-center gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#fff3d8] text-[#c99b4e]"><CircleCheck size={22}/></span>
-          <div><p className="text-2xl font-bold">{completed} <span className="text-sm text-[#536c57]">/ {planned}</span></p><p className="text-xs text-muted-foreground">Stappen deze week</p></div>
+        <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2d8] text-[#b67e2b] sm:size-11"><CircleCheck size={20}/></span>
+            <strong className="min-w-0 whitespace-nowrap text-lg font-bold tabular-nums sm:text-2xl">{completed}<span className="text-[10px] text-[#657565] sm:text-xs">/{planned}</span></strong>
+          </div>
+          <p className="text-[11px] leading-tight text-[#53685a] sm:text-xs">Deze week</p>
         </Card>
-        <Card className="flex-row items-center gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8e5f5] text-[#8d81b3]"><TrendingUp size={22}/></span>
-          <div><p className="text-2xl font-bold">{overall}%</p><p className="text-xs text-muted-foreground">Van je weekdoelen</p></div>
+        <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#eae6f5] text-[#8e7cb3] sm:size-11"><TrendingUp size={20}/></span>
+            <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{overall === null ? "–" : `${overall}%`}</strong>
+          </div>
+          <p className="text-[11px] leading-tight text-[#53685a] sm:text-xs">Voortgang</p>
         </Card>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
-        <section aria-labelledby="habits-heading">
-          <Card className="h-full">
-            <CardHeader className="flex-row items-center justify-between">
-              <div><CardTitle id="habits-heading" className="text-xl">Mijn gewoontes</CardTitle><p className="mt-1 text-sm text-muted-foreground">Dit wil je deze week oefenen</p></div>
-              <Link href="/dashboard/doelen" className="flex items-center gap-1 text-sm font-semibold text-[#3f805e] hover:underline">Bekijk alles <ChevronRight size={16}/></Link>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {demoHabits.map((habit) => (
-                <div key={habit.id} className="flex items-center gap-3 rounded-2xl border border-[#e9ede4] bg-[#fffefb] p-3 sm:p-4">
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-2xl" style={{ backgroundColor: habit.color }}>{habit.emoji}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{habit.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">{habit.detail}</p>
-                    <Progress value={habit.done / habit.target * 100} className="mt-2 h-1.5" aria-label={`${habit.title}: ${habit.done} van ${habit.target} uitgevoerd`}/>
-                  </div>
-                  <span className="whitespace-nowrap text-xs font-semibold text-[#406a51]">{habit.done}/{habit.target}</span>
-                </div>
+      <section aria-labelledby="habits-heading" className="min-w-0">
+        <Card className="min-w-0 gap-4 rounded-[26px] p-3.5 sm:p-6">
+          <div className="flex min-w-0 items-center justify-between gap-3 px-0.5">
+            <h2 id="habits-heading" className="min-w-0 text-xl font-bold tracking-tight text-[#203d2e]">Vandaag afvinken</h2>
+            <Link href="/dashboard/doelen" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#316847] hover:underline sm:text-sm">
+              Alle acties <ChevronRight size={16} aria-hidden="true"/>
+            </Link>
+          </div>
+
+          {weekActions.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[#b9cbb7] bg-[#f6faf3] p-5">
+              <p className="text-sm text-[#3f5d46]">Nog geen weekacties.</p>
+              <Link href="/dashboard/doelen" className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#316447] underline">Weekactie toevoegen <ArrowRight size={15} aria-hidden="true"/></Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {weekActions.map((habit) => (
+                <article key={habit.id} className="min-w-0 space-y-3.5 rounded-[22px] border border-[#e6ece4] bg-white p-3.5 shadow-[0_8px_24px_-23px_rgba(31,69,43,.45)] sm:p-5">
+                  <ActionReviewSheet actionTitle={habit.title} goalTitle={habit.detail} entries={habit.entries}/>
+                  <QuickCompletion actionId={habit.id} title={habit.title}
+                    completed={habit.done} target={habit.target} canUndo={habit.canUndo}/>
+                </article>
               ))}
-              <p className="pt-1 text-xs text-muted-foreground">Dit zijn fictieve voorbeelden. Registreren en opslaan volgt in issue #4.</p>
-            </CardContent>
-          </Card>
-        </section>
-        <section aria-labelledby="reflection-heading">
-          <Card className="h-full justify-between bg-[#f2f5ee]">
-            <CardHeader>
-              <span className="mb-1 flex size-11 items-center justify-center rounded-2xl bg-[#e0ebde] text-[#528564]"><Sun size={21}/></span>
-              <CardTitle id="reflection-heading" className="text-xl">Even stilstaan</CardTitle>
-              <p className="text-sm leading-relaxed text-[#70806e]">Een moment voor jezelf. Hoe voel je je en waar ben je trots op?</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-2xl bg-white/75 px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#576b59]">Vraag van de week</p>
-                <p className="mt-2 font-medium leading-relaxed">Wat ging deze week beter dan je vooraf dacht?</p>
-              </div>
-              <Button variant="outline" asChild className="w-full bg-white"><Link href="/dashboard/reflectie">Bekijk reflectie <ArrowRight size={16}/></Link></Button>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
+            </div>
+          )}
+        </Card>
+      </section>
 
-      <div className="flex items-center gap-2 rounded-2xl bg-[#ecf2e9] px-5 py-4 text-sm text-[#567362]"><Check size={17} className="shrink-0" aria-hidden="true"/><span>Je hoeft niet alles in één keer te veranderen. Eén haalbare stap is genoeg om te beginnen.</span></div>
-      <footer className="flex items-center justify-center gap-2 pb-3 text-xs text-[#506b56]"><Leaf size={14}/> Mijn Leefstijl · AGPL-3.0 · <a className="underline" href="https://github.com/mathossa/GLI-Leefstijl-WebApp" rel="noopener noreferrer" target="_blank">Broncode</a></footer>
+      <Link href="/dashboard/reflectie" className="flex min-h-20 min-w-0 items-center gap-3 rounded-[23px] border border-[#e0e9dc] bg-[#f0f5ed] px-5 py-4 text-[#254b37] transition-colors hover:bg-[#e8f0e5]">
+        <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#e1ebdf] text-[#528564]"><Sun size={22}/></span>
+        <span className="min-w-0 flex-1 text-base font-bold">Even stilstaan</span>
+        <ChevronRight size={20} className="shrink-0" aria-hidden="true"/>
+      </Link>
     </div>
   );
 }

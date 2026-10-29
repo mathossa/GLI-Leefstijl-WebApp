@@ -55,3 +55,32 @@ button, a { -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: auto; }
   .page-enter { animation: none; }
 }
+
+/* Native modal bottom sheet: accessible Escape/backdrop and keyboard behavior,
+   without adding a new dependency. Stays above the mobile bottom navigation. */
+.review-dialog {
+  position: fixed;
+  inset: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100dvh - 12px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: #fffefb;
+  color: #203c2e;
+  box-shadow: 0 -12px 60px rgb(20 45 31 / 16%);
+}
+.review-dialog::backdrop { background: rgb(20 40 30 / 45%); }
+@media (min-width: 640px) {
+  .review-dialog {
+    inset: 0;
+    max-width: 520px;
+    max-height: min(90dvh, 740px);
+    margin: auto;
+    border-radius: 28px;
+    box-shadow: 0 22px 90px rgb(20 45 31 / 22%);
+  }
+}
