@@ -2,6 +2,76 @@
 
 > Voor **Docker Standalone + bestaande Nginx Proxy Manager**. Dit is een nog te reviewen uitrolplan, geen uitgevoerde productie-deployment. Gebruik eerst fictieve accounts op een aparte teststack.
 
+## Voorkeursmethode: volledig via Portainer, zonder SSH
+
+De **uitrol** verloopt via **Portainer → Stacks → Add stack → Git repository**. GitHub Actions bouwt eerst uit een geteste commit de Next.js-image en publiceert deze in GitHub Container Registry (GHCR). Portainer haalt uitsluitend de image en het Compose-bestand op, zodat Portainer geen Docker-build op je VPS hoeft uit te voeren. Dit werkt ook bij Portainer-omgevingen via een remote Agent waar Compose-build niet betrouwbaar wordt ondersteund.
+
+### Vooraf: image publiceren
+
+De GitHub Actions-workflow `Code quality, secure container deployment and restore` bevat drie stappen/jobs: `quality`, `container`, en daarna pas `Publish tested image for Portainer`. Alleen wanneer beide testjobs succesvol zijn, wordt de geteste app-image gepubliceerd.
+
+- Testbranch: `ghcr.io/mathossa/gli-leefstijl-webapp:issue7-test`.
+- Voor een specifieke geteste commit: `ghcr.io/mathossa/gli-leefstijl-webapp:sha-<40-tekens-Git-commit>`.
+- Na merge naar main: `ghcr.io/mathossa/gli-leefstijl-webapp:main` (voor echte releases liever een immutable SHA-tag gebruiken).
+
+**GHCR-pakketten zijn mogelijk standaard privé.** Als de registry een authentication error geeft, koppel in Portainer onder **Registries → Add registry → Custom registry** een GitHub Container Registry-account met minimaal `read:packages`, of maak de specifieke package bewust publiek via GitHub package settings. Deel het token nooit in chat, issues, Git of Compose. De workflow vereist dat GitHub Actions `packages: write` voor deze repository mag gebruiken. Controleer in GitHub Actions of de publish-job op de gekozen commit is geslaagd.
+
+### Stap A — Bestaande Nginx Proxy Manager-netwerknaam
+
+Zoek in **Portainer → Containers → Nginx Proxy Manager → Connected networks** een *user-defined Docker bridge*. Dat is `PROXY_NETWORK`. Gebruik het bestaande netwerk; de Mijn Leefstijl-app krijgt daarop de vaste interne alias `mijn-leefstijl-web`. PostgreSQL blijft op zijn eigen interne netwerk. Staat NPM alleen op de standaard `bridge`, dan moet je eerst via Portainer een user-defined netwerk verbinden.
+
+### Stap B — Nieuwe Git Stack in Portainer
+
+Ga naar **Stacks → Add stack**, maak een nieuwe teststack en kies **Git repository**:
+
+| Portainer-veld | Invullen |
+| --- | --- |
+| Name | `mijn-leefstijl` (alleen als deze naam nog vrij is) |
+| Repository URL | `https://github.com/mathossa/GLI-Leefstijl-WebApp` |
+| Repository reference | `refs/heads/feat/issue-7-portainer-production-deployment` |
+| Compose path | `compose.prod.yml` |
+| Additional files | **Leeg laten** (niet `compose.build.yml` toevoegen) |
+| GitOps updates / Automatic updates | **Uit** voor een proefopstelling met migraties |
+
+Portainer kan een Git-stack rechtstreeks uit de repository laden. Er is geen lokaal `git clone`, geen VPS-shell en geen handmatige `docker build` nodig.
+
+### Stap C — Variabelen in Portainer instellen
+
+Vul onder **Environment variables** de waarden uit `deploy/portainer.env.example` in. **Plak géén geheimen in de YAML-editor of GitHub.**
+
+| Variabele | Inhoud |
+| --- | --- |
+| `APP_IMAGE` | `ghcr.io/mathossa/gli-leefstijl-webapp:issue7-test` (of geteste SHA-tag) |
+| `PROXY_NETWORK` | Exacte bestaande NPM Docker-netwerknaam |
+| `POSTGRES_USER` | `leefstijl` |
+| `POSTGRES_DB` | `leefstijl` |
+| `POSTGRES_PASSWORD` | Sterke, unieke testwaarde (genereer in wachtwoordmanager; bij voorkeur alfanumeriek/hex) |
+| `DATABASE_URL` | `postgresql://leefstijl:<zelfde-wachtwoord>@postgres:5432/leefstijl` (URL-encode speciale tekens) |
+| `BETTER_AUTH_URL` | Exacte externe `https://`-testhostnaam |
+| `BETTER_AUTH_SECRET` | Afzonderlijke cryptografisch willekeurige lange sleutel (min. 32 tekens) |
+| `SMTP_ENCRYPTION_KEY` | Mag leeg blijven bij een nieuwe testomgeving **zonder opgeslagen SMTP-wachtwoord** |
+
+**Bestaande gegevens migreren?** Nooit zomaar nieuwe `BETTER_AUTH_SECRET` of `SMTP_ENCRYPTION_KEY` gebruiken: behoud de oorspronkelijke sleutels en zorg eerst voor een consistente backup.
+
+Druk op **Deploy the stack**. Verwacht **precies twee containers**: `app` en `postgres`. De app wacht op de database, voert `prisma migrate deploy` uit en start pas daarna Next.js. Controleer **Portainer → Containers → app → Logs** en daarna **Health / Healthy**.
+
+### Stap D — Nginx Proxy Manager en eerste testaccount
+
+In **NPM → Hosts → Proxy Hosts → Add Proxy Host** stel je `Scheme: http`, `Forward Hostname: mijn-leefstijl-web`, `Forward Port: 3000` in. Schakel websockets en Force SSL in en gebruik een geldig certificaat. De externe DNS-host moet bij `BETTER_AUTH_URL` passen. Test vervolgens `https://jouw-host/api/health` (antwoord `ok`).
+
+Voor het eerste account ga je in **Portainer → Containers → Mijn Leefstijl app → Console**, kies `/bin/sh`, en voer interactief uit:
+
+```sh
+npm run auth:create-admin -- --email beheerder@voorbeeld.nl --name "Beheerder" --role admin
+```
+
+Vervang het adres door je eigen beheermailadres. De Better Auth-CLI vraagt om het wachtwoord; typ dat in de Portainer-console, nooit als stackvariable. Test login, doelen, reflecties, gebruikersbeheer en privéfoto's met uitsluitend fictieve gegevens.
+
+### Niet vergeten: backups vóór echte persoonsgegevens
+
+**Portainer Git-deployment maakt niet automatisch backups.** Deze PR bevat `scripts/backup-db.sh`, `scripts/backup-private-uploads.sh` en geïsoleerde hersteltests, maar de geplande off-host uitvoering en veilige export zijn een **aparte beheerinstelling**. De repo hoeft niet via SSH geïnstalleerd te worden om de containers te deployen. Voor echt gebruik moeten we nog een backupstrategie kiezen die je ook vanuit Portainer kunt beheren (bijvoorbeeld met een geplande taak/daarvoor bestemde backupvoorziening); dat kan een tijdelijk extra hulpcontainerproces vereisen. Tot die tijd: alleen fictieve testdata.
+
+---
 ## Architectuur en startup
 
 De stack bevat precies **twee services**:
@@ -36,9 +106,9 @@ Dit ontwerp is voor **één** Next.js-appinstantie op één VPS; geen automatisc
 
 Let op: meerdere test- en productieapps op hetzelfde proxy-netwerk mogen niet dezelfde alias hebben; geef ze een eigen DNS-alias voordat je een tweede stack aansluit.
 
-## 2. Image bouwen en runtimevariabelen
+## Alternatief voor handmatige CLI-deployments (niet nodig met Portainer Git)
 
-Vanaf een reviewed commit van het project op dezelfde VPS:
+Alleen wanneer je bewust **niet** de hierboven beschreven Portainer/GHCR-methode gebruikt, kun je op een Docker-host handmatig een image bouwen uit een gereviewde checkout:
 
 ```sh
 git clone https://github.com/mathossa/GLI-Leefstijl-WebApp.git
@@ -67,7 +137,7 @@ docker compose --env-file .env.prod -f compose.prod.yml -f compose.build.yml bui
 docker compose --env-file .env.prod -f compose.prod.yml config --quiet
 ```
 
-De **Portainer Web Editor** heeft niet vanzelf een Docker-buildcontext. Bouw vooraf op dezelfde Docker-host of publiceer de app-image in een beveiligd registry. Gebruik **alleen `compose.prod.yml`** voor de Stack in Portainer; `compose.build.yml` is voor lokale builds en CI.
+Voor de aanbevolen Portainer-only deployment gebruik je de door GitHub Actions gepubliceerde GHCR-image. `compose.build.yml` is uitsluitend voor lokale builds en CI, niet voor de Portainer Stack.
 
 ## 3. Eerste start in Portainer
 

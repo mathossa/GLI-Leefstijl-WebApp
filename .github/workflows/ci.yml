@@ -110,6 +110,20 @@ jobs:
         run: docker network create ci-proxy
       - name: Validate Compose config with CI-only secrets
         run: docker compose -f compose.prod.yml -f compose.build.yml config --quiet
+      - name: Validate Portainer Git Stack (registry image; no SSH build)
+        run: |
+          docker compose -f compose.prod.yml config --format json > /tmp/leefstijl-portainer.json
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const c = JSON.parse(readFileSync("/tmp/leefstijl-portainer.json", "utf8"));
+            assert.deepEqual(Object.keys(c.services).sort(), ["app", "postgres"]);
+            assert.equal(c.services.app.image, process.env.APP_IMAGE);
+            assert.equal(c.services.app.build, undefined, "Portainer must pull a prebuilt image");
+            assert.equal(c.networks.database.internal, true);
+            assert.equal(c.networks.proxy.external, true);
+            for (const svc of Object.values(c.services)) assert.ok(!svc.ports?.length);
+          '
       - name: Verify stable Nginx Proxy Manager network alias and isolation
         run: |
           docker compose -f compose.prod.yml -f compose.build.yml config --format json > /tmp/leefstijl-compose.json
@@ -206,3 +220,40 @@ jobs:
         run: |
           docker compose -f compose.prod.yml down --volumes --remove-orphans || true
           docker network rm ci-proxy || true
+
+  publish:
+    name: Publish tested image for Portainer
+    needs: [quality, container]
+    if: github.event_name == 'push' && github.repository == 'mathossa/GLI-Leefstijl-WebApp'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout validated revision
+        uses: actions/checkout@v4
+      - name: Configure Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Authenticate to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish app image from tested commit
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: runner
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/mathossa/gli-leefstijl-webapp:sha-${{ github.sha }}
+            ghcr.io/mathossa/gli-leefstijl-webapp:${{ github.ref_name == 'main' && 'main' || 'issue7-test' }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/mathossa/GLI-Leefstijl-WebApp
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
