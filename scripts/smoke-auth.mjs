@@ -59,6 +59,15 @@ assert.equal(memberLogin.status, 200, "Regular user must be able to log in");
 const memberCookie = cookies(memberLogin);
 assert.equal((await get("/dashboard",memberCookie)).status, 200);
 assert.equal((await get("/admin",memberCookie)).status, 404, "Non-admin must be denied");
+const listAdmin = await get("/api/auth/admin/list-users?limit=20&offset=0",adminCookie);
+assert.equal(listAdmin.status,200,"Official admin plugin must list users for admin");
+const listMember = await get("/api/auth/admin/list-users?limit=20&offset=0",memberCookie);
+assert.ok(listMember.status >= 400 && listMember.status < 500,"Member must not list users");
+const memberCreate = await post("/api/auth/admin/create-user",{
+  name:"Forbidden user",email:"not-created@example.test",password:"A-strong-test-password-123456",role:"user"
+},memberCookie);
+assert.ok(memberCreate.status >= 400 && memberCreate.status < 500,"Member must not create users");
+
 
 // Export must be private and include individual entries without auth credentials.
 const noSessionExport = await get("/api/export");
@@ -71,6 +80,14 @@ const connection = new pg.Client({ connectionString: process.env.DATABASE_URL })
 let privatePhotoId = "", privatePhotoFolder = "";
 await connection.connect();
 try {
+  const sentinel = "CI-ENCRYPTED-SMTP-SENTINEL-NOT-FOR-CLIENTS";
+  await connection.query(
+    'INSERT INTO "admin_mail_settings" ("id","enabled","encryptedPassword","updatedAt") VALUES ($1,false,$2,NOW())',
+    ["smtp",sentinel],
+  );
+  const html = await (await get("/admin",adminCookie)).text();
+  assert.ok(!html.includes(sentinel),"Encrypted SMTP credential must never be serialized to browser");
+
   const adminId = adminSession.user.id;
   const memberId = memberSession.user.id;
   for (const [id, userId, title] of [

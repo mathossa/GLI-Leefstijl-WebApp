@@ -55,6 +55,8 @@ jobs:
         run: node scripts/smoke-goals-db.mjs
       - name: SMTP encryption and relay input safety tests
         run: node --experimental-strip-types --test tests/admin-smtp.test.mjs
+      - name: Verify SMTP DB constraints and test cooldown
+        run: node scripts/smoke-admin-db.mjs
       - name: ESLint
         run: npm run lint
       - name: TypeScript
