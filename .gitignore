@@ -22,7 +22,12 @@ generated/
 Thumbs.db
 .idea/
 .vscode/
-# Production operations
+
+# Private user-uploaded CooL photos (must never be public or committed)
+.private-uploads/
+
+# Self-hosting artifacts and private operational backups
 backups/
 artifacts/
 *.dump
+*.tar.gz

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { amsterdamMonday } from "@/lib/goals-domain.mjs";
+import { isoWeekLabel } from "@/lib/week-labels.mjs";
 import { QuickCompletion } from "@/components/quick-completion";
 import { ActionReviewSheet } from "@/components/action-review-sheet";
 
@@ -48,6 +49,7 @@ export default async function DashboardPage() {
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-3 sm:space-y-6">
       <section aria-labelledby="today-heading" className="wellness-pattern relative min-w-0 overflow-hidden rounded-[26px] border border-[#e2ebdf] px-5 py-7 sm:px-8 sm:py-9">
         <div className="relative z-10 max-w-[95%] space-y-2 sm:max-w-[75%]">
+          <p className="text-xs font-semibold text-[#426a50]">{isoWeekLabel(weekStart)}</p>
           <h1 id="today-heading" className="text-[1.65rem] font-bold leading-tight tracking-tight text-[#234735] sm:text-4xl">
             Goed dat je er bent <span aria-hidden="true">👋</span>
           </h1>

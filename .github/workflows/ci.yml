@@ -1,9 +1,9 @@
-name: Code quality, deployment and security
+name: Code quality, secure container deployment and restore
 on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main, feat/issue-7-portainer-production-deployment]
 
 permissions:
   contents: read
@@ -45,8 +45,20 @@ jobs:
         run: npm run db:deploy
       - name: Validate goal inputs, limits and Amsterdam week boundaries
         run: node --test tests/goals-domain.test.mjs
+      - name: Validate ISO week labels at New Year and DST
+        run: node --test tests/week-labels.test.mjs
+      - name: Validate reflection inputs and Amsterdam calendar dates
+        run: node --test tests/reflections-domain.test.mjs
+      - name: Verify reflection database constraints
+        run: node scripts/smoke-reflections-db.mjs
       - name: Verify goal ownership and DB constraints
         run: node scripts/smoke-goals-db.mjs
+      - name: Validate administrator display name input
+        run: node --test tests/admin-user-validation.test.mjs
+      - name: SMTP encryption and relay input safety tests
+        run: node --experimental-strip-types --test tests/admin-smtp.test.mjs
+      - name: Verify SMTP DB constraints and test cooldown
+        run: node scripts/smoke-admin-db.mjs
       - name: Inventory all dependency licenses
         run: node scripts/license-inventory.mjs
       - name: ESLint

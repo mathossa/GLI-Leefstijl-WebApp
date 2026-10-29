@@ -1,6 +1,6 @@
 # Productie op een VPS met Docker Compose en Portainer (#7)
 
-> Alleen voor **Portainer Docker Standalone**, niet Swarm. Deze PR introduceert nog geen echte VPS-deployment of automatisch bijgewerkte productieomgeving. Eerst de inmiddels gemergede #5 integreren en de lopende #6 reviewen; pas daarna deze PR mergen, backups maken en een proefdeploy uitvoeren.
+> Alleen voor **Portainer Docker Standalone**, niet Swarm. Deze PR introduceert **geen echte VPS-deployment** en wijzigt geen bestaande productieomgeving. De implementatie is geïntegreerd met de gemergede #5 en #6. Controleer het geheel eerst op een geïsoleerde VPS of lokale Docker-host met fictieve accounts.
 
 ## Keuzes en architectuur
 
@@ -29,7 +29,7 @@ Vul in .env.prod:
 - **DATABASE_URL** met **host postgres**, niet 127.0.0.1. URL-encode bijzondere tekens in het PostgreSQL-wachtwoord; gebruik hetzelfde wachtwoord als bij PostgreSQL.
 - **BETTER_AUTH_URL**: exacte externe HTTPS-domeinnaam, bijvoorbeeld https://leefstijl.example.nl. Configuratie van de proxy moet Host en X-Forwarded-Proto correct doorgeven.
 - **BETTER_AUTH_SECRET**: genereer afzonderlijk via 'openssl rand -base64 48', en bewaar veilig buiten Git.
-- **SMTP_ENCRYPTION_KEY**: alleen wanneer #6 gemerged is en SMTP-credentials gebruikt worden; genereer afzonderlijk met 'openssl rand -base64 32'. Deze key mag niet gelijk zijn aan de Better Auth-secret. Zonder SMTP is hij niet vereist.
+- **SMTP_ENCRYPTION_KEY**: wanneer SMTP-credentials gebruikt worden; genereer afzonderlijk met 'openssl rand -base64 32'. Deze key mag niet gelijk zijn aan de Better Auth-secret. Zonder SMTP is hij niet vereist.
 
 Laat Portainer/Compose-secretwaarden niet in screenshots, issues of debuglogs terechtkomen. Scherm de VPS, Portainer, backups en Docker socket strikt af.
 
@@ -97,4 +97,12 @@ Bij een mislukte migratie **niet** zomaar de oude image tegen een gewijzigde dat
 
 - Hergebruikt: officiële Docker Node/Postgres images, Next.js standalone output, Compose v2 healthchecks/dependency ordering, Prisma 7 migrate deploy, Better Auth CLI. Geen extra runtime-dependencies en geen extra diensten voor monitoring/backups.
 - Licentie: bestaande AGPL-3.0-only projectcode, Docker/Prisma/Node ecosysteemlicenties behouden. CI produceert licentie-inventaris (met handmatige review voor copyleft/attributie) en voert audit van productieafhankelijkheden uit.
-- Nog te doen bij echte VPS-ingebruikname: #5 migraties/foto-opslag en #6 SMTP-migratie/secret op de samengevoegde branch testen; TLS-proxy-details verifiëren, secretmanagement/beveiligde **off-site database- én foto-backup** inrichten, volledige hersteloefening met (fictieve) proefdata uitvoeren en security review van de VPS. Geen productie-credentials in Git.
+- Nog te doen bij echte VPS-ingebruikname: TLS-proxy-details verifiëren, secretmanagement en beveiligde **off-host database- én foto-backup** inrichten, een volledig herstel van fictieve data op een aparte VPS/stack oefenen en een security review van de VPS uitvoeren. Geen productie-credentials in Git.
+
+## Integratie met de gemergede app (#5 en #6)
+
+De productiestack gebruikt dezelfde Prisma-migraties als `main` (inclusief `20261029003000_weekly_reflections_meetings`, `20261029004000_private_meeting_photos` en `20261029005000_admin_smtp_settings`). De app image neemt de Next.js 12 MB uploadlimiet voor privéfoto's en de modules `pdf-lib`, `sharp`, `nodemailer` mee. De afzonderlijke migrator heeft de Prisma-CLI plus Better Auth-admin-CLI zodat de eerste beheerder aangemaakt kan worden.
+
+**SMTP_ENCRYPTION_KEY mag niet opnieuw worden gegenereerd** wanneer er al een werkende versleutelde SMTP-configuratie bestaat. Voor migratie van een bestaande omgeving moeten de bijbehorende sleutel en de database als één set worden bewaard. `BETTER_AUTH_SECRET` moet bij een bestaande productie-installatie eveneens stabiel blijven.
+
+**Let op bij de eerste stap:** de voorbeeldstack is uitsluitend voor een reverse-proxy op dezelfde Docker-host. Als je al een Nginx Proxy Manager-, Traefik- of Caddy-netwerk hebt, configureer `PROXY_NETWORK` op dat bestaande netwerk. Maak nooit onnodig een tweede publieke proxy of open poort 5432. Het eigen `DATABASE_URL`-wachtwoord en `POSTGRES_PASSWORD` moeten dezelfde waarde hebben.

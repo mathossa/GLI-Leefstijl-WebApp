@@ -1,24 +1,39 @@
 import type { Metadata } from "next";
-import { BookHeart, HeartHandshake, Lightbulb, MoonStar } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
+import { amsterdamMonday } from "@/lib/goals-domain.mjs";
+import { dateOnly } from "@/lib/reflections-domain.mjs";
+import { ReflectionsOverview, type ReflectionView, type MeetingView } from "@/components/reflections-overview";
 
 export const metadata: Metadata = { title: "Reflectie" };
-const prompts = [
-  { icon: HeartHandshake, title: "Wat ging er goed?", description: "Welke kleine stap ging deze week makkelijker dan verwacht?", shade: "bg-[#e8f1e5]" },
-  { icon: MoonStar, title: "Wat vond je lastig?", description: "Wat kwam er tussendoor? Je hoeft niet streng voor jezelf te zijn.", shade: "bg-[#f0eaf5]" },
-  { icon: Lightbulb, title: "Wat neem je mee?", description: "Wat helpt je volgende week om een haalbare stap te zetten?", shade: "bg-[#f9f0db]" },
-];
 
-export default function ReflectionPage() {
-  return (
-    <div className="space-y-6">
-      <header><p className="mb-1 text-xs font-semibold uppercase tracking-[.18em] text-[#506d59]">Een moment voor jezelf</p><h1 className="text-3xl font-bold tracking-tight">Wekelijkse reflectie <span aria-hidden="true">✨</span></h1><p className="mt-2 text-sm text-muted-foreground">Kijk met aandacht terug. Ook kleine overwinningen verdienen ruimte.</p></header>
-      <section className="grid gap-4 md:grid-cols-3" aria-label="Voorbeeld reflectievragen">
-        {prompts.map(({ icon: Icon, title, description, shade }) => (
-          <Card key={title} className="min-h-56"><div className={`flex size-12 items-center justify-center rounded-2xl text-[#527e60] ${shade}`}><Icon size={22} aria-hidden="true"/></div><h2 className="text-lg font-semibold">{title}</h2><p className="text-sm leading-relaxed text-muted-foreground">{description}</p></Card>
-        ))}
-      </section>
-      <div className="rounded-[24px] border border-[#dee9db] bg-[#f0f5ed] p-6"><BookHeart size={23} className="mb-3 text-[#4b8563]"/><h2 className="font-semibold">Jouw verhaal telt</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Hier komen later jouw eigen reflecties en notities van CooL-bijeenkomsten. De invoer en veilige opslag worden toegevoegd in <a className="underline" href="https://github.com/mathossa/GLI-Leefstijl-WebApp/issues/5">issue #5</a>.</p></div>
-    </div>
-  );
+export default async function ReflectionPage({
+  searchParams,
+}: { searchParams: Promise<{ melding?: string }> }) {
+  const { user } = await requireSession();
+  const week = amsterdamMonday();
+  const [reflections, meetings] = await Promise.all([
+    prisma.weeklyReflection.findMany({
+      where: { userId: user.id }, orderBy: { weekStart: "desc" }, take: 52,
+      select: { weekStart: true, wentWell: true, difficult: true, nextStep: true },
+    }),
+    prisma.meetingNote.findMany({
+      where: { userId: user.id }, orderBy: [{ meetingDate: "desc" }, { createdAt: "desc" }], take: 100,
+      select: { id: true, meetingDate: true, title: true, notes: true, actionPoints: true,
+        photos: { where: { userId: user.id }, orderBy: { createdAt: "asc" }, select: { id: true, fileName: true } } },
+    }),
+  ]);
+  const data: ReflectionView[] = reflections.map((item) => ({
+    weekStart: dateOnly(item.weekStart),
+    wentWell: item.wentWell,
+    difficult: item.difficult,
+    nextStep: item.nextStep,
+  }));
+  const appointments: MeetingView[] = meetings.map((item) => ({
+    id: item.id, meetingDate: dateOnly(item.meetingDate),
+    title: item.title, notes: item.notes, actionPoints: item.actionPoints,
+    photos: item.photos.map((photo) => ({ id: photo.id, fileName: photo.fileName })),
+  }));
+  return <ReflectionsOverview currentWeek={dateOnly(week)} reflections={data}
+    meetings={appointments} message={(await searchParams).melding ?? null}/>;
 }
