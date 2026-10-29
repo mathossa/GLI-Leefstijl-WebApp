@@ -74,3 +74,36 @@ export async function sendSmtpTest(_previous: SmtpActionState, _form: FormData):
     return { status: "error", message: diagnostic.publicMessage };
   }
 }
+
+export type ManagedUserDeleteState = { ok: true } | { ok: false; message: string };
+
+/**
+ * Admin-only, deliberate and validated deletion. Better Auth owns account
+ * deletion; its DB cascade removes personal records and its delete hook
+ * removes private meeting images after the database transaction commits.
+ */
+export async function deleteManagedUser(userId: string, confirmationEmail: string): Promise<ManagedUserDeleteState> {
+  const actor = await requireAdmin();
+  if (!userId || userId.length > 200 || userId === actor.user.id) {
+    return { ok: false, message: "Je kunt je eigen beheeraccount niet verwijderen." };
+  }
+  const target = await prisma.user.findUnique({
+    where: { id: userId }, select: { id: true, email: true, role: true },
+  });
+  if (!target || target.email !== confirmationEmail.trim()) {
+    return { ok: false, message: "Gebruiker of bevestiging niet gevonden." };
+  }
+  if (target.role?.split(",").includes("admin")) {
+    return { ok: false, message: "Trek eerst de beheerdersrechten in voordat je dit account verwijdert." };
+  }
+  try {
+    const { auth } = await import("@/lib/auth");
+    const { headers } = await import("next/headers");
+    await auth.api.removeUser({ body: { userId }, headers: await headers() });
+    await prisma.adminAudit.create({ data: { actorId: actor.user.id, action: "admin.user.deleted" } });
+    revalidatePath("/admin");
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Het account kon niet worden verwijderd." };
+  }
+}

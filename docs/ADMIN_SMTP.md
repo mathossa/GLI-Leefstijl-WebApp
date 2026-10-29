@@ -25,3 +25,11 @@ REUSE FIRST: Better Auth Admin-plugin (MIT), Nodemailer 10.2.1 (MIT-0; https://n
 Bij een mislukte testmail toont het adminpaneel nu een *veilige categorie* (ontbrekende relayconfig, niet-ontsleutelbare credentials, DNS, verbinding, SMTP-auth, TLS-certificaat of geweigerd bericht). De serverlog toont uitsluitend de geallowliste foutcode, categorie en optionele numerieke SMTP-status, **nooit het ruwe Nodemailer-errorobject, SMTP-response, host, adressen of wachtwoorden**. De vijfminutencooldown geldt ook na een mislukte verbinding.
 
 Voordat je de test opnieuw uitvoert: bevestig dat `SMTP_ENCRYPTION_KEY` bestaat in de draaiende Node-server. Als de sleutel ná het opslaan van een SMTP-wachtwoord is vervangen, moet je de oorspronkelijke sleutel herstellen of het SMTP-wachtwoord opnieuw opslaan. Wijzig de sleutel niet zomaar wanneer bestaande credentials nog nodig zijn.
+
+## Gebruikersnaam wijzigen en gebruikers verwijderen
+
+Het gebruikersoverzicht heeft nu een eigen mobiele `Naam wijzigen`-sheet en een `Verwijderen`-sheet. Naam wijzigen gebruikt rechtstreeks `admin.updateUser` van de bestaande Better Auth Admin-plugin. Er wordt alleen het **weergavenaamveld** gewijzigd, niet het e-mailadres of een apart login-username (de app meldt nog steeds aan met e-mailadres).
+
+Verwijderen vereist het **exact intypen van het e-mailadres** en een nieuwe server-side admin- en eigenaarcontrole. Een admin kan zichzelf niet verwijderen; voor andere beheeraccounts moeten eerst de beheerrechten worden ingetrokken. De gewone Better Auth `admin.removeUser` verzorgt het daadwerkelijke hard delete, met cascades van accounts, sessies, doelen, individuele registraties, reflecties, bijeenkomstnotities en bijbehorende foto-metadata. Een server-side Better Auth database-deletehook blokkeert verwijdering van huidige beheerders via alle API-paden, en ruimt na succesvolle verwijdering de private fotomap van het account op. Het auditlog registreert de actie zonder persoons- of gezondheidsgegevens.
+
+**Let op:** verwijderingen zijn permanent. Herstel van per ongeluk verwijderde gegevens kan alleen via eigen database- en bestandsbackups. De bestaande admin-/gebruikersaanmaak- en SMTP-functies blijven intact.
