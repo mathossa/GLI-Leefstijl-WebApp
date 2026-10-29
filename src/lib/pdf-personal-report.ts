@@ -1,7 +1,7 @@
 import "server-only";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { amsterdamMonday } from "@/lib/goals-domain.mjs";
-import { isoWeekLabel } from "@/lib/week-labels.mjs";
+import { isoWeekInfo, isoWeekLabel } from "@/lib/week-labels.mjs";
 import type { exportPersonalData } from "@/lib/export-personal-data";
 
 type Data = Awaited<ReturnType<typeof exportPersonalData>>;
@@ -158,7 +158,7 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
   labelPill(isoWeekLabel(thisWeek).replace("Week ","WEEK ").split(" · ")[0],M+20,175,green,81);
   text(`${done} van ${total}`,M+20,219,25,bold,dark);
   text("keer uitgevoerd",M+20,239,11,regular,grey);
-  text(String(weekStart.getUTCFullYear()),M+20,263,9,regular,grey);
+  text(String(isoWeekInfo(thisWeek).year),M+20,263,9,regular,grey);
   donut(W-102,221,37,overall);
   y=300;
 
