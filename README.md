@@ -42,6 +42,10 @@ Next.js genereert `next-env.d.ts` automatisch. Dit bestand is daarom niet meer o
 
 GitHub Actions gebruikt een tijdelijke PostgreSQL 17, voert de gecommitte migraties uit en test via HTTP onder meer afgesloten registratie, inloggen en adminisolatie.
 
+## Beheer en SMTP (#6, aparte featurebranch)
+
+In de adminomgeving kun je gebruikers toevoegen of blokkeren en de optionele SMTP-relay configureren. Voor versleutelde SMTP-credentials heb je een **aparte** `SMTP_ENCRYPTION_KEY` nodig (genereer met `openssl rand -base64 32`). Zonder relay blijven inloggen en doelen werken. Zie [docs/ADMIN_SMTP.md](docs/ADMIN_SMTP.md) voor test- en herstelafspraken. Geen directe MX-mail en geen poort 25.
+
 ## Beveiliging
 
 - **Geen publieke registratie**: Better Auth `emailAndPassword.disableSignUp: true` op de server.

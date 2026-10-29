@@ -31,7 +31,8 @@
     "@prisma/adapter-pg": "7.10.1",
     "pg": "8.16.3",
     "dotenv": "16.6.1",
-    "server-only": "0.0.1"
+    "server-only": "0.0.1",
+    "nodemailer": "10.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.16",

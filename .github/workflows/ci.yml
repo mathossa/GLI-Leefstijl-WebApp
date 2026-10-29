@@ -47,6 +47,8 @@ jobs:
         run: node --test tests/goals-domain.test.mjs
       - name: Verify goal ownership and DB constraints
         run: node scripts/smoke-goals-db.mjs
+      - name: SMTP encryption and relay input safety tests
+        run: node --experimental-strip-types --test tests/admin-smtp.test.mjs
       - name: ESLint
         run: npm run lint
       - name: TypeScript
