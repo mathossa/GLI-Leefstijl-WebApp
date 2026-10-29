@@ -14,7 +14,6 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
   const [name, setName] = useState(""), [email, setEmail] = useState(""), [password, setPassword] = useState("");
 
   const refresh = useCallback(async () => {
-    setLoading(true);
     try {
       const response = await authClient.admin.listUsers({ query: { limit: PAGE_SIZE, offset } });
       if (response.error || !response.data) throw new Error();
@@ -90,8 +89,8 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
       </div>
       {total > PAGE_SIZE && <div className="flex items-center justify-between gap-3 text-sm">
         <span className="text-muted-foreground">{offset + 1}–{Math.min(offset + PAGE_SIZE,total)} van {total}</span>
-        <div className="flex gap-2"><Button type="button" variant="outline" disabled={loading || offset === 0} onClick={()=>setOffset(o=>Math.max(0,o-PAGE_SIZE))}>Vorige</Button>
-          <Button type="button" variant="outline" disabled={loading || offset + PAGE_SIZE >= total} onClick={()=>setOffset(o=>o+PAGE_SIZE)}>Volgende</Button></div></div>}
+        <div className="flex gap-2"><Button type="button" variant="outline" disabled={loading || offset === 0} onClick={()=>{ setLoading(true); setOffset(o=>Math.max(0,o-PAGE_SIZE)); }}>Vorige</Button>
+          <Button type="button" variant="outline" disabled={loading || offset + PAGE_SIZE >= total} onClick={()=>{ setLoading(true); setOffset(o=>o+PAGE_SIZE); }}>Volgende</Button></div></div>}
     </section>
   );
 }
