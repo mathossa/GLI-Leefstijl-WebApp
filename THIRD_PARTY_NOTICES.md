@@ -16,7 +16,7 @@ Bestaande dependency-pakketten blijven onder hun eigen licenties. Controleer de 
 ## PDF- en fotoverwerking (#5)
 
 - [pdf-lib](https://github.com/Hopding/pdf-lib) **1.17.1**, MIT-licentie. Wordt als npm-dependency gebruikt voor het opmaken van lokale PDF-overzichten; er zijn geen upstreambronbestanden gekopieerd.
-- [sharp](https://github.com/lovell/sharp) **0.34.5**, Apache-2.0-licentie. Wordt als npm-dependency gebruikt om privéfoto's van notities veilig te verwerken (resize/oriëntatie, WebP, zonder EXIF). Eigen bindings en native libvips-afhankelijkheden behouden hun oorspronkelijke licenties.
+- [sharp](https://github.com/lovell/sharp) **0.35.5**, Apache-2.0-licentie. Wordt als npm-dependency gebruikt om privéfoto's van notities veilig te verwerken (resize/oriëntatie, WebP, zonder EXIF). Eigen bindings en native libvips-afhankelijkheden behouden hun oorspronkelijke licenties.
 
 Bekijk de lockfile voor exacte versies/transitieve pakketten en controleer bij distributie de eventuele notice-verplichtingen. De projectcode van de integratie is AGPL-3.0-only; de libraries behouden hun upstreamlicenties.
 

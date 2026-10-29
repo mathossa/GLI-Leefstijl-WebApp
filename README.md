@@ -4,7 +4,7 @@
 
 ## Status
 
-Mijn Leefstijl bevat een mobile-first dashboard, beveiligde login met Better Auth, doelen en eenklikregistratie (#1–#4). **Issue #5 is gemerged** en biedt: wekelijkse reflecties, CooL-bijeenkomstnotities, echte week-/maandinzichten en een privé JSON-export, een deelbaar PDF-overzicht en privéfoto's bij CooL-bijeenkomsten. Alle persoonlijke gegevens worden opgeslagen in PostgreSQL via Prisma. Dit is nog geen productieversie; SMTP, VPS/Portainer en verdere privacy-/securityhardening volgen in #6–#8.
+Mijn Leefstijl bevat een mobile-first dashboard, beveiligde login met Better Auth, doelen en eenklikregistratie (#1–#4). **Issue #5 is gemerged** en biedt: wekelijkse reflecties, CooL-bijeenkomstnotities, echte week-/maandinzichten en een privé JSON-export, een deelbaar PDF-overzicht en privéfoto's bij CooL-bijeenkomsten. Alle persoonlijke gegevens worden opgeslagen in PostgreSQL via Prisma. De beveiligde adminomgeving en SMTP-relay van #6 zijn gemerged. Docker/Portainer, backups en releasebeheer worden ontwikkeld in issue #7; de volledige securityhardening volgt in #8. Dit is nog geen productie-uitrol.
 
 ## Lokaal op Linux / WSL
 
@@ -28,7 +28,7 @@ Het Better Auth CLI-commando vraagt interactief om een wachtwoord. Vermijd `--pa
 
 Voor een andere poort: pas eerst `BETTER_AUTH_URL` in `.env` aan naar de exacte URL, en start `npm run dev -- -p 3001`. Gebruik dezelfde hostnaam (localhost of 127.0.0.1) consistent.
 
-**Belangrijk:** de Compose-database is alleen voor lokale ontwikkeling, luistert uitsluitend op loopback (`127.0.0.1`) en is geen productieopzet. VPS/Portainer deployment volgt in #7.
+**Belangrijk:** de Compose-database is alleen voor lokale ontwikkeling, luistert uitsluitend op loopback (`127.0.0.1`) en is geen productieopzet. VPS/Portainer deployment wordt voorbereid in #7.
 
 ### Privéfoto's en exports (#5)
 
@@ -65,4 +65,14 @@ Gebruik bestaande upstreamfunctionaliteit boven eigen code. Zie [AGENTS.md](AGEN
 
 ## Gebruikersbeheer en SMTP-relay (#6)
 
-Beheerders kunnen via `/admin` gebruikers aanmaken, hun rol wijzigen en accounts blokkeren of deblokkeren via de bestaande Better Auth Admin-plugin. Een optionele TLS/STARTTLS SMTP-relay ondersteunt veilig verzenden van een testmail naar het eigen beheeraccount. Het SMTP-wachtwoord is met AES-256-GCM versleuteld; stel `SMTP_ENCRYPTION_KEY` apart van `BETTER_AUTH_SECRET` in (bijvoorbeeld `openssl rand -base64 32`). Zonder SMTP blijven login en leefstijlfunctionaliteit werken. Geen directe MX-mail of poort 25. Zie [docs/ADMIN_SMTP.md](docs/ADMIN_SMTP.md).
+Beheerders kunnen via `/admin` gebruikers aanmaken, weergavenamen wijzigen, rollen beheren en accounts blokkeren of definitief verwijderen via de Better Auth Admin-plugin. Een optionele TLS/STARTTLS SMTP-relay ondersteunt veilig verzenden van een testmail naar het eigen beheeraccount. Het SMTP-wachtwoord is met AES-256-GCM versleuteld; stel `SMTP_ENCRYPTION_KEY` apart van `BETTER_AUTH_SECRET` in (bijvoorbeeld `openssl rand -base64 32`). Zonder SMTP blijven login en leefstijlfunctionaliteit werken. Geen directe MX-mail of poort 25. Zie [docs/ADMIN_SMTP.md](docs/ADMIN_SMTP.md).
+
+## Docker en Portainer (issue #7, PR #17)
+
+Een gereviewde twee-container-Compose-stack voor **Docker Standalone + bestaande TLS reverse proxy** is voorbereid: non-root Next.js standalone app met Prisma-migraties vóór de webserverstart, PostgreSQL 17 op een **intern** netwerk, database- en privéfotovolumes, privacyveilige healthcheck en scriptbare database-/foto-backups met geïsoleerde restoretests. Geen database- of apppoort wordt publiek gepubliceerd. Zie [de productiehandleiding](docs/DEPLOYMENT.md) en [voorbeeldvariabelen](deploy/portainer.env.example).
+
+**De twee-containerstack is nog niet naar een VPS gedeployed**. Hij is bedoeld om vóór het mergen met fictieve data en een bestaande HTTPS-proxy te testen. Uploads staan in een eigen persistent volume; zowel DB als foto's en de bijbehorende encryptiesleutels moeten onderdeel zijn van een versleutelde off-host backup. Productiesecrets nooit committen. Scripts voor het testen van restore worden **niet** uitgevoerd tegen bestaande productiegegevens.
+
+## Zonder SSH via Portainer Git repository
+
+De standaarduitrol voor **Nginx Proxy Manager + Portainer** werkt nu zonder handmatige Git checkout of image-build op de VPS. De groene `quality`- en `container`-jobs publiceren een vooraf geteste app-image naar GitHub Container Registry. In Portainer kies je **Stacks → Add stack → Git repository**, ref `refs/heads/feat/issue-7-portainer-production-deployment`, Compose path `compose.prod.yml` en laat Additional files leeg. Stel `APP_IMAGE=ghcr.io/mathossa/gli-leefstijl-webapp:issue7-test` en de overige variabelen in Portainer in. Als GHCR privé is, koppel de registry met `read:packages`; sla deze credential niet in de Compose-file op. Zie [de Portainer-only handleiding](docs/DEPLOYMENT.md). Productiebackup en restore blijven aparte vereiste beheertaken.

@@ -1,9 +1,9 @@
-name: Code quality and authentication security
+name: Code quality, secure container deployment and restore
 on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, feat/issue-6-admin-smtp-relay]
+    branches: [main, feat/issue-7-portainer-production-deployment]
 
 permissions:
   contents: read
@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:17.11-alpine3.24
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci_disposable_only
@@ -59,6 +59,8 @@ jobs:
         run: node --experimental-strip-types --test tests/admin-smtp.test.mjs
       - name: Verify SMTP DB constraints and test cooldown
         run: node scripts/smoke-admin-db.mjs
+      - name: Inventory all dependency licenses
+        run: node scripts/license-inventory.mjs
       - name: ESLint
         run: npm run lint
       - name: TypeScript
@@ -78,3 +80,217 @@ jobs:
             sleep 1
           done
           node scripts/smoke-auth.mjs
+      - name: Publish dependency license inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-license-inventory
+          path: artifacts/dependency-licenses.json
+          if-no-files-found: warn
+      - name: Audit production dependencies for high/critical advisories
+        run: npm audit --omit=dev --audit-level=high
+
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci_only_throwaway
+      POSTGRES_DB: leefstijl
+      DATABASE_URL: postgresql://ci:ci_only_throwaway@postgres:5432/leefstijl
+      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: ci-only-a-random-looking-secret-that-is-not-used-in-production
+      PROXY_NETWORK: ci-proxy
+      APP_IMAGE: mijn-leefstijl:ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell backup/restore scripts
+        run: bash -n scripts/backup-db.sh scripts/test-restore.sh scripts/backup-private-uploads.sh scripts/test-restore-private-uploads.sh
+      - name: Create disposable reverse-proxy network
+        run: docker network create ci-proxy
+      - name: Validate Compose config with CI-only secrets
+        run: docker compose -f compose.prod.yml -f compose.build.yml config --quiet
+      - name: Validate Portainer Git Stack (registry image; no SSH build)
+        run: |
+          docker compose -f compose.prod.yml config --format json > /tmp/leefstijl-portainer.json
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const c = JSON.parse(readFileSync("/tmp/leefstijl-portainer.json", "utf8"));
+            assert.deepEqual(Object.keys(c.services).sort(), ["app", "postgres"]);
+            assert.equal(c.services.app.image, process.env.APP_IMAGE);
+            assert.equal(c.services.app.build, undefined, "Portainer must pull a prebuilt image");
+            assert.equal(c.networks.database.internal, true);
+            assert.equal(c.networks.proxy.external, true);
+            for (const svc of Object.values(c.services)) assert.ok(!svc.ports?.length);
+          '
+      - name: Verify stable Nginx Proxy Manager network alias and isolation
+        run: |
+          docker compose -f compose.prod.yml -f compose.build.yml config --format json > /tmp/leefstijl-compose.json
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import assert from "node:assert/strict";
+            const c = JSON.parse(readFileSync("/tmp/leefstijl-compose.json", "utf8"));
+            assert.ok(c.services.app.networks.proxy.aliases.includes("mijn-leefstijl-web"));
+            assert.ok(!("proxy" in c.services.postgres.networks));
+            assert.deepEqual(Object.keys(c.services).sort(), ["app", "postgres"]);
+            assert.equal(c.services.app.depends_on.postgres.condition, "service_healthy");
+            assert.equal(c.networks.database.internal, true);
+            assert.equal(c.networks.proxy.external, true);
+            for (const service of ["app", "postgres"]) {
+              assert.ok(!c.services[service].ports?.length);
+            }
+          '
+      - name: Build single app image with migration tools
+        run: docker compose -f compose.prod.yml -f compose.build.yml build
+      - name: Ensure failed migrations cannot start Next.js
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          timeout 35s docker run --rm --network none \
+            -e DATABASE_URL=postgresql://invalid:invalid@127.0.0.1:5432/invalid \
+            -e BETTER_AUTH_URL=http://localhost:3000 \
+            -e BETTER_AUTH_SECRET=ci-only-invalid-test-secret-over-32-characters \
+            "$APP_IMAGE" >/tmp/leefstijl-no-db.log 2>&1
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ] || [ "$rc" -eq 124 ]; then
+            echo "Expected migration failure (not success/timeout); exit: $rc"; exit 1
+          fi
+          if grep -q '\[startup\] Prisma migration completed' /tmp/leefstijl-no-db.log; then
+            echo "Next.js started without a database"; exit 1
+          fi
+      - name: Apply migrations at app startup and wait for healthy application
+        shell: bash
+        run: |
+          docker compose -f compose.prod.yml up -d
+          ready=0
+          for attempt in $(seq 1 45); do
+            if docker compose -f compose.prod.yml exec -T app node /app/healthcheck.mjs >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          docker compose -f compose.prod.yml ps
+          if [ "$ready" != 1 ]; then
+            docker compose -f compose.prod.yml logs --no-color postgres app || true
+            exit 1
+          fi
+          echo "Two-container app and database readiness passed"
+          docker compose -f compose.prod.yml exec -T app ./node_modules/.bin/auth create-admin --help >/dev/null
+          docker compose -f compose.prod.yml restart app
+          for attempt in $(seq 1 45); do
+            if docker compose -f compose.prod.yml exec -T app node /app/healthcheck.mjs >/dev/null 2>&1; then
+              echo "Restart with already-applied Prisma migrations passed"; exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f compose.prod.yml logs --no-color app || true
+          exit 1
+      - name: Verify optional one-time admin bootstrap without an interactive console
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A partial configuration must fail, rather than creating an insecure account.
+          if docker compose -f compose.prod.yml exec -T -e BOOTSTRAP_ADMIN_EMAIL=ci@example.test app node /app/bootstrap-admin.mjs; then
+            echo "Partial bootstrap configuration unexpectedly succeeded"; exit 1
+          fi
+          docker compose -f compose.prod.yml exec -T \
+            -e BOOTSTRAP_ADMIN_EMAIL=ci-bootstrap@example.test \
+            -e BOOTSTRAP_ADMIN_NAME="CI Bootstrap" \
+            -e BOOTSTRAP_ADMIN_PASSWORD=ci-only-throwaway-admin-password-12345 \
+            app node /app/bootstrap-admin.mjs
+          # Re-running with a different email must not create another admin.
+          docker compose -f compose.prod.yml exec -T \
+            -e BOOTSTRAP_ADMIN_EMAIL=ci-second@example.test \
+            -e BOOTSTRAP_ADMIN_NAME="Unexpected admin" \
+            -e BOOTSTRAP_ADMIN_PASSWORD=ci-only-throwaway-admin-password-23456 \
+            app node /app/bootstrap-admin.mjs
+          docker compose -f compose.prod.yml exec -T app node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import pg from "pg";
+            const db = new pg.Client({connectionString:process.env.DATABASE_URL});
+            try {
+              await db.connect();
+              const {rows} = await db.query(
+                "SELECT u.email, u.role, a.password FROM \"user\" u JOIN account a ON a.\"userId\"=u.id"
+              );
+              assert.equal(rows.length, 1, "Exactly one initial account expected");
+              assert.equal(rows[0].email, "ci-bootstrap@example.test");
+              assert.equal(rows[0].role, "admin");
+              assert.ok(rows[0].password && !rows[0].password.includes("throwaway"), "Password must be hashed");
+            } finally {
+              await db.end();
+            }
+          '
+      - name: Verify PostgreSQL backup and isolated restore
+        shell: bash
+        run: |
+          umask 077
+          tempdir="$(mktemp -d)"
+          trap 'rm -rf "$tempdir"' EXIT
+          cat > "$tempdir/.env.prod" <<EOF
+          APP_IMAGE=$APP_IMAGE
+          PROXY_NETWORK=$PROXY_NETWORK
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          POSTGRES_DB=$POSTGRES_DB
+          DATABASE_URL=$DATABASE_URL
+          BETTER_AUTH_URL=$BETTER_AUTH_URL
+          BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
+          EOF
+          ./scripts/backup-db.sh "$tempdir/.env.prod" "$tempdir/backups"
+          ./scripts/test-restore.sh "$tempdir/backups/"*.dump
+          # Only synthetic CI content: verify non-root upload volume and restore path.
+          docker compose -f compose.prod.yml exec -T app sh -c 'test -w "$PRIVATE_UPLOAD_DIR" && printf ci-volume-persistence > "$PRIVATE_UPLOAD_DIR/ci-upload-probe.txt"'
+          docker compose -f compose.prod.yml restart app
+          docker compose -f compose.prod.yml exec -T app sh -c 'test -s "$PRIVATE_UPLOAD_DIR/ci-upload-probe.txt"'
+          bash ./scripts/backup-private-uploads.sh "$tempdir/.env.prod" "$tempdir/backups"
+          bash ./scripts/test-restore-private-uploads.sh "$tempdir/backups/"*.tar.gz
+          tar -xOf "$tempdir/backups/"*.tar.gz ./ci-upload-probe.txt | grep -qx ci-volume-persistence
+      - name: Remove disposable CI stack and network
+        if: always()
+        shell: bash
+        run: |
+          docker compose -f compose.prod.yml down --volumes --remove-orphans || true
+          docker network rm ci-proxy || true
+
+  publish:
+    name: Publish tested image for Portainer
+    needs: [quality, container]
+    if: github.event_name == 'push' && github.repository == 'mathossa/GLI-Leefstijl-WebApp'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout validated revision
+        uses: actions/checkout@v4
+      - name: Configure Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Authenticate to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish app image from tested commit
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: runner
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/mathossa/gli-leefstijl-webapp:sha-${{ github.sha }}
+            ghcr.io/mathossa/gli-leefstijl-webapp:${{ github.ref_name == 'main' && 'main' || 'issue7-test' }}
+            ${{ github.ref_name == 'main' && 'ghcr.io/mathossa/gli-leefstijl-webapp:latest' || '' }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/mathossa/GLI-Leefstijl-WebApp
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
