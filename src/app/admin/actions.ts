@@ -10,6 +10,7 @@ import { sendConfiguredTestMail } from "@/lib/smtp";
 export type SmtpActionState = { status: "idle" | "success" | "error"; message: string };
 
 export async function saveSmtpSettings(_previous: SmtpActionState, formData: FormData): Promise<SmtpActionState> {
+  void _previous;
   const session = await requireAdmin();
   let input;
   try { input = parseMailInput(formData); }
@@ -45,6 +46,8 @@ export async function saveSmtpSettings(_previous: SmtpActionState, formData: For
 }
 
 export async function sendSmtpTest(_previous: SmtpActionState, _form: FormData): Promise<SmtpActionState> {
+  void _previous;
+  void _form;
   const session = await requireAdmin();
   // Atomic PostgreSQL update also throttles simultaneous requests across replicas.
   const cutoff = new Date(Date.now() - 5 * 60 * 1000);
