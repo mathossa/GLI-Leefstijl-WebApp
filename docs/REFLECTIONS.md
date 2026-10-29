@@ -40,3 +40,10 @@ npm run lint && npm run typecheck && npm run build
 ## Definitieve #4-integratie
 
 #5 gebruikt `HabitWeekEntry` uit #4. Een week telt voor de inzichten mee als `completedCount > 0`, er een weeknotitie bestaat, of er individuele entries zijn; een lege automatische target-snapshot telt niet mee. De eigen JSON-export bevat ook alle individuele uitvoeringen en bijbehorende optionele feedback. De actuele Vandaag- en Doelen-schermen blijven behouden.
+
+## Mobile-first UX en exporttests
+
+- Reflectie heeft nu een **compacte kaart voor deze week**, eerdere weekkaarten en een eenvoudige lijst met CooL-bijeenkomsten. Grote formulieren zitten in native bottom-sheets (desktop modal), met terugknop en sluitknop. Geen geneste accordion-machines.
+- Per week zijn **wat ging goed, wat was lastig en volgende stap** te bewerken; ten minste één antwoord volstaat. Eerdere ontbrekende weken zijn via één keuzescherm invulbaar.
+- Bijeenkomst toevoegen/bewerken en notities/actiepunten bekijken gebeurt via een sheet. Verwijderen vraagt bevestiging.
+- De CI voert een echte HTTP-exporttest uit: 401 zonder login, een export voor administrator en gewone gebruiker, verifiëren dat hun gegevens niet mengen en dat individuele uitvoeringsfeedback, reflecties en bijeenkomstnotities wel in de JSON staan, maar authvelden niet.

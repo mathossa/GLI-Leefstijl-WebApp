@@ -172,7 +172,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
           )}
 
           {mode?.kind === "reflection" && (
-            <form action={saveReflection} className="space-y-4">
+            <form key={mode.weekStart} action={saveReflection} className="space-y-4">
               <p className="text-sm text-[#5e7866]">Week van {formattedDate(mode.weekStart)}</p>
               <input name="weekStart" type="hidden" value={mode.weekStart}/>
               {([
@@ -186,9 +186,15 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
                 </div>
               ))}
               <Button className="h-12 w-full" type="submit">Reflectie opslaan</Button>
-              {entry && <div className="border-t border-[#e2e9df] pt-4">
-                <button type="submit" form="remove-reflection" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm text-[#b04545]"> <Trash2 size={17} aria-hidden="true"/> Reflectie verwijderen</button>
-              </div>}
+            </form>
+          )}
+          {mode?.kind === "reflection" && entry && (
+            <form action={deleteReflection} className="border-t border-[#e2e9df] pt-3"
+              onSubmit={(event) => { if (!window.confirm("Deze weekreflectie verwijderen?")) event.preventDefault(); }}>
+              <input type="hidden" name="weekStart" value={entry.weekStart}/>
+              <button type="submit" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm text-[#b04545]">
+                <Trash2 size={17} aria-hidden="true"/> Reflectie verwijderen
+              </button>
             </form>
           )}
 
@@ -230,13 +236,6 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
         </div>
       </dialog>
 
-      {/* Explicitly separate form avoids nested forms in the reflection sheet. */}
-      {mode?.kind === "reflection" && entry && (
-        <form id="remove-reflection" action={deleteReflection}
-          onSubmit={(e) => { if (!window.confirm("Deze weekreflectie verwijderen?")) e.preventDefault(); }}>
-          <input type="hidden" name="weekStart" value={entry.weekStart}/>
-        </form>
-      )}
     </div>
   );
 }
