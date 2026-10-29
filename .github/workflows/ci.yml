@@ -288,6 +288,7 @@ jobs:
           tags: |
             ghcr.io/mathossa/gli-leefstijl-webapp:sha-${{ github.sha }}
             ghcr.io/mathossa/gli-leefstijl-webapp:${{ github.ref_name == 'main' && 'main' || 'issue7-test' }}
+            ${{ github.ref_name == 'main' && 'ghcr.io/mathossa/gli-leefstijl-webapp:latest' || '' }}
           labels: |
             org.opencontainers.image.source=https://github.com/mathossa/GLI-Leefstijl-WebApp
             org.opencontainers.image.revision=${{ github.sha }}
