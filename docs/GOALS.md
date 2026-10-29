@@ -49,3 +49,13 @@
 ### Handmatige acceptatie
 
 Controleer 320px, 375px, 390px en 430px breedte, plus tablet en desktop. Nergens horizontaal scrollen of afgekapte titels, KPI's of knoppen. Probeer een actietitel met minimaal 80 tekens, zoom naar 200%, toets Tab/Enter/Escape in het reviewscherm, registreer tweemaal, draai een keer terug, voeg optionele feedback toe, herlaad de pagina en verifieer de opgeslagen data.
+
+## Doelenoverzicht met mobiele bottom-sheets (PR #13)
+
+- Het scherm **Mijn doelen** bestaat uit een compacte titel, één knop `Nieuw doel toevoegen`, en overzichtskaarten. Iedere kaart toont alleen naam, één regel motivatie, leefstijlgebied, aantal weekacties, optionele periode en voortgang; de pagina toont geen standaard open formulieren of weekdetails.
+- **Doelkaart** opent een native bottom-sheet (desktop: modal). Daar zijn volledige motivatie, actiekaarten, doel bewerken, weekactie toevoegen en veilig archiveren zichtbaar.
+- **Actiekaart** opent een volgende view in dezelfde sheet: weekteller, ervaringen, weekreflectie, bewerken en recente historie. Met de terugknop ga je naar het doel, niet terug naar de startpagina.
+- Toevoegen/bewerken van doelen en acties, weekreflectie en ervaringen gebeuren in afzonderlijke sheet-views. Bestaande Next.js Server Actions en gebruikersisolatie blijven onveranderd; er zijn geen nieuwe dependencies of databasemigraties nodig.
+- Motivatie is optioneel geworden, passend bij het goedgekeurde ontwerp; oude doelen blijven ongewijzigd.
+- Ervaringen uit de meest recente geregistreerde weken blijven beschikbaar om te bekijken en te bewerken; het review-overzicht gebruikt de al bestaande feedbackcomponent.
+- Mobiele acceptatie: 320/375/390/430px, scrollen in een open sheet, met Escape sluiten, terugnavigatie, aanmaken/bewerken/archiveren en gegevens na herladen. `Vandaag` mag visueel en functioneel niet veranderen.

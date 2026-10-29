@@ -122,6 +122,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
   function open(next: View) {
     setView(next);
     if (!dialog.current?.open) dialog.current?.showModal();
+    else dialog.current.scrollTop = 0;
   }
   function close() {
     dialog.current?.close();
@@ -140,6 +141,8 @@ export function GoalsOverview({ goals, currentWeek, message }: {
   const goal = view && "goalId" in view ? goals.find((item) => item.id === view.goalId) : null;
   const action = view && "actionId" in view ? goal?.actions.find((item) => item.id === view.actionId) : null;
   const progress = action ? currentProgress(action, currentWeek) : null;
+  const entries = action?.weeks.flatMap((week) => week.entries)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt)) ?? [];
 
   let title = "Nieuw doel toevoegen";
   if (view?.kind === "goal") title = goal?.title ?? "Doel";
@@ -323,7 +326,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
               </div>
               <button type="button" onClick={() => open({ kind: "experiences", goalId: goal.id, actionId: action.id })}
                 className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#e3e9e0] bg-white px-4 text-left text-sm font-semibold">
-                <History size={19} aria-hidden="true"/><span className="flex-1">Ervaringen ({progress.week?.entries.length ?? 0})</span><ChevronRight size={18} aria-hidden="true"/>
+                <History size={19} aria-hidden="true"/><span className="flex-1">Ervaringen ({entries.length})</span><ChevronRight size={18} aria-hidden="true"/>
               </button>
               <button type="button" onClick={() => open({ kind: "week-note", goalId: goal.id, actionId: action.id })}
                 className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#e3e9e0] bg-white px-4 text-left text-sm font-semibold">
@@ -380,7 +383,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
           {view?.kind === "experiences" && action && (
             <div className="space-y-4">
               <p className="text-sm text-[#5d7163]">{action.title}</p>
-              <ActionEntryFeedback entries={progress?.week?.entries ?? []} label="Ervaringen deze week"/>
+              <ActionEntryFeedback entries={entries} label="Geregistreerde ervaringen"/>
               <p className="text-xs text-[#6c7c6f]">Een uitvoering registreren doe je direct op Vandaag.</p>
             </div>
           )}
