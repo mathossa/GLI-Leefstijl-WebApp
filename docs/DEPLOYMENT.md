@@ -101,8 +101,12 @@ Bij een mislukte migratie **niet** zomaar de oude image tegen een gewijzigde dat
 
 ## Integratie met de gemergede app (#5 en #6)
 
-De productiestack gebruikt dezelfde Prisma-migraties als `main` (inclusief `20261029003000_weekly_reflections_meetings`, `20261029004000_private_meeting_photos` en `20261029005000_admin_smtp_settings`). De app image neemt de Next.js 12 MB uploadlimiet voor privéfoto's en de modules `pdf-lib`, `sharp`, `nodemailer` mee. De afzonderlijke migrator heeft de Prisma-CLI plus Better Auth-admin-CLI zodat de eerste beheerder aangemaakt kan worden.
+De productiestack gebruikt dezelfde Prisma-migraties als `main` (inclusief `20261029003000_weekly_reflections_meetings`, `20261029004000_private_meeting_photos` en `20261029005000_admin_smtp_settings`). De app image gebruikt de gepatchte sharp 0.35.5 (upstream libvips/librsvg-beveiligingsupdates) en neemt de Next.js 12 MB uploadlimiet voor privéfoto's en de modules `pdf-lib`, `sharp`, `nodemailer` mee. De afzonderlijke migrator heeft de Prisma-CLI plus Better Auth-admin-CLI zodat de eerste beheerder aangemaakt kan worden.
 
 **SMTP_ENCRYPTION_KEY mag niet opnieuw worden gegenereerd** wanneer er al een werkende versleutelde SMTP-configuratie bestaat. Voor migratie van een bestaande omgeving moeten de bijbehorende sleutel en de database als één set worden bewaard. `BETTER_AUTH_SECRET` moet bij een bestaande productie-installatie eveneens stabiel blijven.
 
 **Let op bij de eerste stap:** de voorbeeldstack is uitsluitend voor een reverse-proxy op dezelfde Docker-host. Als je al een Nginx Proxy Manager-, Traefik- of Caddy-netwerk hebt, configureer `PROXY_NETWORK` op dat bestaande netwerk. Maak nooit onnodig een tweede publieke proxy of open poort 5432. Het eigen `DATABASE_URL`-wachtwoord en `POSTGRES_PASSWORD` moeten dezelfde waarde hebben.
+
+## Bestandsrechten en dependency-audit
+
+De backup- en restore-scripts zijn uitvoerbaar (mode 0755) in Git; lokaal kun je ze ook met `bash scripts/backup-db.sh ...` uitvoeren. De security-audit loopt bij iedere PR en blokkeert hoge of kritieke advisories. Tijdens het afronden van #7 is de kwetsbare `sharp@0.34.5` vervangen door de gepatchte `sharp@0.35.5`, met nieuw `package-lock.json`. De volledige fotobewerking, mobiele upload, containerbuild en `npm audit --omit=dev --audit-level=high` moeten op deze versie opnieuw slagen.
