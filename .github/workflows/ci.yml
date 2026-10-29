@@ -1,4 +1,4 @@
-name: Code quality and authentication security
+name: Code quality, deployment and security
 on:
   pull_request:
     branches: [main]
@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:17.11-alpine3.24
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci_disposable_only
@@ -47,6 +47,8 @@ jobs:
         run: node --test tests/goals-domain.test.mjs
       - name: Verify goal ownership and DB constraints
         run: node scripts/smoke-goals-db.mjs
+      - name: Inventory all dependency licenses
+        run: node scripts/license-inventory.mjs
       - name: ESLint
         run: npm run lint
       - name: TypeScript
@@ -66,3 +68,60 @@ jobs:
             sleep 1
           done
           node scripts/smoke-auth.mjs
+      - name: Publish dependency license inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-license-inventory
+          path: artifacts/dependency-licenses.json
+          if-no-files-found: warn
+      - name: Audit production dependencies for high/critical advisories
+        run: npm audit --omit=dev --audit-level=high
+
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      POSTGRES_USER: ci
+      POSTGRES_PASSWORD: ci_only_throwaway
+      POSTGRES_DB: leefstijl
+      DATABASE_URL: postgresql://ci:ci_only_throwaway@postgres:5432/leefstijl
+      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: ci-only-a-random-looking-secret-that-is-not-used-in-production
+      PROXY_NETWORK: ci-proxy
+      APP_IMAGE: mijn-leefstijl:ci
+      MIGRATOR_IMAGE: mijn-leefstijl-migrate:ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shell backup/restore scripts
+        run: bash -n scripts/backup-db.sh scripts/test-restore.sh
+      - name: Create disposable reverse-proxy network
+        run: docker network create ci-proxy
+      - name: Validate Compose config with CI-only secrets
+        run: docker compose -f compose.prod.yml -f compose.build.yml config --quiet
+      - name: Build app and migration images (production stages)
+        run: docker compose -f compose.prod.yml -f compose.build.yml build
+      - name: Apply migrations in one-shot container and wait for healthy application
+        shell: bash
+        run: |
+          docker compose -f compose.prod.yml up -d
+          ready=0
+          for attempt in $(seq 1 45); do
+            if docker compose -f compose.prod.yml exec -T app node /app/healthcheck.mjs >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          docker compose -f compose.prod.yml ps
+          if [ "$ready" != 1 ]; then
+            docker compose -f compose.prod.yml logs --no-color postgres migrate app || true
+            exit 1
+          fi
+          echo "Standalone app and database readiness passed"
+      - name: Remove disposable CI stack and network
+        if: always()
+        shell: bash
+        run: |
+          docker compose -f compose.prod.yml down --volumes --remove-orphans || true
+          docker network rm ci-proxy || true

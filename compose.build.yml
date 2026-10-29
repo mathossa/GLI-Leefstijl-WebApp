@@ -1,0 +1,12 @@
+# Local/CI build override; Portainer uses compose.prod.yml with prebuilt images.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator

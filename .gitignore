@@ -22,3 +22,7 @@ generated/
 Thumbs.db
 .idea/
 .vscode/
+# Production operations
+backups/
+artifacts/
+*.dump

@@ -28,7 +28,7 @@ Het Better Auth CLI-commando vraagt interactief om een wachtwoord. Vermijd `--pa
 
 Voor een andere poort: pas eerst `BETTER_AUTH_URL` in `.env` aan naar de exacte URL, en start `npm run dev -- -p 3001`. Gebruik dezelfde hostnaam (localhost of 127.0.0.1) consistent.
 
-**Belangrijk:** de Compose-database is alleen voor lokale ontwikkeling, luistert uitsluitend op loopback (`127.0.0.1`) en is geen productieopzet. VPS/Portainer deployment volgt in #7.
+**Belangrijk:** `compose.dev.yml` blijft uitsluitend voor lokale ontwikkeling. Voor self-hosting via Portainer is nu een afzonderlijke productiecompose met intern PostgreSQL-netwerk, migrator, healthcheck en backups beschikbaar. Zie [VPS/Portainer deployment](docs/DEPLOYMENT.md) (issue #7; eerst reviewen en testen, geen live deployment).
 
 ## Controle
 
