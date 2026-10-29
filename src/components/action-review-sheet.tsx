@@ -29,7 +29,7 @@ function ReviewForm({ entry, onSaved }: { entry: EntryView; onSaved: () => void 
 
   useEffect(() => {
     if (state.ok) onSaved();
-  }, [state.ok, onSaved]);
+  }, [state, onSaved]);
 
   return (
     <form action={submit} className="space-y-5">
