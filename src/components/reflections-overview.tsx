@@ -240,7 +240,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
                     <input id="meeting-new-photo" type="file" name="photo" required
                       accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                       className="block w-full min-w-0 text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-[#305a42]"/>
-                    <p className="text-xs text-[#5c7464]">Maximaal 8 MB per foto. Alle foto's zijn privé.</p>
+                    <p className="text-xs text-[#5c7464]">Maximaal 8 MB per foto. Alle foto’s zijn privé.</p>
                     <Button type="submit" size="sm" className="w-full">Foto bewaren</Button>
                   </form>
                 )}
