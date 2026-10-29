@@ -67,10 +67,10 @@ services:
       migrate:
         condition: service_completed_successfully
     networks:
-      - database
-      - proxy:
-          aliases:
-            - mijn-leefstijl-web
+      database: {}
+      proxy:
+        aliases:
+          - mijn-leefstijl-web
     # Intentionally no published ports; only proxy network reaches app:3000.
     expose:
       - "3000"
