@@ -4,5 +4,7 @@ set -eu
 cd /app
 echo "[startup] Applying pending Prisma migrations"
 ./node_modules/.bin/prisma migrate deploy
-echo "[startup] Prisma migration completed; starting Next.js"
+echo "[startup] Prisma migration completed"
+node /app/bootstrap-admin.mjs
+echo "[startup] Starting Next.js"
 exec node server.js
