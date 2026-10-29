@@ -41,7 +41,7 @@ function dateInput(value) {
 /** @param {FormData} form */
 export function parseGoalForm(form) {
   const title = bounded(field(form, "title"), 120);
-  const motivation = bounded(field(form, "motivation"), 1000);
+  const motivation = bounded(field(form, "motivation"), 1000, false);
   const area = field(form, "area");
   if (!GOAL_AREAS.some((item) => item.value === area)) throw new FormInputError();
   const startDate = dateInput(field(form, "startDate"));

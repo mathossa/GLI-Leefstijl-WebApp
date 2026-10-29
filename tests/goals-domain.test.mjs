@@ -27,6 +27,7 @@ test("Amsterdam calendar weeks reset on Monday, never on UTC midnight", () => {
 test("goal validation: title, motivation, area and optional dates", () => {
   const valid = parseGoalForm(goal({ startDate: "2026-10-28", endDate: "2026-12-01" }));
   assert.equal(valid.area, "SLAAP");
+  assert.equal(parseGoalForm(goal({ motivation: "" })).motivation, "");
   assert.equal(valid.startDate.toISOString(), "2026-10-28T00:00:00.000Z");
   assert.throws(() => parseGoalForm(goal({ title: "" })), FormInputError);
   assert.throws(() => parseGoalForm(goal({ motivation: "x".repeat(1001) })), FormInputError);
