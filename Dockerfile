@@ -38,6 +38,7 @@ COPY --from=builder --chown=node:node /app/src ./src
 COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=node:node /app/package.json ./package.json
 COPY --chown=node:node scripts/healthcheck.mjs ./healthcheck.mjs
+COPY --chown=node:node scripts/bootstrap-admin.mjs ./bootstrap-admin.mjs
 COPY --chmod=0755 --chown=node:node scripts/start-container.sh ./start-container.sh
 USER node
 EXPOSE 3000
