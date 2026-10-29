@@ -1,6 +1,6 @@
 # Issue #6 — adminpaneel en SMTP-relay
 
-Deze branch is onafhankelijk van #5 en gebaseerd op main. De bestaande Better Auth Admin-plugin verzorgt gebruikersbeheer: nieuwe leden toevoegen, rol wijzigen en blokkeren/deblokkeren. Er zijn geen eigen auth-tabellen of eigen wachtwoordhashes.
+De voorbereidende branch is geïntegreerd met de gemergede #5. Reflecties, privéfoto's, PDF-export en weeknummers blijven behouden. De bestaande Better Auth Admin-plugin verzorgt gebruikersbeheer: nieuwe leden toevoegen, rol wijzigen en blokkeren/deblokkeren. Er zijn geen eigen auth-tabellen of eigen wachtwoordhashes.
 
 ## SMTP en privacy
 
@@ -14,7 +14,7 @@ Er is nog geen publieke self-registration, geen e-mailverificatie of wachtwoord-
 
 ## Migratie, test en hergebruik
 
-Additieve migratie: 20261029004000_admin_smtp_settings. Deze laat alle bestaande auth-, doelen-, actie-, reflectie- en historierecords ongemoeid. Voor productie vooraf een volledige DB-backup maken en het bewaren van de encryptiesleutel controleren. Terugval bij een fout: de vorige applicatieversie draait zonder de twee nieuwe tabellen; nooit bestaande gegevens verwijderen.
+Additieve migratie: 20261029005000_admin_smtp_settings. Deze laat alle bestaande auth-, doelen-, actie-, reflectie- en historierecords ongemoeid. Voor productie vooraf een volledige DB-backup maken en het bewaren van de encryptiesleutel controleren. Terugval bij een fout: de vorige applicatieversie draait zonder de twee nieuwe tabellen; nooit bestaande gegevens verwijderen.
 
 Geautomatiseerd: node --experimental-strip-types --test tests/admin-smtp.test.mjs; daarnaast lint, typecheck, build en bestaande auth-smoke-tests via CI. Voor handmatige review: /admin openen als admin en lid, relay uit/aan, poort 25 afwijzen, optioneel wachtwoord bewaren, eigen testmail, cooldown, foutieve TLS en geen secrets in network responses.
 

@@ -26,6 +26,9 @@ model User {
   accounts      Account[]
   goals         Goal[]
   habitActions  HabitAction[]
+  reflections   WeeklyReflection[]
+  meetingNotes  MeetingNote[]
+  meetingPhotos MeetingPhoto[]
 
   @@unique([email])
   @@map("user")
@@ -165,6 +168,54 @@ model HabitWeekEntry {
 
   @@index([userId, weekId, createdAt])
   @@map("habit_week_entry")
+}
+// Personal reflections are private to one user and one Amsterdam calendar week.
+model WeeklyReflection {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date
+  wentWell  String   @default("") @db.VarChar(1500)
+  difficult String   @default("") @db.VarChar(1500)
+  nextStep  String   @default("") @db.VarChar(1500)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekStart])
+  @@index([userId, weekStart(sort: Desc)])
+  @@map("weekly_reflection")
+}
+
+model MeetingNote {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meetingDate  DateTime @db.Date
+  title        String   @db.VarChar(120)
+  notes        String   @db.VarChar(4000)
+  actionPoints String?  @db.VarChar(2000)
+  photos       MeetingPhoto[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([id, userId])
+  @@index([userId, meetingDate(sort: Desc)])
+  @@map("meeting_note")
+}
+
+// Photos are held in a private server directory, never in /public.
+// Metadata is owned by the same user as its CooL meeting.
+model MeetingPhoto {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meetingId String
+  meeting   MeetingNote @relation(fields: [meetingId, userId], references: [id, userId], onDelete: Cascade)
+  fileName  String      @db.VarChar(120)
+  createdAt DateTime    @default(now())
+
+  @@index([userId, meetingId])
+  @@map("meeting_photo")
 }
 
 // Only one server-side SMTP relay configuration is active for the whole app.
