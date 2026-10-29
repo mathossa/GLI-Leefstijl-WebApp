@@ -1,206 +1,320 @@
 import "server-only";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { amsterdamMonday } from "@/lib/goals-domain.mjs";
+import { isoWeekLabel } from "@/lib/week-labels.mjs";
 import type { exportPersonalData } from "@/lib/export-personal-data";
 
-type PersonalData = Awaited<ReturnType<typeof exportPersonalData>>;
-const WIDTH = 595.28, HEIGHT = 841.89;
-const M = 47, BODY = WIDTH - M * 2;
-const navy = rgb(0.14, 0.30, 0.22);
-const green = rgb(0.22, 0.46, 0.33);
-const soft = rgb(0.91, 0.95, 0.90);
-const white = rgb(1, 1, 1);
-const textColor = rgb(0.23, 0.31, 0.25);
-const muted = rgb(0.42, 0.50, 0.44);
-const ivory = rgb(0.98, 0.98, 0.96);
-const line = rgb(0.85, 0.89, 0.85);
+type Data = Awaited<ReturnType<typeof exportPersonalData>>;
+type Color = ReturnType<typeof rgb>;
+type Goal = Data["goals"][number];
+type Action = Goal["actions"][number];
+type Reflection = Data["reflections"][number];
+type Meeting = Data["meetings"][number];
 
-// Built-in PDF fonts support WinAnsi, so replace unsupported symbols safely.
-function safe(value: unknown): string {
-  return String(value ?? "")
-    .replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"')
-    .replace(/[\u2013\u2014]/g, "-").replace(/\u2022/g, "-")
-    .replace(/\u2026/g, "...").replace(/\u00A0/g, " ")
+const W = 595.28, H = 841.89, M = 42, CW = W - M * 2;
+const dark = rgb(.13,.28,.21), green = rgb(.19,.46,.33), grey = rgb(.39,.49,.43);
+const cream = rgb(.986,.982,.967), white = rgb(1,1,1), line = rgb(.87,.91,.86);
+const mint = rgb(.88,.94,.87), lime = rgb(.93,.96,.91), peach = rgb(.99,.93,.86);
+const lilac = rgb(.94,.92,.98), butter = rgb(.99,.94,.82), pink = rgb(.98,.91,.92);
+const blue = rgb(.91,.94,.98);
+const variants = [
+  { fill:lime, ink:green }, { fill:lilac, ink:rgb(.45,.36,.61) },
+  { fill:peach, ink:rgb(.62,.37,.19) }, { fill:blue, ink:rgb(.30,.43,.66) },
+  { fill:pink, ink:rgb(.60,.33,.42) }, { fill:mint, ink:green },
+];
+
+function safe(value: unknown) {
+  return String(value ?? "").replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2022/g, "-").replace(/\u2026/g, "...")
+    .replace(/[\u00A0\u202F]/g, " ")
     .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^\x20-\x7e\xA0-\xFF\n]/g, "?");
 }
-const fmt = (value: string | Date) => {
-  const date = typeof value === "string" ? new Date(value.slice(0, 10) + "T00:00:00Z") : value;
-  return new Intl.DateTimeFormat("nl-NL", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" }).format(date);
-};
-function wrap(value: string, font: PDFFont, size: number, max: number) {
-  const lines: string[] = [];
+function lines(value: unknown, font: PDFFont, size: number, width: number) {
+  const output: string[] = [];
   for (const paragraph of safe(value).split("\n")) {
-    let line = "";
+    let current = "";
     for (const word of paragraph.split(/\s+/)) {
       if (!word) continue;
-      const candidate = line ? line + " " + word : word;
-      if (font.widthOfTextAtSize(candidate, size) <= max) {
-        line = candidate;
-      } else {
-        if (line) lines.push(line);
-        line = "";
-        // Break abnormally long words without widening the page.
-        for (const ch of word) {
-          if (font.widthOfTextAtSize(line + ch, size) > max && line) { lines.push(line); line = ""; }
-          line += ch;
+      const next = current ? current + " " + word : word;
+      if (font.widthOfTextAtSize(next,size) <= width) { current = next; continue; }
+      if (current) output.push(current);
+      current = "";
+      for (const letter of word) {
+        if (current && font.widthOfTextAtSize(current+letter,size)>width) {
+          output.push(current);current="";
         }
+        current+=letter;
       }
     }
-    lines.push(line);
+    output.push(current);
   }
-  return lines;
+  return output;
+}
+const asDate = (value: string | Date) => typeof value === "string"
+  ? new Date(value.slice(0,10)+"T00:00:00Z") : value;
+const dateText = (date: string | Date) => new Intl.DateTimeFormat("nl-NL", {
+  timeZone:"UTC",day:"numeric",month:"long",year:"numeric",
+}).format(asDate(date));
+
+function recorded(week: { completedCount: number; note: string | null; entries: unknown[] }) {
+  return week.completedCount>0 || !!week.note?.trim() || week.entries.length>0;
 }
 
-export async function createPersonalPdf(data: PersonalData, name: string): Promise<Uint8Array> {
-  const pdf = await PDFDocument.create();
-  pdf.setTitle("Mijn Leefstijl - persoonlijk overzicht");
-  pdf.setAuthor("Mijn Leefstijl");
-  pdf.setSubject("Persoonlijk overzicht van zelf vastgelegde doelen, ervaringen en reflecties");
-  const regular = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  let page!: PDFPage;
-  let y = 0;
-  function newPage() {
-    page = pdf.addPage([WIDTH, HEIGHT]);
-    page.drawRectangle({ x: 0, y: 0, width: WIDTH, height: HEIGHT, color: ivory });
-    page.drawRectangle({ x: 0, y: HEIGHT - 15, width: WIDTH, height: 15, color: green });
-    page.drawText("MIJN LEEFSTIJL", { x: M, y: HEIGHT - 48, size: 10.5, font: bold, color: green });
-    page.drawLine({ start: {x:M,y:HEIGHT-64}, end:{x:WIDTH-M,y:HEIGHT-64}, color:line, thickness:0.8 });
-    y = HEIGHT - 89;
-  }
-  function need(h: number) { if (y - h < 65) newPage(); }
-  function paragraph(value: string, opts: {size?:number; font?:PDFFont; color?:typeof textColor; indent?:number} = {}) {
-    if (!value?.trim()) return;
-    const size = opts.size ?? 10;
-    const font = opts.font ?? regular;
-    const indent = opts.indent ?? 0;
-    const lines = wrap(value, font, size, BODY - indent);
-    for (const item of lines) {
-      need(size + 4);
-      page.drawText(item || " ", {x:M+indent,y,size,font,color:opts.color ?? textColor});
-      y -= size + 5;
+export async function createPersonalPdf(data: Data, name: string): Promise<Uint8Array> {
+  const document = await PDFDocument.create();
+  document.setTitle("Mijn Leefstijl | Persoonlijk overzicht");
+  document.setAuthor("Mijn Leefstijl");
+  document.setSubject("Persoonlijk leefstijloverzicht");
+  const regular = await document.embedFont(StandardFonts.Helvetica);
+  const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  let page!: PDFPage, y = 0;
+  const text = (value: unknown, x: number, top: number, size=10, font=regular, ink:Color=dark) => {
+    page.drawText(safe(value), {x,y:H-top,size,font,color:ink});
+  };
+  const box = (x:number, top:number,w:number,h:number,fill:Color,r=0) => {
+    const radius=Math.max(0,Math.min(r,w/2,h/2));
+    if(!radius) {
+      page.drawRectangle({x,y:H-top-h,width:w,height:h,color:fill});return;
     }
-    y -= 5;
-  }
-  function heading(value: string) {
-    need(48);
-    y -= 13;
-    page.drawRectangle({x:M,y:y-8,width:4,height:22,color:green});
-    page.drawText(safe(value),{x:M+15,y:y-3,size:17,font:bold,color:navy});
-    y -= 34;
-  }
-  function rowTitle(value: string, sub?:string) {
-    need(37);
-    y -= 4;
-    const lines=wrap(value,bold,11,BODY);
-    for(const line of lines){need(17);page.drawText(line,{x:M,y,size:11,font:bold,color:navy});y-=17;}
-    if(sub)paragraph(sub,{size:9,color:muted});
-    else y-=3;
-  }
-  function divider(){need(9);page.drawLine({start:{x:M,y},end:{x:WIDTH-M,y},color:line,thickness:0.6});y-=13;}
-  function labelText(title:string,value:string){
-    if(!value?.trim())return;
-    paragraph(title,{size:9,font:bold,color:green});
-    paragraph(value,{size:10,indent:9});
-  }
-  function miniStats(items:{label:string;value:string}[]) {
-    need(85);
-    const gap=10,w=(BODY-(items.length-1)*gap)/items.length;
-    items.forEach((it,i)=>{
-      const x=M+i*(w+gap);
-      page.drawRectangle({x,y:y-68,width:w,height:76,color:soft});
-      page.drawText(safe(it.value),{x:x+12,y:y-28,size:21,font:bold,color:navy});
-      const ls=wrap(it.label,regular,8,w-24);
-      ls.slice(0,2).forEach((l,k)=>page.drawText(l,{x:x+12,y:y-44-k*10,size:8,font:regular,color:muted}));
-    });
-    y-=91;
-  }
-  newPage();
-  need(160);
-  page.drawRectangle({x:M,y:y-125,width:BODY,height:137,color:soft});
-  page.drawText("PERSOONLIJK OVERZICHT",{x:M+19,y:y-25,size:10,font:bold,color:green});
-  page.drawText("Mijn Leefstijl",{x:M+19,y:y-63,size:27,font:bold,color:navy});
-  const nameLines=wrap(name||"Persoonlijk verslag",regular,11,BODY-38);
-  page.drawText(nameLines[0]||"Persoonlijk verslag",{x:M+19,y:y-88,size:11,font:regular,color:textColor});
-  page.drawText(fmt(new Date()),{x:M+19,y:y-108,size:9,font:regular,color:muted});
-  y-=158;
+    page.drawRectangle({x:x+radius,y:H-top-h,width:w-2*radius,height:h,color:fill});
+    page.drawRectangle({x,y:H-top-h+radius,width:w,height:h-2*radius,color:fill});
+    for(const xx of [x+radius,x+w-radius]) for(const yy of [top+radius,top+h-radius]) {
+      page.drawCircle({x:xx,y:H-yy,size:radius,color:fill});
+    }
+  };
+  const circle = (x:number,top:number,r:number,fill:Color) =>
+    page.drawCircle({x,y:H-top,size:r,color:fill});
+  const stroke = (x:number,top:number,x2:number,top2:number,ink:Color=line,width=1) =>
+    page.drawLine({start:{x,y:H-top},end:{x:x2,y:H-top2},thickness:width,color:ink});
+  const bar = (x:number,top:number,w:number,pct:number,ink:Color=green,h=6) => {
+    box(x,top,w,h,line,h/2);
+    if(pct>0)box(x,top,Math.min(w,Math.max(h,w*pct/100)),h,ink,h/2);
+  };
+  const textLines = (content: unknown, x:number, top:number, width:number, size=10,
+    font=regular, ink:Color=dark, lineH=size+4) => {
+    const ls=lines(content,font,size,width);
+    ls.forEach((s,i)=>{if(s)text(s,x,top+i*lineH,size,font,ink);});
+    return ls.length*lineH;
+  };
+  const pageFrame=()=>{
+    page=document.addPage([W,H]);
+    box(0,0,W,H,cream);
+    circle(W+10,12,75,lime);circle(W+18,10,34,lilac);
+    box(M,37,29,29,green,8);
+    circle(M+14,51,6,white);stroke(M+11,57,M+19,45,green,2.5);
+    text("MIJN LEEFSTIJL",M+40,57,10.7,bold,green);
+    text(dateText(new Date()),W-M,78,9,regular,grey); // aligned below by footer, far right
+    y=105;
+  };
+  const next=()=>pageFrame();
+  const ensure=(h:number)=>{
+    if(y+h>H-74)next();
+  };
+  const section=(caption:string)=>{
+    ensure(47);
+    text(caption.toUpperCase(),M,y+8,10.5,bold,green);
+    y+=29;
+  };
+  const donut=(cx:number,cy:number,r:number,pct:number)=>{
+    const steps=84;
+    for(let i=0;i<steps;i++){
+      const a=(-Math.PI/2)+(2*Math.PI*i/steps);
+      circle(cx+Math.cos(a)*r,cy+Math.sin(a)*r,3.7,
+        i<Math.round(steps*Math.max(0,Math.min(100,pct))/100)?green:white);
+    }
+    const pctText=pct+"%";
+    const size=21;
+    text(pctText,cx-bold.widthOfTextAtSize(pctText,size)/2,cy+5,size,bold,dark);
+    const label="deze week";
+    text(label,cx-regular.widthOfTextAtSize(label,7.7)/2,cy+20,7.7,regular,grey);
+  };
+  const labelPill=(label:string,x:number,top:number,ink:Color,width=82)=>{
+    box(x,top,width,20,white,10);
+    const size=8;
+    text(label,x+width/2-bold.widthOfTextAtSize(safe(label),size)/2,top+13,size,bold,ink);
+  };
+  const weekStart=amsterdamMonday();
+  const thisWeek=weekStart.toISOString().slice(0,10);
   const active=data.goals.filter(g=>g.status==="ACTIVE");
-  const countActions=active.reduce((acc,g)=>acc+g.actions.filter(a=>!a.archivedAt).length,0);
-  miniStats([
-    {label:"Actieve doelen",value:String(active.length)},
-    {label:"Weekacties",value:String(countActions)},
-    {label:"Reflecties",value:String(data.reflections.length)},
-    {label:"CooL-bijeenkomsten",value:String(data.meetings.length)},
-  ]);
-  paragraph("Dit verslag is gebaseerd op je eigen ingevoerde gegevens. Het is geen medische beoordeling.",{size:9,color:muted});
+  const goalActions=(goal:Goal)=>goal.actions.filter(a=>!a.archivedAt);
+  const progressFor=(a:Action)=>{
+    const snapshot=a.weeks.find(w=>w.weekStart===thisWeek);
+    return {done:snapshot?.completedCount??0,target:snapshot?.targetCount??a.targetPerWeek};
+  };
+  const all=active.flatMap(goalActions);
+  const total=all.reduce((n,a)=>n+progressFor(a).target,0);
+  const done=all.reduce((n,a)=>n+progressFor(a).done,0);
+  const overall=total>0?Math.round(100*done/total):0;
+  pageFrame();
+  text("Jouw leefstijl",M,121,29,bold,dark);
+  text(`${active.length} ${active.length===1?"doel":"doelen"}, ${all.length} ${all.length===1?"actie":"acties"}`,M,145,11,regular,grey);
+  box(M,157,CW,123,lime,20);
+  circle(W-78,181,42,mint);circle(W-55,168,21,butter);
+  labelPill(isoWeekLabel(thisWeek).replace("Week ","WEEK ").split(" · ")[0],M+20,175,green,81);
+  text(`${done} van ${total}`,M+20,219,25,bold,dark);
+  text("keer uitgevoerd",M+20,239,11,regular,grey);
+  text(String(weekStart.getUTCFullYear()),M+20,263,9,regular,grey);
+  donut(W-102,221,37,overall);
+  y=300;
 
-  heading("Mijn doelen");
-  if(!active.length)paragraph("Nog geen actieve doelen geregistreerd.");
-  for (const goal of active) {
-    rowTitle(goal.title, [goal.area.toLowerCase(),goal.motivation].filter(Boolean).join(" - "));
-    for(const a of goal.actions.filter(a=>!a.archivedAt)){
-      const weekStart=amsterdamMonday().toISOString().slice(0,10);
-      const snap=a.weeks.find(w=>w.weekStart===weekStart);
-      const completed=snap?.completedCount??0, target=snap?.targetCount??a.targetPerWeek;
-      need(42);
-      page.drawRectangle({x:M+9,y:y-23,width:BODY-18,height:32,color:white});
-      const text=wrap(a.title,regular,9.5,BODY-125)[0]||"Actie";
-      page.drawText(text,{x:M+18,y:y-10,size:9.5,font:regular,color:textColor});
-      page.drawText(`${completed} / ${target}`,{x:WIDTH-M-55,y:y-10,size:9.5,font:bold,color:green});
-      y-=36;
+  // Goal cards are grouped by goal. If a goal has many actions, split its
+  // actions into chunks rather than clipping or silently omitting them.
+  section("Mijn doelen en acties");
+  if(!active.length){box(M,y,CW,55,lime,16);text("Nog geen actieve doelen.",M+16,y+31,11,regular,grey);y+=70;}
+  for(let gi=0;gi<active.length;gi++){
+    const goal=active[gi], actions=goalActions(goal);
+    const palette=variants[gi%variants.length];
+    const chunks:Action[][]=[];
+    if(!actions.length)chunks.push([]);
+    else for(let i=0;i<actions.length;i+=4)chunks.push(actions.slice(i,i+4));
+    for(let ci=0;ci<chunks.length;ci++){
+      const group=chunks[ci];
+      const badge=goal.area.toUpperCase();
+      const badgeWidth=Math.max(77,Math.min(112,bold.widthOfTextAtSize(safe(badge),8)+22));
+      const nameLines=lines(goal.title,bold,15,CW-62-badgeWidth);
+      const header=Math.max(31,nameLines.length*18);
+      const rowInfo=group.map(a=>{
+        const titleLines=lines(a.title,regular,10,CW-145);
+        return {action:a,titleLines,height:titleLines.length*13+14};
+      });
+      const rowsHeight=rowInfo.reduce((n,r)=>n+r.height,0);
+      const height=19+header+12+rowsHeight+37;
+      ensure(height+12);
+      const top=y;
+      box(M,top,CW,height,palette.fill,18);
+      circle(M+25,top+28,13,white);
+      text(String(gi+1),M+25-bold.widthOfTextAtSize(String(gi+1),10)/2,top+32,10,bold,palette.ink);
+      nameLines.forEach((line,i)=>text(line,M+45,top+30+i*18,15,bold,dark));
+      labelPill(badge,W-M-badgeWidth-16,top+16,palette.ink,badgeWidth);
+      if(ci>0)text("vervolg",M+45,top+30+header,8.5,regular,grey);
+      let rowTop=top+19+header+10;
+      for(const item of rowInfo){
+        const p=progressFor(item.action);
+        item.titleLines.forEach((line,i)=>{if(line)text(line,M+19,rowTop+9+i*13,10,regular,dark);});
+        const score=`${p.done} / ${p.target}`;
+        text(score,W-M-20-bold.widthOfTextAtSize(score,10),rowTop+9,10,bold,palette.ink);
+        bar(M+19,rowTop+item.titleLines.length*13+5,CW-38,
+          p.target?100*p.done/p.target:0,palette.ink,4.4);
+        rowTop+=item.height;
+      }
+      stroke(M+19,top+height-31,W-M-19,top+height-31,line,.7);
+      const gp=actions.reduce((acc,a)=>({done:acc.done+progressFor(a).done,target:acc.target+progressFor(a).target}),{done:0,target:0});
+      text(isoWeekLabel(thisWeek),M+19,top+height-13,8.5,regular,grey);
+      const summary=gp.target?`${gp.done} / ${gp.target}  (${Math.round(100*gp.done/gp.target)}%)`:"Nog geen weekacties";
+      text(summary,W-M-20-bold.widthOfTextAtSize(summary,9),top+height-13,9,bold,palette.ink);
+      y+=height+11;
     }
-    divider();
   }
 
-  heading("Voortgang per week");
-  paragraph("Laatste twaalf weken. Niet ingevuld wordt als 'Geen gegevens' weergegeven.",{size:9,color:muted});
-  const monday=amsterdamMonday();
+  // Only real recorded weeks enter the shareable report; no empty placeholders.
+  const weekly: {week:string;done:number;target:number;percentage:number}[]=[];
   for(let i=0;i<12;i++){
-    const start=new Date(monday);
-    start.setUTCDate(start.getUTCDate()-7*i);
-    const key=start.toISOString().slice(0,10);
-    const snapshots=data.goals.flatMap(g=>g.actions.flatMap(a=>a.weeks.filter(w=>w.weekStart===key &&
-      (w.completedCount>0 || !!w.note || w.entries.length>0))));
-    const target=snapshots.reduce((v,w)=>v+w.targetCount,0);
-    const done=snapshots.reduce((v,w)=>v+w.completedCount,0);
-    const pct=target?Math.round(done/target*100):null;
-    need(22);
-    page.drawText("Week " + fmt(key),{x:M,y,size:9,font:regular,color:textColor});
-    page.drawText(pct===null?"Geen gegevens":`${done}/${target}  (${pct}%)`,{
-      x:WIDTH-M-110,y,size:9,font:bold,color:green});
-    y-=22;
+    const monday=new Date(weekStart);monday.setUTCDate(monday.getUTCDate()-i*7);
+    const week=monday.toISOString().slice(0,10);
+    const snapshots=data.goals.flatMap(g=>g.actions.flatMap(a=>a.weeks.filter(w=>w.weekStart===week && recorded(w))));
+    const target=snapshots.reduce((sum,w)=>sum+w.targetCount,0);
+    if(!target)continue;
+    const completed=snapshots.reduce((sum,w)=>sum+w.completedCount,0);
+    weekly.push({week,done:completed,target,percentage:Math.round(100*completed/target)});
   }
-
-  heading("Mijn weekreflecties");
-  const recent=[...data.reflections].sort((a,b)=>b.weekStart.localeCompare(a.weekStart)).slice(0,12);
-  if(!recent.length)paragraph("Nog geen weekreflecties.");
-  for(const r of recent){
-    rowTitle("Week van " + fmt(r.weekStart));
-    labelText("WAT GING GOED?",r.wentWell);
-    labelText("WAT WAS LASTIG?",r.difficult);
-    labelText("VOLGENDE STAP",r.nextStep);
-    divider();
-  }
-
-  heading("CooL-bijeenkomsten");
+  const reflections=[...data.reflections].sort((a,b)=>b.weekStart.localeCompare(a.weekStart)).slice(0,12);
   const meetings=[...data.meetings].sort((a,b)=>b.meetingDate.localeCompare(a.meetingDate)).slice(0,24);
-  if(!meetings.length)paragraph("Nog geen bijeenkomstnotities.");
-  for(const m of meetings){
-    rowTitle(m.title,fmt(m.meetingDate));
-    labelText("AANTEKENINGEN",m.notes);
-    labelText("ACTIEPUNTEN",m.actionPoints??"");
-    if(m.photos?.length)paragraph(`${m.photos.length} privefoto('s) opgeslagen; foto's zijn niet opgenomen in dit deelbare verslag.`,{size:9,color:muted});
-    divider();
-  }
-  heading("Over dit verslag");
-  paragraph("De PDF is bedoeld om te delen. Hij bevat je actieve doelen, de laatste 12 weken voortgang, maximaal 12 recente reflecties en 24 recente CooL-bijeenkomsten. Privéfoto's zijn bewust niet bijgevoegd.",{size:9,color:muted});
-  paragraph("Download de JSON-export vanuit Mijn Leefstijl voor de volledige machineleesbare historie en individuele actie-ervaringen.",{size:9,color:muted});
 
-  pdf.getPages().forEach((p,index)=>{
-    p.drawLine({start:{x:M,y:46},end:{x:WIDTH-M,y:46},color:line,thickness:0.7});
-    p.drawText("Mijn Leefstijl  |  Persoonlijk en vertrouwelijk",{x:M,y:30,size:8,font:regular,color:muted});
-    p.drawText(`${index+1} / ${pdf.getPageCount()}`,{x:WIDTH-M-33,y:30,size:8,font:regular,color:muted});
+  if(weekly.length||reflections.length||meetings.length){
+    next();
+    text("Terugblik & reflectie",M,115,26,bold,dark);
+    y=143;
+  }
+  if(weekly.length){
+    section("Voortgang");
+    const maxPerPanel=8;
+    for(let start=0;start<weekly.length;start+=maxPerPanel){
+      const rows=weekly.slice(start,start+maxPerPanel);
+      const height=39+rows.length*28+15;
+      ensure(height+10);
+      box(M,y,CW,height,lime,19);
+      text("GEREGISTREERDE WEKEN",M+19,y+23,9,bold,green);
+      rows.forEach((row,i)=>{
+        const top=y+44+i*28;
+        const label=isoWeekLabel(row.week).replace("Week ","W");
+        text(label,M+20,top,9.2,bold,dark);
+        bar(M+138,top-10,CW-226,row.percentage,green,7);
+        const pct=row.percentage+"%";
+        text(pct,W-M-20-bold.widthOfTextAtSize(pct,9),top,9,bold,green);
+      });
+      y+=height+12;
+    }
+  }
+  const createTextRows=(value:string,font=regular,size=10,width=CW-36) =>
+    value.trim()?lines(value,font,size,width).map(v=>({value:v,font,size,ink:dark,leading:14})):[];
+
+  // Long user-written text is split into continuation cards when required.
+  function narrativeCard(title:string,fields:{caption:string;value:string}[],fill:Color,accent:Color) {
+    const segments:{value:string;font:PDFFont;size:number;ink:Color;leading:number}[]=[];
+    for(const field of fields){
+      if(!field.value.trim())continue;
+      if(segments.length)segments.push({value:"",font:regular,size:5,ink:grey,leading:8});
+      segments.push({value:field.caption.toUpperCase(),font:bold,size:9,ink:accent,leading:19});
+      segments.push(...createTextRows(field.value));
+    }
+    if(!segments.length)return;
+    let cursor=0,part=0;
+    while(cursor<segments.length){
+      const titleLines=lines(title,bold,12,CW-130);
+      const header=42+titleLines.length*17;
+      if(y>H-190)next();
+      const space=H-73-y;
+      const limit=Math.max(80,Math.min(410,space-header-22));
+      let sliceHeight=0,amount=0;
+      while(cursor+amount<segments.length &&
+        sliceHeight+segments[cursor+amount].leading<=limit){
+        sliceHeight+=segments[cursor+amount].leading;amount++;
+      }
+      if(!amount){next();continue;}
+      const height=header+sliceHeight+15;
+      ensure(height+11);
+      box(M,y,CW,height,fill,18);
+      const suffix=part?" (vervolg)":"";
+      const headingLines=lines(title+suffix,bold,12,CW-130);
+      headingLines.forEach((l,i)=>text(l,M+18,y+27+i*17,12,bold,dark));
+      let top=y+header;
+      for(const row of segments.slice(cursor,cursor+amount)){
+        if(row.value)text(row.value,M+19,top,row.size,row.font,row.ink);
+        top+=row.leading;
+      }
+      y+=height+11;cursor+=amount;part++;
+    }
+  }
+
+  if(reflections.length){
+    section("Mijn weekreflecties");
+    for(let i=0;i<reflections.length;i++){
+      const r=reflections[i],v=variants[(i+2)%variants.length];
+      narrativeCard(isoWeekLabel(r.weekStart),[
+        {caption:"Wat ging goed?",value:r.wentWell},
+        {caption:"Wat was lastig?",value:r.difficult},
+        {caption:"Volgende stap",value:r.nextStep},
+      ],v.fill,v.ink);
+    }
+  }
+  if(meetings.length){
+    section("CooL-bijeenkomsten");
+    for(let i=0;i<meetings.length;i++){
+      const meeting=meetings[i],v=variants[(i+1)%variants.length];
+      narrativeCard(meeting.title,[
+        {caption:dateText(meeting.meetingDate),value:meeting.notes},
+        {caption:"Actiepunten",value:meeting.actionPoints??""},
+      ],v.fill,v.ink);
+      // Photo files are deliberately omitted from the shareable PDF.
+    }
+  }
+  document.getPages().forEach((p,index)=>{
+    p.drawLine({start:{x:M,y:48},end:{x:W-M,y:48},color:line,thickness:.8});
+    p.drawText("MIJN LEEFSTIJL",{x:M,y:31,size:8,font:bold,color:green});
+    const number=`${index+1} / ${document.getPageCount()}`;
+    p.drawText(number,{x:W-M-bold.widthOfTextAtSize(number,8),y:31,size:8,font:bold,color:grey});
   });
-  return pdf.save();
+  return document.save();
 }
