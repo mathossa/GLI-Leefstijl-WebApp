@@ -33,13 +33,13 @@ test("reflections allow one answer, not empty or oversized text", () => {
   assert.throws(() => parseReflection(form({ wentWell: "x".repeat(1501) })));
 });
 
-test("meetings require title and notes, dates validated", () => {
+test("meetings require title but allow photo-only notes, dates validated", () => {
   assert.deepEqual(parseMeeting(form({
     title: " Groep 1 ", notes: " Een goede ontmoeting ", meetingDate: "2026-10-26", actionPoints: " ",
   })), {
     title: "Groep 1", notes: "Een goede ontmoeting", meetingDate: new Date("2026-10-26T00:00:00.000Z"), actionPoints: null,
   });
-  assert.throws(() => parseMeeting(form({ title: "Groep", notes: "", meetingDate: "2026-10-26" })));
+  assert.equal(parseMeeting(form({ title: "Groep", notes: "", meetingDate: "2026-10-26" })).notes, "");
   assert.throws(() => parseMeeting(form({ title: "Groep", notes: "x", meetingDate: "2026-02-30" })));
   assert.throws(() => parseOwnedId(form({ id: "" })));
 });

@@ -56,7 +56,7 @@ export function parseMeeting(form) {
   return {
     meetingDate: parseDate(textField(form, "meetingDate", 10, true)),
     title: textField(form, "title", 120, true),
-    notes: textField(form, "notes", 4000, true),
+    notes: textField(form, "notes", 4000),
     actionPoints: textField(form, "actionPoints", 2000) || null,
   };
 }

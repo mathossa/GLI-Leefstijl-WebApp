@@ -22,3 +22,6 @@ generated/
 Thumbs.db
 .idea/
 .vscode/
+
+# Private user-uploaded CooL photos (must never be public or committed)
+.private-uploads/

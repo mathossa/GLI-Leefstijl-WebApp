@@ -31,7 +31,8 @@ export async function exportPersonalData(userId: string) {
     }),
     prisma.meetingNote.findMany({
       where: { userId }, orderBy: { meetingDate: "asc" },
-      select: { id: true, meetingDate: true, title: true, notes: true, actionPoints: true, createdAt: true, updatedAt: true },
+      select: { id: true, meetingDate: true, title: true, notes: true, actionPoints: true, createdAt: true, updatedAt: true,
+        photos: { where: { userId }, select: { id: true, fileName: true, createdAt: true } } },
     }),
   ]);
   return {

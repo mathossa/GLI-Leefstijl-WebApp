@@ -28,6 +28,7 @@ model User {
   habitActions  HabitAction[]
   reflections   WeeklyReflection[]
   meetingNotes  MeetingNote[]
+  meetingPhotos MeetingPhoto[]
 
   @@unique([email])
   @@map("user")
@@ -193,9 +194,26 @@ model MeetingNote {
   title        String   @db.VarChar(120)
   notes        String   @db.VarChar(4000)
   actionPoints String?  @db.VarChar(2000)
+  photos       MeetingPhoto[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  @@unique([id, userId])
   @@index([userId, meetingDate(sort: Desc)])
   @@map("meeting_note")
+}
+
+// Photos are held in a private server directory, never in /public.
+// Metadata is owned by the same user as its CooL meeting.
+model MeetingPhoto {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meetingId String
+  meeting   MeetingNote @relation(fields: [meetingId, userId], references: [id, userId], onDelete: Cascade)
+  fileName  String      @db.VarChar(120)
+  createdAt DateTime    @default(now())
+
+  @@index([userId, meetingId])
+  @@map("meeting_photo")
 }
