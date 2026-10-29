@@ -36,7 +36,7 @@ export default async function AdminPage() {
         <h2 className="text-lg font-semibold">Instellingenlog</h2>
         {logs.length === 0 ? <p className="text-sm text-muted-foreground">Nog geen beheeracties vastgelegd.</p> :
           <ul className="space-y-2 text-sm">{logs.map(row => <li key={row.id} className="flex flex-wrap justify-between gap-2 border-b pb-2 last:border-0">
-            <span>{row.action === "smtp.settings.saved" ? "SMTP-instellingen gewijzigd" : row.action === "smtp.test.sent" ? "Testmail verzonden" : row.action === "smtp.test.failed" ? "Testmail mislukt" : "SMTP-test aangevraagd"}</span>
+            <span>{row.action === "smtp.settings.saved" ? "SMTP-instellingen gewijzigd" : row.action === "smtp.test.sent" ? "Testmail verzonden" : row.action === "smtp.test.failed" ? "Testmail mislukt" : row.action === "admin.user.deleted" ? "Gebruiker verwijderd" : "SMTP-test aangevraagd"}</span>
             <time className="text-xs text-muted-foreground" dateTime={row.createdAt.toISOString()}>{row.createdAt.toLocaleString("nl-NL",{timeZone:"Europe/Amsterdam"})}</time>
           </li>)}</ul>}
         <p className="flex items-center gap-2 text-xs text-muted-foreground"><LockKeyhole size={14}/> Het log bevat alleen actie, actor-ID en tijdstip; nooit wachtwoorden.</p>
