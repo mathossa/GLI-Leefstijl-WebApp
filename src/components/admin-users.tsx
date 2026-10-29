@@ -22,7 +22,22 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
     } catch { setError("Gebruikers konden niet worden opgehaald."); }
     finally { setLoading(false); }
   }, [offset]);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    let active = true;
+    void authClient.admin.listUsers({ query: { limit: PAGE_SIZE, offset } })
+      .then(response => {
+        if (!active) return;
+        if (response.error || !response.data) {
+          setError("Gebruikers konden niet worden opgehaald.");
+          return;
+        }
+        setUsers(response.data.users);
+        setTotal(response.data.total);
+      })
+      .catch(() => { if (active) setError("Gebruikers konden niet worden opgehaald."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [offset]);
 
   async function createUser(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
