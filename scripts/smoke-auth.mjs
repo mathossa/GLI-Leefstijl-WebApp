@@ -97,6 +97,19 @@ try {
         'INSERT INTO "habit_week_entry" ("id","userId","weekId","rating","note") VALUES ($1,$2,$3,$4,$5)',
         [randomUUID(), adminId, weekId, "GOED", "CI-PRIVATE-ENTRY-NOTE"],
       );
+      // Exercise the approved design B with 3 goals and 7 week actions.
+      const extraActions = title === "CI-ADMIN-VOEDING-GOAL" ? 2 : 1;
+      for (let n = 0; n < extraActions; n++) {
+        const extraId = randomUUID(), extraWeekId = randomUUID();
+        await connection.query(
+          'INSERT INTO "habit_action" ("id","userId","goalId","title","targetPerWeek","updatedAt") VALUES ($1,$2,$3,$4,3,NOW())',
+          [extraId, adminId, id, "Extra fictieve weekactie " + (n + 1)],
+        );
+        await connection.query(
+          'INSERT INTO "habit_week_progress" ("id","userId","actionId","weekStart","targetCount","completedCount","updatedAt") VALUES ($1,$2,$3,$4,3,2,NOW())',
+          [extraWeekId, adminId, extraId, "2026-10-26"],
+        );
+      }
     }
   }
   await connection.query(
@@ -134,6 +147,7 @@ assert.ok(memberExport.goals.some(g => g.title === "CI-MEMBER-PRIVATE-GOAL"));
 assert.ok(!memberExport.goals.some(g => g.title === "CI-ADMIN-PRIVATE-GOAL"));
 assert.ok(adminExport.goals.find(g => g.title === "CI-ADMIN-PRIVATE-GOAL").actions[0].weeks[0].entries[0].note === "CI-PRIVATE-ENTRY-NOTE");
 assert.equal(adminExport.goals.filter(g => g.status === "ACTIVE").length, 3, "PDF fixture includes three active goals");
+assert.equal(adminExport.goals.flatMap(g => g.actions).length, 7, "PDF fixture includes seven actions");
 assert.equal(adminExport.reflections[0].wentWell, "CI-PRIVATE-REFLECTION");
 assert.equal(adminExport.meetings[0].notes, "CI-PRIVATE-MEETING-NOTE");
 assert.equal(memberExport.reflections.length, 0);

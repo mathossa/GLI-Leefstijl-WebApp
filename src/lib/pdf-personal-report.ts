@@ -105,7 +105,9 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
     box(M,37,29,29,green,8);
     circle(M+14,51,6,white);stroke(M+11,57,M+19,45,green,2.5);
     text("MIJN LEEFSTIJL",M+40,57,10.7,bold,green);
-    const reportDate=dateText(new Date());
+    const reportDate=new Intl.DateTimeFormat("nl-NL", {
+      timeZone:"Europe/Amsterdam",day:"numeric",month:"long",year:"numeric",
+    }).format(new Date());
     text(reportDate,W-M-regular.widthOfTextAtSize(safe(reportDate),9),78,9,regular,grey);
     y=105;
   };
@@ -312,7 +314,8 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
     for(let i=0;i<meetings.length;i++){
       const meeting=meetings[i],v=variants[(i+1)%variants.length];
       narrativeCard(meeting.title,[
-        {caption:dateText(meeting.meetingDate),value:meeting.notes},
+        {caption:"Datum",value:dateText(meeting.meetingDate)},
+        {caption:"Aantekeningen",value:meeting.notes},
         {caption:"Actiepunten",value:meeting.actionPoints??""},
       ],v.fill,v.ink);
       // Photo files are deliberately omitted from the shareable PDF.

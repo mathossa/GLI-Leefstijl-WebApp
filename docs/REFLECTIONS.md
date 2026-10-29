@@ -71,4 +71,4 @@ Er zijn geen externe analyticsdiensten, medische aannames of nieuwe grafieklibra
 - Een aparte sectie **Terugblik & reflectie** toont alleen daadwerkelijk geregistreerde weken (geen `Geen gegevens`-rijen), en daarna de echte weekreflecties en CooL-bijeenkomsten als gekleurde, dynamisch paginerende kaarten. Bij langere tekst worden vervolgkaarten gebruikt; originele privéfoto’s blijven bewust buiten de deelbare PDF.
 - Niet-relevante bijzinnen, `Over dit verslag` en lege reflectiesecties zijn verwijderd. De export bevat een compacte samenvatting, geen medische conclusies.
 - Dezelfde centrale `isoWeekLabel`-helper toont **`Week NN · ISO-jaar`** in Vandaag, Mijn doelen, Reflectie, Inzichten en de PDF. ISO-weekjaar volgt de donderdagregel, ook wanneer bijvoorbeeld 30 december al bij week 1 van het nieuwe jaar hoort.
-- CI controleert week 53, jaarwisselingen, zomer-/wintertijd en een synthetische PDF met drie actieve doelen; de echte PDF-response wordt geopend met `pdf-lib`.
+- CI controleert week 53, jaarwisselingen, zomer-/wintertijd en een synthetische PDF met drie actieve doelen en zeven acties; de echte PDF-response wordt geopend met `pdf-lib`.
