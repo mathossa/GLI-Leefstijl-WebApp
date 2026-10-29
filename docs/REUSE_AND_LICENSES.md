@@ -27,7 +27,7 @@ Geen code of designs kopiëren uit willekeurige GitHub-repo's zonder licentie. G
 | Grafieken | Recharts | MIT | https://github.com/recharts/recharts |
 | SMTP relay | Nodemailer | MIT-0 | https://nodemailer.com/license |
 
-**Nog geen dependencies geïnstalleerd of broncode gekopieerd.** Deze tabel is een geverifieerde kandidaatselectie, geen actuele runtime-inventaris. Na installatie registreren we exacte versies en transitive licenses via lockfile/licentiecontrole. Apache-2.0 NOTICE-verplichtingen respecteren als die van toepassing zijn.
+**Deze tabel is een kandidaatselectie, geen complete runtime-inventaris.** Werkelijke pakketversies zijn vastgelegd in `package-lock.json`. Onder #5 gebruiken we ook `pdf-lib` (MIT) en `sharp` (Apache-2.0), zie `THIRD_PARTY_NOTICES.md`. Na installatie registreren we exacte versies en transitive licenses via lockfile/licentiecontrole. Apache-2.0 NOTICE-verplichtingen respecteren als die van toepassing zijn.
 
 ## Overname van andere repo's (ook eigen repo's)
 
@@ -44,3 +44,11 @@ PR's noemen:
 ## AGPL en SaaS
 
 Als gebruikers via het netwerk met een aangepaste AGPLv3-app interacteren, moeten de relevante licentieverplichtingen inclusief aanbod van Corresponding Source zorgvuldig worden nageleefd. Houd een zichtbare broncode-link in de app zodra die wordt uitgerold. Dit document is een engineering-richtlijn en geen juridisch advies.
+
+## OCR-verkenning (#5)
+
+- **PaddleOCR** (https://github.com/PaddlePaddle/PaddleOCR; Apache-2.0): voorkeurskandidaat voor handgeschreven Nederlandstalige aantekeningen. Bij modelgewichten altijd afzonderlijk modellicentie, GPU/CPU-gebruik en resultaten op echte Nederlandstalige notities beoordelen.
+- **Microsoft TrOCR** (https://github.com/microsoft/unilm/tree/master/trocr): gespecialiseerde handschriftherkenning, maar modellen/gewichten kunnen andere licenties hebben. Eerst een klein benchmarkonderzoek op eigen testmateriaal, geen externe upload.
+- **Tesseract.js** (https://github.com/naptha/tesseract.js; Apache-2.0): handig voor drukwerk, maar de eigen FAQ raadt Tesseract voor handgeschreven tekst af.
+
+Nog geen OCR-dependency toegevoegd. Eventuele latere OCR wordt optioneel en lokaal/VPS uitgevoerd; de gebruiker moet de voorgestelde tekst altijd zelf beoordelen vóór opslaan. De foto blijft het origineel.

@@ -1,37 +1,46 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, ChartNoAxesCombined, Heart, Sprout } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { demoHabits } from "@/lib/demo-data";
+import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
+import { amsterdamMonday } from "@/lib/goals-domain.mjs";
+import { amsterdamDate, dateOnly, summarizeCompletion } from "@/lib/reflections-domain.mjs";
+import { isoWeekLabel } from "@/lib/week-labels.mjs";
+import { InsightsOverview } from "@/components/insights-overview";
 
 export const metadata: Metadata = { title: "Inzichten" };
-const sampleWeeks = [38, 52, 47, 63, 69, 73];
 
-export default function InsightsPage() {
-  return (
-    <div className="space-y-6">
-      <header><p className="mb-1 text-xs font-semibold uppercase tracking-[.18em] text-[#506d59]">Jouw ontwikkeling</p><h1 className="text-3xl font-bold tracking-tight">Inzichten <span aria-hidden="true">📈</span></h1><p className="mt-2 text-sm text-muted-foreground">Zie hoe kleine stappen samen een patroon vormen.</p></header>
-      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-        <Card>
-          <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">Voortgang in de tijd</h2><p className="text-sm text-muted-foreground">Zes fictieve voorbeeldweken</p></div><ChartNoAxesCombined size={22} className="text-[#568668]" aria-hidden="true"/></div>
-          <div className="mt-4 flex h-56 items-end gap-3 border-b border-[#dde7dc] pb-1" role="img" aria-label={`Voorbeeldvoortgang week 1 tot 6: ${sampleWeeks.join(", ")} procent`}>
-            {sampleWeeks.map((percentage, idx) => (
-              <div className="flex h-full flex-1 flex-col items-center justify-end gap-2" key={idx}>
-                <span className="text-xs font-medium text-[#406650]">{percentage}%</span>
-                <div className="w-full max-w-14 rounded-t-xl bg-[#92b79d]" style={{height:`${percentage}%`}} aria-hidden="true"/>
-                <span className="text-xs text-[#4c6953]">W{idx+1}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card>
-          <Sprout size={25} className="text-[#4e8968]" aria-hidden="true"/><h2 className="text-lg font-semibold">Je gewoontes</h2>
-          <div className="space-y-5">
-            {demoHabits.map((habit)=> <div key={habit.id}><div className="mb-2 flex justify-between gap-2 text-sm"><span>{habit.title}</span><span className="font-semibold text-[#416a51]">{habit.done}/{habit.target}</span></div><Progress value={habit.done/habit.target*100} aria-label={`${habit.title}: ${habit.done} van ${habit.target}`}/></div>)}
-          </div>
-        </Card>
-      </div>
-      <div className="flex items-start gap-3 rounded-2xl bg-[#e9f1e5] p-5 text-sm text-[#5d785f]"><Heart size={18} className="mt-0.5 shrink-0"/><p>Deze grafieken gebruiken uitsluitend fictieve gegevens. Echte trends en je eigen registraties worden toegevoegd in <a href="https://github.com/mathossa/GLI-Leefstijl-WebApp/issues/5" className="underline">issue #5</a>. <ArrowUpRight size={13} className="inline"/></p></div>
-    </div>
-  );
+export default async function InsightsPage() {
+  const { user } = await requireSession();
+  const now = amsterdamDate();
+  const monday = amsterdamMonday();
+  const weeks = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(monday);
+    d.setUTCDate(d.getUTCDate() - i * 7);
+    return d;
+  });
+  const months = Array.from({ length: 6 }, (_, i) =>
+    new Date(Date.UTC(Number(now.slice(0, 4)), Number(now.slice(5, 7)) - 1 - i, 1)));
+  const earliest = weeks[11] < months[5] ? weeks[11] : months[5];
+
+  const [progress, reflectionCount] = await Promise.all([
+    prisma.habitWeekProgress.findMany({
+      where: {
+        userId: user.id, weekStart: { gte: earliest, lte: monday },
+        OR: [{ completedCount: { gt: 0 } }, { note: { not: null } }, { entries: { some: { userId: user.id } } }],
+      },
+      select: { weekStart: true, completedCount: true, targetCount: true },
+    }),
+    prisma.weeklyReflection.count({ where: { userId: user.id, weekStart: { gte: weeks[11] } } }),
+  ]);
+  const weekly = weeks.map((date) => ({
+    date, completion: summarizeCompletion(progress.filter((item) => dateOnly(item.weekStart) === dateOnly(date))),
+  }));
+  const monthly = months.map((date) => ({
+    date, completion: summarizeCompletion(progress.filter(
+      (item) => dateOnly(item.weekStart).slice(0, 7) === dateOnly(date).slice(0, 7))),
+  }));
+  const registeredWeeks = weekly.filter((entry) => entry.completion.percentage !== null).length;
+  const formatMonth = new Intl.DateTimeFormat("nl-NL", { timeZone: "UTC", month: "long", year: "numeric" });
+  return <InsightsOverview registeredWeeks={registeredWeeks} reflectionCount={reflectionCount}
+    weeks={weekly.map(({ date, completion }) => ({ label: isoWeekLabel(date), ...completion }))}
+    months={monthly.map(({ date, completion }) => ({ label: formatMonth.format(date), ...completion }))}/>;
 }
