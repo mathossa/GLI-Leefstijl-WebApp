@@ -28,27 +28,6 @@ services:
         max-size: 10m
         max-file: "3"
 
-  migrate:
-    image: ${MIGRATOR_IMAGE:?Set MIGRATOR_IMAGE}
-    restart: "no"
-    environment:
-      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - database
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
-
   app:
     image: ${APP_IMAGE:?Set APP_IMAGE}
     restart: unless-stopped
@@ -64,8 +43,8 @@ services:
     volumes:
       - leefstijl_private_uploads:/app/private-uploads
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
     networks:
       database: {}
       proxy:

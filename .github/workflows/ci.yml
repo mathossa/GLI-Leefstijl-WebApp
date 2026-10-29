@@ -102,7 +102,6 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-a-random-looking-secret-that-is-not-used-in-production
       PROXY_NETWORK: ci-proxy
       APP_IMAGE: mijn-leefstijl:ci
-      MIGRATOR_IMAGE: mijn-leefstijl-migrate:ci
     steps:
       - uses: actions/checkout@v4
       - name: Validate shell backup/restore scripts
@@ -120,16 +119,35 @@ jobs:
             const c = JSON.parse(readFileSync("/tmp/leefstijl-compose.json", "utf8"));
             assert.ok(c.services.app.networks.proxy.aliases.includes("mijn-leefstijl-web"));
             assert.ok(!("proxy" in c.services.postgres.networks));
-            assert.ok(!("proxy" in c.services.migrate.networks));
+            assert.deepEqual(Object.keys(c.services).sort(), ["app", "postgres"]);
+            assert.equal(c.services.app.depends_on.postgres.condition, "service_healthy");
             assert.equal(c.networks.database.internal, true);
             assert.equal(c.networks.proxy.external, true);
-            for (const service of ["app", "postgres", "migrate"]) {
+            for (const service of ["app", "postgres"]) {
               assert.ok(!c.services[service].ports?.length);
             }
           '
-      - name: Build app and migration images (production stages)
+      - name: Build single app image with migration tools
         run: docker compose -f compose.prod.yml -f compose.build.yml build
-      - name: Apply migrations in one-shot container and wait for healthy application
+      - name: Ensure failed migrations cannot start Next.js
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          timeout 35s docker run --rm --network none \
+            -e DATABASE_URL=postgresql://invalid:invalid@127.0.0.1:5432/invalid \
+            -e BETTER_AUTH_URL=http://localhost:3000 \
+            -e BETTER_AUTH_SECRET=ci-only-invalid-test-secret-over-32-characters \
+            "$APP_IMAGE" >/tmp/leefstijl-no-db.log 2>&1
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ] || [ "$rc" -eq 124 ]; then
+            echo "Expected migration failure (not success/timeout); exit: $rc"; exit 1
+          fi
+          if grep -q '\[startup\] Prisma migration completed' /tmp/leefstijl-no-db.log; then
+            echo "Next.js started without a database"; exit 1
+          fi
+      - name: Apply migrations at app startup and wait for healthy application
         shell: bash
         run: |
           docker compose -f compose.prod.yml up -d
@@ -143,10 +161,20 @@ jobs:
           done
           docker compose -f compose.prod.yml ps
           if [ "$ready" != 1 ]; then
-            docker compose -f compose.prod.yml logs --no-color postgres migrate app || true
+            docker compose -f compose.prod.yml logs --no-color postgres app || true
             exit 1
           fi
-          echo "Standalone app and database readiness passed"
+          echo "Two-container app and database readiness passed"
+          docker compose -f compose.prod.yml exec -T app ./node_modules/.bin/auth create-admin --help >/dev/null
+          docker compose -f compose.prod.yml restart app
+          for attempt in $(seq 1 45); do
+            if docker compose -f compose.prod.yml exec -T app node /app/healthcheck.mjs >/dev/null 2>&1; then
+              echo "Restart with already-applied Prisma migrations passed"; exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f compose.prod.yml logs --no-color app || true
+          exit 1
       - name: Verify PostgreSQL backup and isolated restore
         shell: bash
         run: |
@@ -155,7 +183,6 @@ jobs:
           trap 'rm -rf "$tempdir"' EXIT
           cat > "$tempdir/.env.prod" <<EOF
           APP_IMAGE=$APP_IMAGE
-          MIGRATOR_IMAGE=$MIGRATOR_IMAGE
           PROXY_NETWORK=$PROXY_NETWORK
           POSTGRES_USER=$POSTGRES_USER
           POSTGRES_PASSWORD=$POSTGRES_PASSWORD

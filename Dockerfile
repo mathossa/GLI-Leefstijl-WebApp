@@ -20,15 +20,6 @@ RUN DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \
     BETTER_AUTH_SECRET=unused-build-only-placeholder-of-32-characters \
     npm run build
 
-# Contains Prisma CLI and Better Auth CLI for one-shot migration/bootstrap.
-FROM base AS migrator
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run db:generate
-ENV NODE_ENV=production
-USER node
-CMD ["npm", "run", "db:deploy"]
-
 FROM base AS runner
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
@@ -38,7 +29,16 @@ RUN mkdir -p /app/.next /app/private-uploads && chown -R node:node /app/.next /a
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+# Include the Prisma and Better Auth CLIs in the single app container.
+# Additional tooling makes this image larger, but avoids a third container.
+COPY --from=deps --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/prisma ./prisma
+COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder --chown=node:node /app/src ./src
+COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
+COPY --from=builder --chown=node:node /app/package.json ./package.json
 COPY --chown=node:node scripts/healthcheck.mjs ./healthcheck.mjs
+COPY --chmod=0755 --chown=node:node scripts/start-container.sh ./start-container.sh
 USER node
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["/bin/sh", "/app/start-container.sh"]
