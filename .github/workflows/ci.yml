@@ -189,6 +189,42 @@ jobs:
           done
           docker compose -f compose.prod.yml logs --no-color app || true
           exit 1
+      - name: Verify optional one-time admin bootstrap without an interactive console
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A partial configuration must fail, rather than creating an insecure account.
+          if docker compose -f compose.prod.yml exec -T -e BOOTSTRAP_ADMIN_EMAIL=ci@example.test app node /app/bootstrap-admin.mjs; then
+            echo "Partial bootstrap configuration unexpectedly succeeded"; exit 1
+          fi
+          docker compose -f compose.prod.yml exec -T \
+            -e BOOTSTRAP_ADMIN_EMAIL=ci-bootstrap@example.test \
+            -e BOOTSTRAP_ADMIN_NAME="CI Bootstrap" \
+            -e BOOTSTRAP_ADMIN_PASSWORD=ci-only-throwaway-admin-password-12345 \
+            app node /app/bootstrap-admin.mjs
+          # Re-running with a different email must not create another admin.
+          docker compose -f compose.prod.yml exec -T \
+            -e BOOTSTRAP_ADMIN_EMAIL=ci-second@example.test \
+            -e BOOTSTRAP_ADMIN_NAME="Unexpected admin" \
+            -e BOOTSTRAP_ADMIN_PASSWORD=ci-only-throwaway-admin-password-23456 \
+            app node /app/bootstrap-admin.mjs
+          docker compose -f compose.prod.yml exec -T app node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import pg from "pg";
+            const db = new pg.Client({connectionString:process.env.DATABASE_URL});
+            try {
+              await db.connect();
+              const {rows} = await db.query(
+                "SELECT u.email, u.role, a.password FROM \"user\" u JOIN account a ON a.\"userId\"=u.id"
+              );
+              assert.equal(rows.length, 1, "Exactly one initial account expected");
+              assert.equal(rows[0].email, "ci-bootstrap@example.test");
+              assert.equal(rows[0].role, "admin");
+              assert.ok(rows[0].password && !rows[0].password.includes("throwaway"), "Password must be hashed");
+            } finally {
+              await db.end();
+            }
+          '
       - name: Verify PostgreSQL backup and isolated restore
         shell: bash
         run: |
