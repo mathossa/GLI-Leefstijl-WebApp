@@ -16,35 +16,37 @@
     "test:auth": "node scripts/smoke-auth.mjs"
   },
   "dependencies": {
-    "next": "16.4.3",
-    "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "lucide-react": "^0.468.0",
-    "@radix-ui/react-slot": "^1.2.3",
+    "@better-auth/prisma-adapter": "1.7.14",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "better-auth": "1.7.14",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.4.0",
-    "@better-auth/prisma-adapter": "1.7.14",
-    "better-auth": "1.7.14",
-    "@prisma/client": "7.10.1",
-    "@prisma/adapter-pg": "7.10.1",
-    "pg": "8.16.3",
     "dotenv": "16.6.1",
-    "server-only": "0.0.1"
+    "lucide-react": "^0.468.0",
+    "next": "16.4.3",
+    "pdf-lib": "1.17.1",
+    "pg": "8.16.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1",
+    "sharp": "0.34.5",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.16",
-    "tailwindcss": "^4.1.16",
-    "typescript": "~5.9.3",
     "@types/node": "^22.15.0",
+    "@types/pg": "8.15.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.2.0",
+    "auth": "1.7.14",
     "eslint": "^9.38.0",
     "eslint-config-next": "16.4.3",
     "prisma": "7.10.1",
-    "auth": "1.7.14",
-    "@types/pg": "8.15.5"
+    "tailwindcss": "^4.1.16",
+    "typescript": "~5.9.3"
   },
   "type": "module"
 }
