@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, feat/issue-5-reflections-insights-export]
+    branches: [main, feat/issue-6-admin-smtp-relay]
 
 permissions:
   contents: read
@@ -53,6 +53,12 @@ jobs:
         run: node scripts/smoke-reflections-db.mjs
       - name: Verify goal ownership and DB constraints
         run: node scripts/smoke-goals-db.mjs
+      - name: Validate administrator display name input
+        run: node --test tests/admin-user-validation.test.mjs
+      - name: SMTP encryption and relay input safety tests
+        run: node --experimental-strip-types --test tests/admin-smtp.test.mjs
+      - name: Verify SMTP DB constraints and test cooldown
+        run: node scripts/smoke-admin-db.mjs
       - name: ESLint
         run: npm run lint
       - name: TypeScript

@@ -52,3 +52,9 @@ Als gebruikers via het netwerk met een aangepaste AGPLv3-app interacteren, moete
 - **Tesseract.js** (https://github.com/naptha/tesseract.js; Apache-2.0): handig voor drukwerk, maar de eigen FAQ raadt Tesseract voor handgeschreven tekst af.
 
 Nog geen OCR-dependency toegevoegd. Eventuele latere OCR wordt optioneel en lokaal/VPS uitgevoerd; de gebruiker moet de voorgestelde tekst altijd zelf beoordelen vóór opslaan. De foto blijft het origineel.
+
+## SMTP-relay (#6)
+
+- [Nodemailer 10.2.1](https://nodemailer.com/) (MIT-0), gekozen voor SMTP over verplicht STARTTLS of directe TLS naar de expliciet ingestelde host. Geen eigen SMTP-protocolimplementatie.
+- De bestaande Better Auth Admin-plugin (MIT) blijft verantwoordelijk voor ledenbeheer en rolwijzigingen, niet een nieuwe custom autorisatietabel.
+- Eigen beveiligingslaag: AES-256-GCM per-wachtwoord-IV, geheime sleutel uitsluitend op de appserver en PostgreSQL-cooldown voor testmail.

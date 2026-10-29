@@ -217,3 +217,33 @@ model MeetingPhoto {
   @@index([userId, meetingId])
   @@map("meeting_photo")
 }
+
+// Only one server-side SMTP relay configuration is active for the whole app.
+model AdminMailSettings {
+  id                String   @id @default("smtp")
+  enabled           Boolean  @default(false)
+  host              String   @default("") @db.VarChar(253)
+  port              Int      @default(587)
+  security          String   @default("STARTTLS") @db.VarChar(10)
+  username          String?  @db.VarChar(254)
+  encryptedPassword String?  @db.Text
+  fromName          String   @default("") @db.VarChar(120)
+  fromEmail         String   @default("") @db.VarChar(254)
+  lastTestAt        DateTime?
+  updatedById       String?
+  updatedAt         DateTime @updatedAt
+
+  @@map("admin_mail_settings")
+}
+
+// No SMTP credentials, message bodies or personal health data in this audit.
+model AdminAudit {
+  id        String   @id @default(cuid())
+  actorId   String
+  action    String   @db.VarChar(80)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("admin_audit")
+}
+

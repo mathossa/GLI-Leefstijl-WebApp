@@ -19,3 +19,7 @@ Bestaande dependency-pakketten blijven onder hun eigen licenties. Controleer de 
 - [sharp](https://github.com/lovell/sharp) **0.34.5**, Apache-2.0-licentie. Wordt als npm-dependency gebruikt om privéfoto's van notities veilig te verwerken (resize/oriëntatie, WebP, zonder EXIF). Eigen bindings en native libvips-afhankelijkheden behouden hun oorspronkelijke licenties.
 
 Bekijk de lockfile voor exacte versies/transitieve pakketten en controleer bij distributie de eventuele notice-verplichtingen. De projectcode van de integratie is AGPL-3.0-only; de libraries behouden hun upstreamlicenties.
+
+## SMTP (#6)
+
+- [Nodemailer](https://nodemailer.com/) **10.2.1**, MIT-0-licentie, wordt via npm gebruikt voor TLS/STARTTLS naar een ingestelde relay. Better Auth Admin-plugin (MIT) wordt hergebruikt voor gebruikersbeheer; Node.js `crypto` implementeert AES-256-GCM.

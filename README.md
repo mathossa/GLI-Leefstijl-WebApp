@@ -4,7 +4,7 @@
 
 ## Status
 
-Mijn Leefstijl bevat een mobile-first dashboard, beveiligde login met Better Auth, doelen en eenklikregistratie (#1–#4). **Issue #5 is in voorbereiding voor review in PR #14**: wekelijkse reflecties, CooL-bijeenkomstnotities, echte week-/maandinzichten en een privé JSON-export, een deelbaar PDF-overzicht en privéfoto's bij CooL-bijeenkomsten. Alle persoonlijke gegevens worden opgeslagen in PostgreSQL via Prisma. Dit is nog geen productieversie; SMTP, VPS/Portainer en verdere privacy-/securityhardening volgen in #6–#8.
+Mijn Leefstijl bevat een mobile-first dashboard, beveiligde login met Better Auth, doelen en eenklikregistratie (#1–#4). **Issue #5 is gemerged** en biedt: wekelijkse reflecties, CooL-bijeenkomstnotities, echte week-/maandinzichten en een privé JSON-export, een deelbaar PDF-overzicht en privéfoto's bij CooL-bijeenkomsten. Alle persoonlijke gegevens worden opgeslagen in PostgreSQL via Prisma. Dit is nog geen productieversie; SMTP, VPS/Portainer en verdere privacy-/securityhardening volgen in #6–#8.
 
 ## Lokaal op Linux / WSL
 
@@ -62,3 +62,7 @@ GitHub Actions gebruikt een tijdelijke PostgreSQL 17, voert de gecommitte migrat
 Gebruik bestaande upstreamfunctionaliteit boven eigen code. Zie [AGENTS.md](AGENTS.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md), [REUSE_AND_LICENSES.md](docs/REUSE_AND_LICENSES.md) en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Better Auth (MIT), Prisma (Apache-2.0), shadcn/ui (MIT) en Lucide (ISC) behouden hun oorspronkelijke licenties. Eigen code: [AGPL-3.0-only](LICENSE).
 
 [GitHub issues](https://github.com/mathossa/GLI-Leefstijl-WebApp/issues) · [Broncode](https://github.com/mathossa/GLI-Leefstijl-WebApp)
+
+## Gebruikersbeheer en SMTP-relay (#6)
+
+Beheerders kunnen via `/admin` gebruikers aanmaken, hun rol wijzigen en accounts blokkeren of deblokkeren via de bestaande Better Auth Admin-plugin. Een optionele TLS/STARTTLS SMTP-relay ondersteunt veilig verzenden van een testmail naar het eigen beheeraccount. Het SMTP-wachtwoord is met AES-256-GCM versleuteld; stel `SMTP_ENCRYPTION_KEY` apart van `BETTER_AUTH_SECRET` in (bijvoorbeeld `openssl rand -base64 32`). Zonder SMTP blijven login en leefstijlfunctionaliteit werken. Geen directe MX-mail of poort 25. Zie [docs/ADMIN_SMTP.md](docs/ADMIN_SMTP.md).
