@@ -5,7 +5,7 @@
 ## Keuzes en architectuur
 
 - Multi-stage Dockerfile: dependencies + Next.js 16 standalone build, non-root runtime, afzonderlijk Prisma v7 migrator/Better Auth beheerimage. Node.js 22.23.4/bookworm-slim, PostgreSQL 17.11/alpine3.24 expliciet gepind op versie (voor volledig immutable deployment registry digest pinnen).
-- Compose: app + PostgreSQL + **eenmalige migrator**. PostgreSQL heeft alleen een intern netwerk, geen gepubliceerd poortnummer en een persistent named volume. De **privéfoto's uit #5** staan op een tweede persistent named volume (\`leefstijl_private_uploads\`) onder \`/app/private-uploads\`, buiten de webroot en schrijfbaar voor de niet-root appgebruiker. De app zit daarnaast op het **bestaande** external reverse-proxy-netwerk. Alleen de TLS-proxy is publiek.
+- Compose: app + PostgreSQL + **eenmalige migrator**. PostgreSQL heeft alleen een intern netwerk, geen gepubliceerd poortnummer en een persistent named volume. De **privéfoto's uit #5** staan op een tweede persistent named volume (`leefstijl_private_uploads`) onder `/app/private-uploads`, buiten de webroot en schrijfbaar voor de niet-root appgebruiker. De app zit daarnaast op het **bestaande** external reverse-proxy-netwerk. Alleen de TLS-proxy is publiek.
 - Migrator draait 'prisma migrate deploy' nadat PostgreSQL gezond is; de app start pas na succesvolle exitcode 0 van migrator. Er is **geen** 'prisma db push' en geen migratie tijdens webserverstart.
 - GET /api/health is ongeauthenticeerde readiness, voert alleen 'SELECT 1' uit op de database en retourneert uitsluitend 'ok' of 'unavailable' met no-store. De Docker healthcheck bevraagt deze endpoint intern.
 - Logging met rotatie; geen gevoelige data in healthchecks of afbeeldingen in Docker-buildcontext. Geen port mapping op de webapp. SMTP is volledig optioneel (na #6).
@@ -50,7 +50,7 @@ Wil je zelf versietags gebruiken, zet bijvoorbeeld APP_IMAGE=mijn-leefstijl:2026
 1. Ga naar **Stacks → Add stack**, kies Docker Standalone → **Web editor**.
 2. Plak de inhoud van **compose.prod.yml** (NIET compose.build.yml).
 3. Vul de variabelen uit je lokale .env.prod in bij **Environment variables** in Portainer; je kunt ze ook vanuit een beveiligd bestand importeren. Controleer dat ze niet als letterlijke tekst in een publieke Git-commit terechtkomen.
-4. De images moeten aanwezig zijn op hetzelfde Docker-host-endpoint, of als vooraf gepushte registry-images bereikbaar zijn. Maak **nooit** gebruik van \`down -v\`: dat verwijdert zowel database- als fotovolume. Controleer dat Portainer geen onbedoelde oude of lokale image uit een andere release gebruikt.
+4. De images moeten aanwezig zijn op hetzelfde Docker-host-endpoint, of als vooraf gepushte registry-images bereikbaar zijn. Maak **nooit** gebruik van `down -v`: dat verwijdert zowel database- als fotovolume. Controleer dat Portainer geen onbedoelde oude of lokale image uit een andere release gebruikt.
 5. Deploy de stack. De Postgres-container wordt healthy, de migrator voert de versiebeheer-migraties uit en **alleen bij succes** start de webapp.
 6. Configureer de bestaande HTTPS-proxy naar **app:3000** op het externe proxy-netwerk (de werkelijke DNS-naam van de container hangt van je stackproject af; controleer de netwerkaliases). Configureer TLS en correcte Host / X-Forwarded-Proto.
 7. Test externe login en lokaal in de appcontainer de readinesscheck.
