@@ -21,7 +21,10 @@ async function completeForm(
   try { await task(); }
   catch (error) {
     if (error instanceof FormInputError) return { error: errorMessage };
-    throw error;
+    // Never drop a user's writing on a transient database/storage failure.
+    // Log only the error type: personal notes must not reach application logs.
+    console.error("Reflectie opslaan mislukt:", error instanceof Error ? error.name : "unknown");
+    return { error: "Opslaan is niet gelukt door een technische fout. Je tekst staat nog in dit formulier; probeer het opnieuw." };
   }
   revalidatePath(route);
   revalidatePath("/dashboard/inzichten");
