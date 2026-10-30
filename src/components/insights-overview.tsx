@@ -68,7 +68,7 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
                 role="progressbar" aria-label={`Voortgang ${item.label}`}
                 aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.percentage ?? undefined}
                 aria-valuetext={item.percentage === null ? "Geen registratie" : `${item.completed} van ${item.target} uitgevoerde weekacties`}>
-                {item.percentage !== null && <div className="h-full rounded-full bg-[#2A9D8F]" style={{width: `${item.percentage}%`}}/>}
+                {item.percentage !== null && <div className="brand-progress h-full rounded-full" style={{width: `${item.percentage}%`}}/>}
               </div>
               {item.percentage !== null && <p className="text-xs text-[#126B68]">{item.completed} van {item.target} geplande stappen</p>}
             </div>
@@ -80,7 +80,7 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
       <section className="space-y-3 rounded-[24px] border border-[#DDE9E8] bg-[#E9F6F4] p-5">
         <h2 className="font-bold text-[#153540]">Mijn gegevens exporteren</h2>
         <p className="text-sm text-[#126B68]">Download jouw doelen, acties, individuele ervaringen, reflecties en CooL-notities als JSON.</p>
-        <a href="/api/export/pdf" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0F4C5C] px-4 text-sm font-semibold text-white hover:bg-[#0F4C5C]">
+        <a href="/api/export/pdf" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#0F4C5C] px-4 text-sm font-semibold text-white hover:bg-[#0c3e4b]">
           <Download size={18} aria-hidden="true"/> PDF-overzicht voor delen <ChevronRight size={16} aria-hidden="true"/>
         </a>
         <a href="/api/export" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#A7D8D0] bg-white px-4 text-sm font-semibold text-[#153540] hover:bg-[#E9F6F4]">
