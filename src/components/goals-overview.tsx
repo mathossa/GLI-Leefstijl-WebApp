@@ -50,21 +50,21 @@ type View =
   | { kind: "experiences"; goalId: string; actionId: string }
   | { kind: "edit-experience"; goalId: string; actionId: string; entryId: string };
 
-const inputClass = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#cfdecf] bg-white px-3.5 py-3 text-sm text-[#263e30]";
-const labelClass = "block text-sm font-semibold text-[#345343]";
+const inputClass = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#A7D8D0] bg-white px-3.5 py-3 text-base text-[#153540]";
+const labelClass = "block text-sm font-semibold text-[#153540]";
 const labelForArea = (key: string) => GOAL_AREAS.find((item) => item.value === key)?.label ?? "Anders";
 const areaStyles = {
-  BEWEGING: { icon: Footprints, idle: "bg-[#e8f5e9] text-[#276a4d]", active: "border-[#81b796] bg-[#d9eedf] text-[#21583e]" },
+  BEWEGING: { icon: Footprints, idle: "bg-[#E9F6F4] text-[#153540]", active: "border-[#A7D8D0] bg-[#DDF2EE] text-[#153540]" },
   VOEDING: { icon: Utensils, idle: "bg-[#fff3df] text-[#a66619]", active: "border-[#efbf7d] bg-[#ffedcd] text-[#885115]" },
-  SLAAP: { icon: Moon, idle: "bg-[#eaf0ff] text-[#426cae]", active: "border-[#a3b9e7] bg-[#e1eafb] text-[#305a9a]" },
-  ONTSPANNING: { icon: Heart, idle: "bg-[#f6eafa] text-[#875cad]", active: "border-[#c8a8dd] bg-[#efe0f7] text-[#754aa0]" },
-  SOCIAAL: { icon: Users, idle: "bg-[#fff0ef] text-[#af5e58]", active: "border-[#e9b2ad] bg-[#f9e3e1] text-[#91453e]" },
-  ANDERS: { icon: Ellipsis, idle: "bg-[#f0f2f1] text-[#4e6260]", active: "border-[#abbdb6] bg-[#e0e8e3] text-[#425a4e]" },
+  SLAAP: { icon: Moon, idle: "bg-[#E9F6F4] text-[#426cae]", active: "border-[#a3b9e7] bg-[#e1eafb] text-[#305a9a]" },
+  ONTSPANNING: { icon: Heart, idle: "bg-[#E9F6F4] text-[#875cad]", active: "border-[#c8a8dd] bg-[#E9F6F4] text-[#754aa0]" },
+  SOCIAAL: { icon: Users, idle: "bg-[#E9F6F4] text-[#af5e58]", active: "border-[#e9b2ad] bg-[#E9F6F4] text-[#91453e]" },
+  ANDERS: { icon: Ellipsis, idle: "bg-[#E9F6F4] text-[#126B68]", active: "border-[#A7D8D0] bg-[#DDF2EE] text-[#153540]" },
 } as const;
 const experienceStyle = {
-  GOED: { icon: Smile, text: "Ging goed", color: "bg-[#e8f5eb] text-[#24734e]" },
+  GOED: { icon: Smile, text: "Ging goed", color: "bg-[#E9F6F4] text-[#153540]" },
   REDELIJK: { icon: Meh, text: "Redelijk", color: "bg-[#fff4df] text-[#ad7629]" },
-  LASTIG: { icon: Frown, text: "Lastig", color: "bg-[#fff0ee] text-[#b74443]" },
+  LASTIG: { icon: Frown, text: "Lastig", color: "bg-[#E9F6F4] text-[#b74443]" },
 } as const;
 const experienceTime = (date: string) => new Intl.DateTimeFormat("nl-NL", {
   timeZone: "Europe/Amsterdam", weekday: "short", day: "numeric",
@@ -87,8 +87,8 @@ const percent = (done: number, total: number) => total > 0 ? Math.round(done / t
 
 function Bar({ value }: { value: number }) {
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-[#e6ebe5]" aria-hidden="true">
-      <div className="h-full rounded-full bg-[#307856]" style={{ width: `${Math.min(100, Math.max(0, value))}%` }}/>
+    <div className="h-2 w-full overflow-hidden rounded-full bg-[#E9F6F4]" aria-hidden="true">
+      <div className="h-full rounded-full bg-[#0F4C5C]" style={{ width: `${Math.min(100, Math.max(0, value))}%` }}/>
     </div>
   );
 }
@@ -104,7 +104,7 @@ function GoalFields({ goal }: { goal?: GoalView }) {
           className={inputClass} defaultValue={goal?.title ?? ""} placeholder="Bijvoorbeeld: meer bewegen"/>
       </div>
       <div>
-        <label htmlFor={`goal-motivation-${prefix}`} className={labelClass}>Motivatie <span className="font-normal text-[#6b8071]">(optioneel)</span></label>
+        <label htmlFor={`goal-motivation-${prefix}`} className={labelClass}>Motivatie <span className="font-normal text-[#126B68]">(optioneel)</span></label>
         <textarea id={`goal-motivation-${prefix}`} name="motivation" maxLength={1000} rows={3}
           className={inputClass} defaultValue={goal?.motivation ?? ""} placeholder="Waarom is dit doel belangrijk voor je?"/>
       </div>
@@ -206,25 +206,25 @@ export function GoalsOverview({ goals, currentWeek, message }: {
   return (
     <div className="mx-auto min-w-0 max-w-4xl space-y-6">
       <header className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight text-[#203d30]">Mijn doelen</h1>
-        <p className="text-sm text-[#647768]">{isoWeekLabel(currentWeek)}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[#153540]">Mijn doelen</h1>
+        <p className="text-sm text-[#126B68]">{isoWeekLabel(currentWeek)}</p>
       </header>
 
-      {message === "opgeslagen" && <p role="status" className="rounded-2xl bg-[#e8f3e5] p-3 text-sm text-[#2c5d40]">Wijzigingen opgeslagen.</p>}
+      {message === "opgeslagen" && <p role="status" className="rounded-2xl bg-[#E9F6F4] p-3 text-sm text-[#153540]">Wijzigingen opgeslagen.</p>}
       {message === "ongeldig" && <p role="alert" className="rounded-2xl border border-[#e2c99b] bg-[#fff5e4] p-3 text-sm text-[#815d31]">Controleer je invoer en de ingestelde limieten.</p>}
 
       <button type="button" onClick={() => open({ kind: "new-goal" })} disabled={active.length >= MAX_ACTIVE_GOALS}
-        className="flex min-h-18 w-full items-center gap-3 rounded-[22px] border border-[#d5e8d5] bg-[#edf5ec] px-4 py-3 text-left text-sm font-semibold text-[#285e41] hover:bg-[#e3f0e2] disabled:opacity-50">
-        <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-xl bg-[#d9ecdc]"><Plus size={21}/></span>
+        className="flex min-h-18 w-full items-center gap-3 rounded-[22px] border border-[#DDE9E8] bg-[#E9F6F4] px-4 py-3 text-left text-sm font-semibold text-[#153540] hover:bg-[#E9F6F4] disabled:opacity-50">
+        <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-xl bg-[#DDF2EE]"><Plus size={21}/></span>
         <span className="min-w-0 flex-1">Nieuw doel toevoegen</span>
         <ChevronRight size={19} aria-hidden="true"/>
       </button>
 
       <section className="space-y-3" aria-labelledby="active-goals-title">
-        <h2 id="active-goals-title" className="flex items-center gap-2 text-lg font-bold text-[#254638]">
+        <h2 id="active-goals-title" className="flex items-center gap-2 text-lg font-bold text-[#153540]">
           <Target size={21} aria-hidden="true"/> Actieve doelen ({active.length})
         </h2>
-        {active.length === 0 && <p className="rounded-2xl bg-[#f2f6f0] p-5 text-sm text-[#5c7260]">Er zijn nog geen doelen. Voeg je eerste doel toe.</p>}
+        {active.length === 0 && <p className="rounded-2xl bg-[#E9F6F4] p-5 text-sm text-[#126B68]">Er zijn nog geen doelen. Voeg je eerste doel toe.</p>}
         {active.map((item) => {
           const actions = activeActions(item);
           const totals = actions.reduce((acc, a) => {
@@ -234,21 +234,21 @@ export function GoalsOverview({ goals, currentWeek, message }: {
           const pct = percent(totals.done, totals.target);
           return (
             <button type="button" key={item.id} onClick={() => open({ kind: "goal", goalId: item.id })}
-              className="block w-full min-w-0 rounded-[23px] border border-[#e2e8df] bg-white p-4 text-left shadow-[0_7px_26px_-22px_rgba(36,70,49,.5)] transition-colors hover:border-[#b8d4bf] sm:p-5"
+              className="block w-full min-w-0 rounded-[23px] border border-[#DDE9E8] bg-white p-4 text-left shadow-[0_7px_26px_-22px_rgba(36,70,49,.5)] transition-colors hover:border-[#A7D8D0] sm:p-5"
               aria-label={`Bekijk doel ${item.title}`}>
               <span className="flex min-w-0 items-start justify-between gap-3">
-                <span className="min-w-0 flex-1 break-words text-lg font-bold leading-tight text-[#233f31]">{item.title}</span>
-                <span className="shrink-0 rounded-full bg-[#e7f1e6] px-3 py-1 text-[11px] font-medium text-[#326747]">{labelForArea(item.area)}</span>
+                <span className="min-w-0 flex-1 break-words text-lg font-bold leading-tight text-[#153540]">{item.title}</span>
+                <span className="shrink-0 rounded-full bg-[#E9F6F4] px-3 py-1 text-[11px] font-medium text-[#153540]">{labelForArea(item.area)}</span>
               </span>
-              {item.motivation && <span className="mt-1.5 block truncate text-sm text-[#617466]">{item.motivation}</span>}
-              <span className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#5f7465]">
+              {item.motivation && <span className="mt-1.5 block truncate text-sm text-[#126B68]">{item.motivation}</span>}
+              <span className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#126B68]">
                 <span className="inline-flex items-center gap-1.5"><ClipboardList size={15} aria-hidden="true"/> {actions.length} {actions.length === 1 ? "weekactie" : "weekacties"}</span>
                 {dates(item) && <span className="inline-flex items-center gap-1.5"><CalendarDays size={15} aria-hidden="true"/>{dates(item)}</span>}
                 <ChevronRight size={16} className="ml-auto shrink-0" aria-hidden="true"/>
               </span>
               {totals.target > 0 && <span className="mt-3 flex items-center gap-3">
                 <span className="min-w-0 flex-1"><Bar value={pct}/></span>
-                <span className="shrink-0 text-xs font-medium tabular-nums text-[#436a50]">{pct}%</span>
+                <span className="shrink-0 text-xs font-medium tabular-nums text-[#153540]">{pct}%</span>
               </span>}
             </button>
           );
@@ -258,15 +258,15 @@ export function GoalsOverview({ goals, currentWeek, message }: {
       {archived.length > 0 && (
         <section>
           <button type="button" onClick={() => setShowArchived(!showArchived)}
-            aria-expanded={showArchived} className="flex w-full items-center gap-2 rounded-xl py-2 text-left text-sm font-semibold text-[#456653]">
+            aria-expanded={showArchived} className="flex w-full items-center gap-2 rounded-xl py-2 text-left text-sm font-semibold text-[#153540]">
             <Archive size={17} aria-hidden="true"/> Gearchiveerde doelen ({archived.length})
             <ChevronDown className={`ml-auto size-4 transition-transform ${showArchived ? "rotate-180" : ""}`} aria-hidden="true"/>
           </button>
           {showArchived && <ul className="mt-3 space-y-2">
-            {archived.map((item) => <li key={item.id} className="rounded-2xl border border-[#e4e8df] bg-white p-4">
+            {archived.map((item) => <li key={item.id} className="rounded-2xl border border-[#DDE9E8] bg-white p-4">
               <p className="font-semibold">{item.title}</p>
-              {item.motivation && <p className="mt-1 text-sm text-[#697769]">{item.motivation}</p>}
-              <p className="mt-1 text-xs text-[#697769]">{item.actions.length} bewaarde acties</p>
+              {item.motivation && <p className="mt-1 text-sm text-[#126B68]">{item.motivation}</p>}
+              <p className="mt-1 text-xs text-[#126B68]">{item.actions.length} bewaarde acties</p>
             </li>)}
           </ul>}
         </section>
@@ -275,12 +275,12 @@ export function GoalsOverview({ goals, currentWeek, message }: {
       <dialog ref={dialog} aria-label={title} className="review-dialog goals-dialog"
         onClose={() => setView(null)}
         onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
-        <div className="mx-auto mb-3 mt-3 h-1.5 w-12 rounded-full bg-[#dce5db] sm:hidden" aria-hidden="true"/>
+        <div className="mx-auto mb-3 mt-3 h-1.5 w-12 rounded-full bg-[#DDF2EE] sm:hidden" aria-hidden="true"/>
         <div className="space-y-5 px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-2 sm:px-7 sm:pb-7 sm:pt-7">
           <header className="flex min-w-0 items-start gap-3">
-            {canBack && <button type="button" onClick={back} aria-label="Terug" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#476a56] hover:bg-[#edf3ea]"><ArrowLeft size={20}/></button>}
-            <h2 className="min-w-0 flex-1 break-words pt-1 text-xl font-bold tracking-tight text-[#223e31]">{title}</h2>
-            <button type="button" onClick={close} aria-label="Sluiten" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#526e5a] hover:bg-[#edf3ea]"><X size={21}/></button>
+            {canBack && <button type="button" onClick={back} aria-label="Terug" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#126B68] hover:bg-[#E9F6F4]"><ArrowLeft size={20}/></button>}
+            <h2 className="min-w-0 flex-1 break-words pt-1 text-xl font-bold tracking-tight text-[#153540]">{title}</h2>
+            <button type="button" onClick={close} aria-label="Sluiten" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#126B68] hover:bg-[#E9F6F4]"><X size={21}/></button>
           </header>
 
           {view?.kind === "new-goal" && (
@@ -301,19 +301,19 @@ export function GoalsOverview({ goals, currentWeek, message }: {
           {view?.kind === "goal" && goal && (
             <div className="space-y-5">
               <div className="space-y-3">
-                <span className="inline-flex rounded-full bg-[#e9f2e7] px-3 py-1 text-xs font-medium text-[#326747]">{labelForArea(goal.area)}</span>
-                {goal.motivation && <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#596d60]">{goal.motivation}</p>}
+                <span className="inline-flex rounded-full bg-[#E9F6F4] px-3 py-1 text-xs font-medium text-[#153540]">{labelForArea(goal.area)}</span>
+                {goal.motivation && <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#126B68]">{goal.motivation}</p>}
                 <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                  {dates(goal) ? <span className="inline-flex items-center gap-2 text-[#5d7464]"><CalendarDays size={16} aria-hidden="true"/> {dates(goal)}</span> : <span/>}
+                  {dates(goal) ? <span className="inline-flex items-center gap-2 text-[#126B68]"><CalendarDays size={16} aria-hidden="true"/> {dates(goal)}</span> : <span/>}
                   <button type="button" onClick={() => open({ kind: "edit-goal", goalId: goal.id })}
-                    className="inline-flex items-center gap-1.5 font-semibold text-[#2f6d4b]"><Pencil size={16} aria-hidden="true"/> Bewerken</button>
+                    className="inline-flex items-center gap-1.5 font-semibold text-[#153540]"><Pencil size={16} aria-hidden="true"/> Bewerken</button>
                 </div>
               </div>
-              <div className="border-t border-[#e1e9df] pt-5">
+              <div className="border-t border-[#DDE9E8] pt-5">
                 <h3 className="mb-3 text-lg font-bold">Weekacties ({activeActions(goal).length})</h3>
                 <button type="button" disabled={activeActions(goal).length >= MAX_ACTIVE_ACTIONS}
                   onClick={() => open({ kind: "new-action", goalId: goal.id })}
-                  className="mb-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#d5e8d6] bg-[#edf5eb] text-sm font-semibold text-[#2b6949] hover:bg-[#e5f1e3] disabled:opacity-50">
+                  className="mb-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#DDE9E8] bg-[#E9F6F4] text-sm font-semibold text-[#153540] hover:bg-[#E9F6F4] disabled:opacity-50">
                   <Plus size={19} aria-hidden="true"/> Weekactie toevoegen
                 </button>
                 <div className="space-y-3">
@@ -321,12 +321,12 @@ export function GoalsOverview({ goals, currentWeek, message }: {
                     const p = currentProgress(a, currentWeek);
                     return (
                       <button type="button" key={a.id} onClick={() => open({ kind: "action", goalId: goal.id, actionId: a.id })}
-                        className="block w-full rounded-2xl border border-[#e3e9e1] bg-white p-4 text-left hover:border-[#b3d1b9]">
+                        className="block w-full rounded-2xl border border-[#DDE9E8] bg-white p-4 text-left hover:border-[#A7D8D0]">
                         <span className="flex items-center justify-between gap-2">
                           <span className="min-w-0 flex-1 break-words font-semibold">{a.title}</span>
                           <ChevronRight size={17} className="shrink-0" aria-hidden="true"/>
                         </span>
-                        <span className="mt-1.5 block text-xs tabular-nums text-[#5a745f]">{p.completed} / {p.target} · {isoWeekLabel(currentWeek)}</span>
+                        <span className="mt-1.5 block text-xs tabular-nums text-[#126B68]">{p.completed} / {p.target} · {isoWeekLabel(currentWeek)}</span>
                         <span className="mt-3 block"><Bar value={percent(p.completed,p.target)}/></span>
                       </button>
                     );
@@ -335,15 +335,15 @@ export function GoalsOverview({ goals, currentWeek, message }: {
                 {activeActions(goal).length === 0 && <p className="py-3 text-sm text-muted-foreground">Nog geen weekacties.</p>}
                 {goal.actions.some((a) => a.archived) && (
                   <details className="mt-4 text-sm">
-                    <summary className="cursor-pointer font-medium text-[#52715a]">Gearchiveerde weekacties</summary>
+                    <summary className="cursor-pointer font-medium text-[#126B68]">Gearchiveerde weekacties</summary>
                     <ul className="mt-3 space-y-2">{goal.actions.filter((a) => a.archived).map((a) =>
-                      <li key={a.id} className="rounded-lg bg-[#f4f6f2] p-3">{a.title}</li>)}</ul>
+                      <li key={a.id} className="rounded-lg bg-[#E9F6F4] p-3">{a.title}</li>)}</ul>
                   </details>
                 )}
               </div>
               <form action={archiveGoal} onSubmit={(event) => { if (!window.confirm("Dit doel en zijn acties archiveren?")) event.preventDefault(); }}>
                 <input type="hidden" name="goalId" value={goal.id}/>
-                <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#f3ceca] bg-[#fff2ef] text-sm font-semibold text-[#b13636]">
+                <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#f3ceca] bg-[#E9F6F4] text-sm font-semibold text-[#b13636]">
                   <Archive size={18} aria-hidden="true"/> Doel archiveren
                 </button>
               </form>
@@ -367,36 +367,36 @@ export function GoalsOverview({ goals, currentWeek, message }: {
 
           {view?.kind === "action" && goal && action && progress && (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-[#e4eae2] bg-[#f8faf6] p-5">
-                <p className="mb-1 text-sm text-[#597061]">{goal.title}</p>
-                <p className="text-2xl font-bold tabular-nums text-[#244b35]">{progress.completed} / {progress.target}</p>
-                <p className="mb-3 text-xs text-[#5c7661]">{isoWeekLabel(currentWeek)}</p>
+              <div className="rounded-2xl border border-[#DDE9E8] bg-[#E9F6F4] p-5">
+                <p className="mb-1 text-sm text-[#126B68]">{goal.title}</p>
+                <p className="text-2xl font-bold tabular-nums text-[#153540]">{progress.completed} / {progress.target}</p>
+                <p className="mb-3 text-xs text-[#126B68]">{isoWeekLabel(currentWeek)}</p>
                 <Bar value={percent(progress.completed,progress.target)}/>
               </div>
               <button type="button" onClick={() => open({ kind: "experiences", goalId: goal.id, actionId: action.id })}
-                className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#e3e9e0] bg-white px-4 text-left text-sm font-semibold">
+                className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#DDE9E8] bg-white px-4 text-left text-sm font-semibold">
                 <History size={19} aria-hidden="true"/><span className="flex-1">Ervaringen ({entries.length})</span><ChevronRight size={18} aria-hidden="true"/>
               </button>
               <button type="button" onClick={() => open({ kind: "week-note", goalId: goal.id, actionId: action.id })}
-                className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#e3e9e0] bg-white px-4 text-left text-sm font-semibold">
+                className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#DDE9E8] bg-white px-4 text-left text-sm font-semibold">
                 <ClipboardList size={19} aria-hidden="true"/><span className="flex-1">Weekreflectie</span><ChevronRight size={18} aria-hidden="true"/>
               </button>
               <button type="button" onClick={() => open({ kind: "edit-action", goalId: goal.id, actionId: action.id })}
-                className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#e3e9e0] bg-white px-4 text-left text-sm font-semibold">
+                className="flex min-h-13 w-full items-center gap-3 rounded-xl border border-[#DDE9E8] bg-white px-4 text-left text-sm font-semibold">
                 <Pencil size={19} aria-hidden="true"/><span className="flex-1">Weekactie bewerken</span><ChevronRight size={18} aria-hidden="true"/>
               </button>
-              {action.weeks.length > 0 && <details className="rounded-xl bg-[#f3f6f1] p-4">
-                <summary className="cursor-pointer text-sm font-semibold text-[#3b6147]">Recente weekhistorie</summary>
+              {action.weeks.length > 0 && <details className="rounded-xl bg-[#E9F6F4] p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[#153540]">Recente weekhistorie</summary>
                 <ul className="mt-3 space-y-2">
                   {action.weeks.map((week) => <li key={week.id} className="rounded-xl bg-white p-3 text-sm">
                     <span className="font-medium">{weekLabel(week.weekStart)} · {week.completedCount}/{week.targetCount}</span>
-                    {week.note && <p className="mt-1 whitespace-pre-wrap text-[#647569]">{week.note}</p>}
+                    {week.note && <p className="mt-1 whitespace-pre-wrap text-[#126B68]">{week.note}</p>}
                   </li>)}
                 </ul>
               </details>}
               <form action={archiveHabitAction} onSubmit={(event) => { if (!window.confirm("Deze weekactie archiveren?")) event.preventDefault(); }}>
                 <input type="hidden" name="actionId" value={action.id}/>
-                <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#f2d9d3] bg-[#fff8f5] text-sm font-medium text-[#ad3838]">
+                <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#f2d9d3] bg-[#E9F6F4] text-sm font-medium text-[#ad3838]">
                   <Archive size={17} aria-hidden="true"/> Weekactie archiveren
                 </button>
               </form>
@@ -414,7 +414,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
                 <label htmlFor="edit-action-target" className={labelClass}>Keer per week</label>
                 <input id="edit-action-target" type="number" name="targetPerWeek" min={1} max={7} required className={inputClass} defaultValue={action.targetPerWeek}/>
               </div>
-              <p className="text-xs text-[#657769]">Een nieuwe frequentie geldt vanaf volgende week. Je historie blijft bewaard.</p>
+              <p className="text-xs text-[#126B68]">Een nieuwe frequentie geldt vanaf volgende week. Je historie blijft bewaard.</p>
               <Button type="submit" className="h-12 w-full">Wijzigingen opslaan</Button>
             </form>
           )}
@@ -431,9 +431,9 @@ export function GoalsOverview({ goals, currentWeek, message }: {
 
           {view?.kind === "experiences" && action && goal && (
             <div className="space-y-3">
-              <p className="pb-2 text-sm text-[#5d7163]">{action.title}</p>
+              <p className="pb-2 text-sm text-[#126B68]">{action.title}</p>
               {entries.length === 0 ? (
-                <p className="rounded-2xl bg-[#f2f6f0] p-4 text-sm text-[#597160]">Nog geen individuele ervaringen opgeslagen.</p>
+                <p className="rounded-2xl bg-[#E9F6F4] p-4 text-sm text-[#126B68]">Nog geen individuele ervaringen opgeslagen.</p>
               ) : (
                 <ul className="space-y-3">
                   {entries.map((entry) => {
@@ -445,18 +445,18 @@ export function GoalsOverview({ goals, currentWeek, message }: {
                         <button type="button"
                           onClick={() => open({ kind: "edit-experience", goalId: goal.id, actionId: action.id, entryId: entry.id })}
                           aria-label={`Bekijk ervaring van ${experienceTime(entry.createdAt)}`}
-                          className="flex min-h-22 w-full items-center gap-3 rounded-2xl border border-[#e4e9e2] bg-white px-3.5 py-3.5 text-left transition-colors hover:border-[#a7cdb3]">
-                          <span className={`flex size-12 shrink-0 items-center justify-center rounded-full ${rating?.color ?? "bg-[#f0f3ef] text-[#597265]"}`}>
+                          className="flex min-h-22 w-full items-center gap-3 rounded-2xl border border-[#DDE9E8] bg-white px-3.5 py-3.5 text-left transition-colors hover:border-[#A7D8D0]">
+                          <span className={`flex size-12 shrink-0 items-center justify-center rounded-full ${rating?.color ?? "bg-[#E9F6F4] text-[#126B68]"}`}>
                             <Icon size={24} aria-hidden="true"/>
                           </span>
                           <span className="min-w-0 flex-1 space-y-1">
-                            <span className="block text-sm font-medium text-[#2e4738]">{experienceTime(entry.createdAt)}</span>
-                            <span className="block text-sm text-[#5e7164]">
+                            <span className="block text-sm font-medium text-[#153540]">{experienceTime(entry.createdAt)}</span>
+                            <span className="block text-sm text-[#126B68]">
                               {rating?.text ?? "Nog niet beoordeeld"}
                               {entry.note ? " · " + entry.note : ""}
                             </span>
                           </span>
-                          <ChevronRight className="size-5 shrink-0 text-[#6a8370]" aria-hidden="true"/>
+                          <ChevronRight className="size-5 shrink-0 text-[#126B68]" aria-hidden="true"/>
                         </button>
                       </li>
                     );
@@ -468,8 +468,8 @@ export function GoalsOverview({ goals, currentWeek, message }: {
 
           {view?.kind === "edit-experience" && action && selectedEntry && (
             <div className="space-y-5">
-              <p className="text-sm text-[#586e60]">{action.title}</p>
-              <div className="flex items-center gap-2 rounded-xl border border-[#e1e8df] bg-[#fafbf8] px-4 py-3 text-sm text-[#315242]">
+              <p className="text-sm text-[#126B68]">{action.title}</p>
+              <div className="flex items-center gap-2 rounded-xl border border-[#DDE9E8] bg-[#E9F6F4] px-4 py-3 text-sm text-[#153540]">
                 <CalendarDays className="size-4 shrink-0" aria-hidden="true"/>
                 {experienceTime(selectedEntry.createdAt)}
               </div>
