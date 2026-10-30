@@ -98,15 +98,9 @@ function GoalFields({ goal }: { goal?: GoalView }) {
   const [selectedArea, setSelectedArea] = useState(goal?.area ?? "BEWEGING");
   const [startDate, setStartDate] = useState(goal?.startDate ?? "");
   const [endDate, setEndDate] = useState(goal?.endDate ?? "");
-  const [dateError, setDateError] = useState(false);
-  function setStart(value: string) {
-    setStartDate(value);
-    setDateError(Boolean(value && endDate && endDate < value));
-  }
-  function setEnd(value: string) {
-    setEndDate(value);
-    setDateError(Boolean(value && startDate && value < startDate));
-  }
+  const dateError = Boolean(startDate && endDate && endDate < startDate);
+  const setStart = (value: string) => setStartDate(value);
+  const setEnd = (value: string) => setEndDate(value);
   function quickEnd() {
     const base = startDate || amsterdamToday();
     setEnd(addCalendarDays(base, 28));
@@ -159,7 +153,7 @@ function GoalFields({ goal }: { goal?: GoalView }) {
         <div>
           <label htmlFor={`goal-end-${prefix}`} className={labelClass}>Einddatum <span className="block text-xs font-normal">(optioneel)</span></label>
           <input id={`goal-end-${prefix}`} type="date" name="endDate" className={inputClass}
-            value={endDate} onChange={(event) => setEnd(event.target.value)}/>
+            min={startDate || undefined} value={endDate} onChange={(event) => setEnd(event.target.value)}/>
           <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Snelle keuze einddatum">
             <button type="button" onClick={quickEnd}
               className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">
