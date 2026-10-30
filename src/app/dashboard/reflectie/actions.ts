@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { FormInputError } from "@/lib/goals-domain.mjs";
-import { parseDate, parseOwnedId, parseReflectionWeek, parseReflection, parseMeeting } from "@/lib/reflections-domain.mjs";
+import { MeetingInputError, parseOwnedId, parseReflectionWeek, parseReflection, parseMeeting } from "@/lib/reflections-domain.mjs";
 import { validatePhoto, storeMeetingPhoto, deletePhotoFile } from "@/lib/private-meeting-photos";
 
 const route = "/dashboard/reflectie";
@@ -16,11 +16,13 @@ export type ReflectionFormState = { error: string | null };
 // error: that would unmount the dialog and discard the user's unsaved writing.
 async function completeForm(
   task: () => Promise<void>,
-  errorMessage: string,
+  errorMessage: string | ((error: FormInputError) => string),
 ): Promise<ReflectionFormState> {
   try { await task(); }
   catch (error) {
-    if (error instanceof FormInputError) return { error: errorMessage };
+    if (error instanceof FormInputError) {
+      return { error: typeof errorMessage === "string" ? errorMessage : errorMessage(error) };
+    }
     // Never drop a user's writing on a transient database/storage failure.
     // Log only the error type: personal notes must not reach application logs.
     console.error("Reflectie opslaan mislukt:", error instanceof Error ? error.name : "unknown");
@@ -31,16 +33,20 @@ async function completeForm(
   redirect(route + "?melding=opgeslagen");
 }
 
-function meetingErrorMessage(form: FormData): string {
-  const title = form.get("title");
-  if (typeof title !== "string" || !title.trim()) {
-    return "Vul een titel voor je bijeenkomst in. De overige invoer is behouden.";
+function meetingErrorMessage(error: FormInputError): string {
+  if (error instanceof MeetingInputError) {
+    switch (error.field) {
+      case "meetingDate":
+        return "De bijeenkomst kon niet worden opgeslagen: controleer de datum (2000–2100). Datums in het verleden zijn toegestaan. Je tekst blijft staan.";
+      case "title":
+        return "Vul een titel voor je bijeenkomst in (maximaal 120 tekens). Je overige invoer blijft staan.";
+      case "notes":
+        return "De notitie is ongeldig of langer dan 4000 tekens. Je invoer blijft staan.";
+      case "actionPoints":
+        return "De actiepunten zijn ongeldig of langer dan 2000 tekens. Je invoer blijft staan.";
+    }
   }
-  try { parseDate(form.get("meetingDate")); }
-  catch {
-    return "Controleer de datum (tussen 2000 en 2100). Bijeenkomsten in het verleden zijn toegestaan; je tekst blijft staan.";
-  }
-  return "Controleer de lengte van je tekst en de eventuele foto (maximaal 8 MB, JPG/PNG/WebP/HEIC). Je invoer blijft staan.";
+  return "De eventuele foto kon niet worden verwerkt (maximaal 8 MB, JPG/PNG/WebP/HEIC), of er zijn al vijf foto's opgeslagen. Je tekst blijft staan.";
 }
 
 async function complete(task: () => Promise<void>) {
@@ -82,7 +88,7 @@ export async function createMeeting(_previous: ReflectionFormState, form: FormDa
     const image = await validatePhoto(form.get("photo"));
     const meeting = await prisma.meetingNote.create({ data: { userId: user.id, ...data } });
     if (image) await storeMeetingPhoto(user.id, meeting.id, image);
-  }, meetingErrorMessage(form));
+  }, meetingErrorMessage);
 }
 
 export async function updateMeeting(_previous: ReflectionFormState, form: FormData): Promise<ReflectionFormState> {
@@ -96,7 +102,7 @@ export async function updateMeeting(_previous: ReflectionFormState, form: FormDa
     });
     if (result.count !== 1) throw new FormInputError();
     if (image) await storeMeetingPhoto(user.id, id, image);
-  }, meetingErrorMessage(form));
+  }, meetingErrorMessage);
 }
 
 export async function deleteMeeting(form: FormData) {
