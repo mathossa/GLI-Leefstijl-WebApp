@@ -45,7 +45,7 @@ export function QuickCompletion({ actionId, title, completed, target, canUndo }:
         <div role="progressbar" aria-label={`Voortgang ${title}`} aria-valuemin={0}
           aria-valuemax={target} aria-valuenow={count}
           className="h-1.5 w-full overflow-hidden rounded-full bg-[#E9F6F4]">
-          <div className="h-full rounded-full bg-[#0F4C5C] transition-[width] duration-200"
+          <div className="brand-progress h-full rounded-full transition-[width] duration-200"
             style={{ width: `${(count / target) * 100}%` }}/>
         </div>
       </div>
@@ -57,7 +57,7 @@ export function QuickCompletion({ actionId, title, completed, target, canUndo }:
         </button>
         <button type="button" onClick={() => run("complete")} disabled={pending || complete}
           aria-label={`Markeer ${title} als gedaan`} title="Gedaan"
-          className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_5px_12px_-8px_rgba(25,75,50,.65)] transition-colors hover:bg-[#0F4C5C] disabled:cursor-not-allowed disabled:bg-[#E9F6F4] disabled:text-[#153540] sm:size-12">
+          className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_5px_12px_-8px_rgba(25,75,50,.65)] transition-colors hover:bg-[#0c3e4b] disabled:cursor-not-allowed disabled:bg-[#E9F6F4] disabled:text-[#153540] sm:size-12">
           <Check size={23} strokeWidth={2.5} aria-hidden="true"/>
         </button>
       </div>
