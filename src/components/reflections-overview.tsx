@@ -310,6 +310,7 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
     notes: meeting?.notes ?? "",
     actionPoints: meeting?.actionPoints ?? "",
   });
+  const [hasPhoto, setHasPhoto] = useState(false);
   const set = (key: keyof typeof values, value: string) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
@@ -338,7 +339,9 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
           value={values.actionPoints} onChange={(event) => set("actionPoints", event.target.value)}/>
       <div>
         <label htmlFor={`meeting-photo-${prefix}`} className={label}>Foto van je schrift of papier <span className="font-normal text-[#657a6a]">(optioneel)</span></label>
-        <input id={`meeting-photo-${prefix}`} type="file" name="photo"
+        <input id={`meeting-photo-${prefix}`} type="file"
+          name={hasPhoto ? "photo" : undefined}
+          onChange={(event) => setHasPhoto(Boolean(event.currentTarget.files?.length))}
           accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
           className="mt-2 block w-full min-w-0 text-sm file:mr-2 file:rounded-xl file:border-0 file:bg-[#edf4ea] file:px-3 file:py-2 file:text-[#28583d]"/>
         <p className="mt-1 text-xs text-[#647669]">Geen tekst overtypen nodig. Maximaal 8 MB per foto.</p>
