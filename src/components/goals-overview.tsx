@@ -50,7 +50,7 @@ type View =
   | { kind: "experiences"; goalId: string; actionId: string }
   | { kind: "edit-experience"; goalId: string; actionId: string; entryId: string };
 
-const inputClass = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#A7D8D0] bg-white px-3.5 py-3 text-base text-[#153540]";
+const inputClass = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#A7D8D0] bg-white px-3.5 py-3 text-base text-[#153540] focus-visible:border-[#126B68]";
 const labelClass = "block text-sm font-semibold text-[#153540]";
 const labelForArea = (key: string) => GOAL_AREAS.find((item) => item.value === key)?.label ?? "Anders";
 const areaStyles = {
@@ -88,7 +88,7 @@ const percent = (done: number, total: number) => total > 0 ? Math.round(done / t
 function Bar({ value }: { value: number }) {
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-[#E9F6F4]" aria-hidden="true">
-      <div className="h-full rounded-full bg-[#0F4C5C]" style={{ width: `${Math.min(100, Math.max(0, value))}%` }}/>
+      <div className="brand-progress h-full rounded-full" style={{ width: `${Math.min(100, Math.max(0, value))}%` }}/>
     </div>
   );
 }
