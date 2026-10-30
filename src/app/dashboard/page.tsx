@@ -49,7 +49,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-3 sm:space-y-6">
       <section aria-labelledby="today-heading" className="brand-hero relative min-w-0 overflow-hidden rounded-[26px] border border-border px-5 py-6 sm:px-8 sm:py-9">
-        <div className="relative z-10 max-w-[95%] space-y-2 sm:max-w-[75%]">
+        <div className="relative z-10 max-w-[95%] space-y-2 sm:max-w-[58%]">
           <p className="text-xs font-semibold text-[#126b68]">{isoWeekLabel(weekStart)}</p>
           <h1 id="today-heading" className="text-[1.65rem] font-bold leading-tight tracking-tight text-[#0f4c5c] sm:text-4xl">
             Goed dat je er bent <span aria-hidden="true">👋</span>
