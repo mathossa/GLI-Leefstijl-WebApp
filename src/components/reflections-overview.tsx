@@ -27,7 +27,7 @@ type Mode =
   | { kind: "meeting"; id: string }
   | { kind: "meeting-edit"; id: string };
 
-const field = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#A7D8D0] bg-white px-3.5 py-3 text-base text-[#153540]";
+const field = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#A7D8D0] bg-white px-3.5 py-3 text-base text-[#153540] focus-visible:border-[#126B68]";
 const label = "block text-sm font-semibold text-[#153540]";
 const formattedDate = (value: string) => new Intl.DateTimeFormat("nl-NL", {
   timeZone: "UTC", day: "numeric", month: "long", year: "numeric",
