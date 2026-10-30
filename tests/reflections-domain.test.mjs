@@ -40,6 +40,14 @@ test("meetings require title but allow photo-only notes, dates validated", () =>
     title: "Groep 1", notes: "Een goede ontmoeting", meetingDate: new Date("2026-10-26T00:00:00.000Z"), actionPoints: null,
   });
   assert.equal(parseMeeting(form({ title: "Groep", notes: "", meetingDate: "2026-10-26" })).notes, "");
+  // Historical meeting notes must be accepted, independent of the current date.
+  assert.equal(dateOnly(parseMeeting(form({
+    title: "CooL bijeenkomst 1", notes: "Waardevolle les", meetingDate: "2023-06-15",
+  })).meetingDate), "2023-06-15");
+  // A missing title, not the historical date, is what makes this invalid.
+  assert.throws(() => parseMeeting(form({
+    title: "", notes: "Dit wil ik niet kwijt", meetingDate: "2023-06-15",
+  })));
   assert.throws(() => parseMeeting(form({ title: "Groep", notes: "x", meetingDate: "2026-02-30" })));
   assert.throws(() => parseOwnedId(form({ id: "" })));
 });
