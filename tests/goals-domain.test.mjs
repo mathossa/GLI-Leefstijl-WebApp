@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  amsterdamMonday, FormInputError, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS,
+  amsterdamMonday, amsterdamToday, addCalendarDays, FormInputError, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS,
   ownedWhere, parseActionForm, parseGoalForm, parseProgressForm, parseEntryFeedback,
 } from "../src/lib/goals-domain.mjs";
 
@@ -22,6 +22,19 @@ test("Amsterdam calendar weeks reset on Monday, never on UTC midnight", () => {
   assert.equal(week("2026-03-29T21:30:00Z"), "2026-03-23"); // Sunday during DST
   assert.equal(week("2026-03-29T22:30:00Z"), "2026-03-30"); // Monday 00:30 CEST
   assert.equal(week("2027-01-03T12:00:00Z"), "2026-12-28"); // Cross-year
+});
+
+test("goal date shortcuts respect Amsterdam local day, DST, and calendar arithmetic", () => {
+  assert.equal(amsterdamToday(new Date("2026-03-29T22:30:00Z")), "2026-03-30");
+  assert.equal(amsterdamToday(new Date("2026-10-25T22:30:00Z")), "2026-10-25");
+  assert.equal(amsterdamToday(new Date("2026-10-25T23:30:00Z")), "2026-10-26");
+  assert.equal(addCalendarDays("2026-10-28", 28), "2026-11-25");
+  assert.equal(addCalendarDays("2026-12-15", 28), "2027-01-12");
+  assert.equal(addCalendarDays("2026-03-21", 28), "2026-04-18");
+  assert.equal(addCalendarDays("2026-10-24", 28), "2026-11-21");
+  assert.throws(() => addCalendarDays("", 28), FormInputError);
+  assert.throws(() => addCalendarDays("2026-02-30", 28), FormInputError);
+  assert.throws(() => addCalendarDays("2026-10-24", 1.5), FormInputError);
 });
 
 test("goal validation: title, motivation, area and optional dates", () => {
