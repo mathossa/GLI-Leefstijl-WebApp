@@ -81,6 +81,29 @@ export function amsterdamMonday(instant = new Date()) {
   return day;
 }
 
+/** Today's calendar date in Europe/Amsterdam, regardless of UTC offset or DST.
+ * @param {Date} [instant]
+ */
+export function amsterdamToday(instant = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Amsterdam", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(instant);
+  const get = (key) => parts.find((part) => part.type === key)?.value;
+  return [get("year"), get("month"), get("day")].join("-");
+}
+
+/** Calendar-day addition: avoids local timezone/DST hour shifts.
+ * @param {string} dateText ISO calendar date
+ * @param {number} days
+ */
+export function addCalendarDays(dateText, days) {
+  if (!Number.isInteger(days)) throw new FormInputError();
+  const date = dateInput(dateText);
+  if (!date) throw new FormInputError();
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 /** @param {string} userId @param {string} id */
 export function ownedWhere(userId, id) {
   if (!userId || !id || id.length > 128) throw new FormInputError();
