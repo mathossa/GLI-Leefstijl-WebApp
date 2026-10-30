@@ -41,23 +41,23 @@ export function QuickCompletion({ actionId, title, completed, target, canUndo }:
   return (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
       <div className="min-w-[90px] flex-1 space-y-2">
-        <span className="block text-xs font-medium tabular-nums text-[#526e5a]" aria-live="polite">{count} / {target} deze week</span>
+        <span className="block text-xs font-medium tabular-nums text-[#126B68]" aria-live="polite">{count} / {target} deze week</span>
         <div role="progressbar" aria-label={`Voortgang ${title}`} aria-valuemin={0}
           aria-valuemax={target} aria-valuenow={count}
-          className="h-1.5 w-full overflow-hidden rounded-full bg-[#e5ebe5]">
-          <div className="h-full rounded-full bg-[#2e7255] transition-[width] duration-200"
+          className="h-1.5 w-full overflow-hidden rounded-full bg-[#E9F6F4]">
+          <div className="h-full rounded-full bg-[#0F4C5C] transition-[width] duration-200"
             style={{ width: `${(count / target) * 100}%` }}/>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <button type="button" onClick={() => run("undo")} disabled={pending || !canUndo}
           aria-label={`Laatste registratie van ${title} ongedaan maken`} title="Laatste ongedaan maken"
-          className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#dce5dc] bg-[#f7f8f4] text-[#426657] transition-colors hover:bg-[#edf3e9] disabled:cursor-not-allowed disabled:opacity-40 sm:size-12">
+          className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#DDE9E8] bg-[#E9F6F4] text-[#126B68] transition-colors hover:bg-[#E9F6F4] disabled:cursor-not-allowed disabled:opacity-40 sm:size-12">
           <RotateCcw size={21} aria-hidden="true"/>
         </button>
         <button type="button" onClick={() => run("complete")} disabled={pending || complete}
           aria-label={`Markeer ${title} als gedaan`} title="Gedaan"
-          className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#2c7155] text-white shadow-[0_5px_12px_-8px_rgba(25,75,50,.65)] transition-colors hover:bg-[#22583f] disabled:cursor-not-allowed disabled:bg-[#e5eee4] disabled:text-[#336b4e] sm:size-12">
+          className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_5px_12px_-8px_rgba(25,75,50,.65)] transition-colors hover:bg-[#0F4C5C] disabled:cursor-not-allowed disabled:bg-[#E9F6F4] disabled:text-[#153540] sm:size-12">
           <Check size={23} strokeWidth={2.5} aria-hidden="true"/>
         </button>
       </div>
