@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  amsterdamDate, dateOnly, parseDate, parseMeeting, parseOwnedId,
+  amsterdamDate, dateOnly, parseDate, parseMeeting, MeetingInputError, parseOwnedId,
   parseReflection, parseReflectionWeek, summarizeCompletion,
 } from "../src/lib/reflections-domain.mjs";
 
@@ -47,8 +47,18 @@ test("meetings require title but allow photo-only notes, dates validated", () =>
   // A missing title, not the historical date, is what makes this invalid.
   assert.throws(() => parseMeeting(form({
     title: "", notes: "Dit wil ik niet kwijt", meetingDate: "2023-06-15",
-  })));
-  assert.throws(() => parseMeeting(form({ title: "Groep", notes: "x", meetingDate: "2026-02-30" })));
+  })), (error) => error instanceof MeetingInputError && error.field === "title");
+  assert.throws(() => parseMeeting(form({ title: "Groep", notes: "x", meetingDate: "2026-02-30" })),
+    (error) => error instanceof MeetingInputError && error.field === "meetingDate");
+  assert.throws(() => parseMeeting(form({
+    title: "CooL", notes: "wat ik heb geleerd", meetingDate: "28 okt 2026",
+  })), (error) => error instanceof MeetingInputError && error.field === "meetingDate");
+  assert.throws(() => parseMeeting(form({
+    title: "CooL", notes: "x".repeat(4001), meetingDate: "2026-10-28",
+  })), (error) => error instanceof MeetingInputError && error.field === "notes");
+  assert.throws(() => parseMeeting(form({
+    title: "CooL", notes: "Test", actionPoints: "x".repeat(2001), meetingDate: "2026-10-28",
+  })), (error) => error instanceof MeetingInputError && error.field === "actionPoints");
   assert.throws(() => parseOwnedId(form({ id: "" })));
 });
 
