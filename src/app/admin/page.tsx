@@ -26,7 +26,7 @@ export default async function AdminPage() {
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-7 sm:px-6 sm:py-10">
       <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"><ArrowLeft size={16}/> Terug naar dashboard</Link>
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#78927d]">Afgeschermd beheer</p>
+        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[#126B68]">Afgeschermd beheer</p>
         <h1 className="text-3xl font-bold tracking-tight">Beheer</h1>
         <p className="text-sm text-muted-foreground">Ingelogd als {session.user.name}. Alleen beheerders kunnen hier instellingen wijzigen.</p>
       </header>
