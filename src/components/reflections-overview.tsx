@@ -322,7 +322,7 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
             value={values.meetingDate} onChange={(event) => set("meetingDate", event.target.value)}/>
         </div>
         <div>
-          <label htmlFor={`meeting-title-${prefix}`} className={label}>Titel bijeenkomst</label>
+          <label htmlFor={`meeting-title-${prefix}`} className={label}>Titel bijeenkomst <span className="font-normal text-[#657a6a]">(verplicht)</span></label>
           <input id={`meeting-title-${prefix}`} name="title" maxLength={120} required className={field}
             value={values.title} onChange={(event) => set("title", event.target.value)} placeholder="Bijvoorbeeld: CooL bijeenkomst 3"/>
         </div>
