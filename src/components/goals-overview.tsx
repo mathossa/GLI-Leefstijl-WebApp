@@ -10,7 +10,7 @@ import {
   archiveGoal, archiveHabitAction, createGoal, createHabitAction,
   saveWeekReflection, updateGoal, updateHabitAction,
 } from "@/app/dashboard/doelen/actions";
-import { GOAL_AREAS, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS } from "@/lib/goals-domain.mjs";
+import { addCalendarDays, amsterdamToday, GOAL_AREAS, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS } from "@/lib/goals-domain.mjs";
 import { isoWeekLabel } from "@/lib/week-labels.mjs";
 
 type WeekView = {
@@ -96,6 +96,21 @@ function Bar({ value }: { value: number }) {
 function GoalFields({ goal }: { goal?: GoalView }) {
   const prefix = goal?.id ?? "new";
   const [selectedArea, setSelectedArea] = useState(goal?.area ?? "BEWEGING");
+  const [startDate, setStartDate] = useState(goal?.startDate ?? "");
+  const [endDate, setEndDate] = useState(goal?.endDate ?? "");
+  const [dateError, setDateError] = useState(false);
+  function setStart(value: string) {
+    setStartDate(value);
+    setDateError(Boolean(value && endDate && endDate < value));
+  }
+  function setEnd(value: string) {
+    setEndDate(value);
+    setDateError(Boolean(value && startDate && value < startDate));
+  }
+  function quickEnd() {
+    const base = startDate || amsterdamToday();
+    setEnd(addCalendarDays(base, 28));
+  }
   return (
     <>
       <div>
@@ -129,16 +144,33 @@ function GoalFields({ goal }: { goal?: GoalView }) {
           })}
         </div>
       </fieldset>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor={`goal-start-${prefix}`} className={labelClass}>Startdatum <span className="block text-xs font-normal">(optioneel)</span></label>
-          <input id={`goal-start-${prefix}`} type="date" name="startDate" className={inputClass} defaultValue={goal?.startDate ?? ""}/>
+          <input id={`goal-start-${prefix}`} type="date" name="startDate" className={inputClass}
+            value={startDate} onChange={(event) => setStart(event.target.value)}/>
+          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Snelle keuze startdatum">
+            <button type="button" onClick={() => setStart(amsterdamToday())}
+              className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">Vandaag</button>
+            <button type="button" onClick={() => setStart("")}
+              className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">Geen startdatum</button>
+          </div>
         </div>
         <div>
           <label htmlFor={`goal-end-${prefix}`} className={labelClass}>Einddatum <span className="block text-xs font-normal">(optioneel)</span></label>
-          <input id={`goal-end-${prefix}`} type="date" name="endDate" className={inputClass} defaultValue={goal?.endDate ?? ""}/>
+          <input id={`goal-end-${prefix}`} type="date" name="endDate" className={inputClass}
+            value={endDate} onChange={(event) => setEnd(event.target.value)}/>
+          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Snelle keuze einddatum">
+            <button type="button" onClick={quickEnd}
+              className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">
+              {startDate ? "4 weken na start" : "Over 4 weken"}
+            </button>
+            <button type="button" onClick={() => setEnd("")}
+              className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">Geen einddatum</button>
+          </div>
         </div>
       </div>
+      {dateError && <p role="alert" className="text-sm text-[#a24538]">De einddatum mag niet vóór de startdatum liggen.</p>
     </>
   );
 }
