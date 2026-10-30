@@ -52,12 +52,36 @@ export function parseReflection(form) {
   return { wentWell, difficult, nextStep };
 }
 
+// Field identifiers only: never include a person's private note text in errors.
+export class MeetingInputError extends FormInputError {
+  constructor(field) {
+    super();
+    this.name = "MeetingInputError";
+    this.field = field;
+  }
+}
+
+function meetingTextField(form, name, max, required = false) {
+  try { return textField(form, name, max, required); }
+  catch (error) {
+    if (error instanceof FormInputError) throw new MeetingInputError(name);
+    throw error;
+  }
+}
+
 export function parseMeeting(form) {
+  const rawDate = meetingTextField(form, "meetingDate", 10, true);
+  let meetingDate;
+  try { meetingDate = parseDate(rawDate); }
+  catch (error) {
+    if (error instanceof FormInputError) throw new MeetingInputError("meetingDate");
+    throw error;
+  }
   return {
-    meetingDate: parseDate(textField(form, "meetingDate", 10, true)),
-    title: textField(form, "title", 120, true),
-    notes: textField(form, "notes", 4000),
-    actionPoints: textField(form, "actionPoints", 2000) || null,
+    meetingDate,
+    title: meetingTextField(form, "title", 120, true),
+    notes: meetingTextField(form, "notes", 4000),
+    actionPoints: meetingTextField(form, "actionPoints", 2000) || null,
   };
 }
 
