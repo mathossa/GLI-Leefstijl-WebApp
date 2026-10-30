@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title id="title">Mijn Leefstijl — De Klim</title>
+<path d="M9 107 54 35c3-5 7-5 10 0l18 28 11 44Z" fill="#0F4C5C"/>
+<path d="M37 107 64 40l18 23 11 44Z" fill="#2A9D8F"/>
+<path d="M45 107c10-18 17-27 24-34 7-7 17-10 25-20" fill="none" stroke="#FFF4E6" stroke-width="10" stroke-linecap="round"/>
+<path d="M70 107c7-12 17-18 25-32" fill="none" stroke="#FFF4E6" stroke-width="8" stroke-linecap="round"/>
+<path d="M79 104 100 77l15 30Z" fill="#FF9F1C"/>
+<circle cx="107" cy="25" r="11" fill="#FF9F1C"/>
+<circle cx="97" cy="51" r="5" fill="#0F4C5C"/>
+<path d="M95 59c-5 5-6 10-5 15m5-15 11 7m-14 7-8 11m8-11 7 12" fill="none" stroke="#0F4C5C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
