@@ -62,10 +62,10 @@ export default async function DashboardPage() {
           aria-hidden="true"
         >
           <Image
-            src="/brand/hero-reference-v2.svg"
+            src="/brand/hero-user-original-v7.png"
             alt=""
-            width={720}
-            height={330}
+            width={1672}
+            height={941}
             className="block h-full w-auto max-w-none"
             priority
           />
