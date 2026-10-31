@@ -44,6 +44,91 @@ export async function createGoal(form: FormData) {
   });
 }
 
+// Guided plan: create an optional first action in the same transaction as its goal.
+// Return a structured result so a failed save never discards the wizard's answers.
+export type GuidedPlanResult = { ok: boolean; message: string; goalId?: string };
+
+export async function createGuidedPlan(form: FormData): Promise<GuidedPlanResult> {
+  const { user } = await requireSession();
+  const read = (key: string) => {
+    const value = form.get(key);
+    if (value !== null && typeof value !== "string") throw new FormInputError();
+    return value ?? "";
+  };
+  try {
+    const mode = read("mode");
+    const includeAction = read("includeAction");
+    if (!["new-goal", "new-action"].includes(mode) || !["yes", "no"].includes(includeAction)) {
+      throw new FormInputError();
+    }
+    if (mode === "new-action" && includeAction !== "yes") throw new FormInputError();
+
+    let goalInput: ReturnType<typeof parseGoalForm> | null = null;
+    let goalId = "";
+    if (mode === "new-goal") {
+      const goalForm = new FormData();
+      for (const [key, source] of [
+        ["title", "goalTitle"], ["motivation", "goalMotivation"],
+        ["area", "goalArea"], ["progressIndicator", "goalProgressIndicator"],
+        ["startDate", "startDate"], ["endDate", "endDate"],
+      ]) goalForm.set(key, read(source));
+      goalInput = parseGoalForm(goalForm);
+    } else {
+      goalId = idFrom(form, "goalId");
+    }
+
+    let actionInput: ReturnType<typeof parseActionForm> | null = null;
+    if (includeAction === "yes") {
+      const actionForm = new FormData();
+      for (const [key, source] of [
+        ["title", "actionTitle"], ["targetPerWeek", "actionFrequency"],
+        ["whenContext", "whenContext"], ["confidenceScore", "confidenceScore"],
+        ["existingStrength", "existingStrength"], ["confidenceBooster", "confidenceBooster"],
+        ["obstacle", "obstacle"], ["fallbackPlan", "fallbackPlan"],
+      ]) actionForm.set(key, read(source));
+      actionInput = parseActionForm(actionForm);
+    }
+
+    const savedGoalId = await prisma.$transaction(async (tx) => {
+      let id = goalId;
+      if (goalInput) {
+        const count = await tx.goal.count({ where: { userId: user.id, status: "ACTIVE" } });
+        if (count >= MAX_ACTIVE_GOALS) throw new FormInputError();
+        const created = await tx.goal.create({
+          data: {
+            userId: user.id, ...goalInput,
+            area: goalInput.area as "BEWEGING" | "VOEDING" | "SLAAP" | "ONTSPANNING" | "SOCIAAL" | "ANDERS",
+          },
+          select: { id: true },
+        });
+        id = created.id;
+      } else {
+        const ownGoal = await tx.goal.findFirst({
+          where: { ...ownedWhere(user.id, id), status: "ACTIVE" }, select: { id: true },
+        });
+        if (!ownGoal) throw new FormInputError();
+      }
+      if (actionInput) {
+        const count = await tx.habitAction.count({
+          where: { userId: user.id, goalId: id, archivedAt: null },
+        });
+        if (count >= MAX_ACTIVE_ACTIONS) throw new FormInputError();
+        await tx.habitAction.create({ data: { userId: user.id, goalId: id, ...actionInput } });
+      }
+      return id;
+    }, { isolationLevel: "Serializable" });
+
+    revalidatePath("/dashboard/doelen");
+    revalidatePath("/dashboard");
+    return { ok: true, message: "Je plan is opgeslagen.", goalId: savedGoalId };
+  } catch (error) {
+    if (error instanceof FormInputError) {
+      return { ok: false, message: "Controleer je antwoorden en probeer het opnieuw." };
+    }
+    throw error;
+  }
+}
+
 export async function updateGoal(form: FormData) {
   const { user } = await requireSession();
   return finish(async () => {

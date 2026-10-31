@@ -103,6 +103,7 @@ model Goal {
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   title      String       @db.VarChar(120)
   motivation String       @db.VarChar(1000)
+  progressIndicator String? @db.VarChar(500)
   area       GoalArea
   status     GoalStatus   @default(ACTIVE)
   startDate  DateTime?    @db.Date
@@ -125,6 +126,12 @@ model HabitAction {
   goal          Goal                @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
   title         String              @db.VarChar(120)
   targetPerWeek Int
+  whenContext       String? @db.VarChar(250)
+  confidenceScore   Int?
+  existingStrength  String? @db.VarChar(500)
+  confidenceBooster String? @db.VarChar(500)
+  obstacle          String? @db.VarChar(500)
+  fallbackPlan      String? @db.VarChar(500)
   archivedAt    DateTime?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt

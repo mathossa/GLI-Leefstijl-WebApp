@@ -62,3 +62,26 @@ test("individual completion feedback is optional, bounded and validated", () => 
   assert.throws(() => parseEntryFeedback(form({ rating: "ONBEKEND" })), FormInputError);
   assert.throws(() => parseEntryFeedback(form({ note: "x".repeat(501) })), FormInputError);
 });
+
+test("optional goal outcome and action plan parse safely for quick and guided forms", () => {
+  assert.equal(parseGoalForm(goal()).progressIndicator, null);
+  assert.equal(parseGoalForm(goal({ progressIndicator: "  Ik slaap beter  " })).progressIndicator, "Ik slaap beter");
+  assert.throws(() => parseGoalForm(goal({ progressIndicator: "x".repeat(501) })), FormInputError);
+  const quick = parseActionForm(form({title:"Wandelen", targetPerWeek: 3}));
+  assert.deepEqual([quick.confidenceScore, quick.whenContext, quick.fallbackPlan], [null, null, null]);
+  const guided = parseActionForm(form({
+    title: "Wandelen", targetPerWeek: 3, whenContext: " Na het eten ",
+    confidenceScore: "6", existingStrength: "Ik wandel graag", confidenceBooster: "Met een vriend",
+    obstacle: "Regen", fallbackPlan: "Even binnen bewegen",
+  }));
+  assert.equal(guided.confidenceScore, 6);
+  assert.equal(guided.whenContext, "Na het eten");
+  assert.equal(guided.fallbackPlan, "Even binnen bewegen");
+  for (const bad of ["0","11","3.5","NaN","-2","6x"]) {
+    assert.throws(() => parseActionForm(form({title:"Wandelen",targetPerWeek:3,confidenceScore:bad})), FormInputError);
+  }
+  for (const score of ["1", "10", ""]) {
+    assert.equal(parseActionForm(form({title:"Wandelen",targetPerWeek:3,confidenceScore:score})).confidenceScore, score ? Number(score) : null);
+  }
+  assert.throws(() => parseActionForm(form({title:"Wandelen",targetPerWeek:3,fallbackPlan:"x".repeat(501)})), FormInputError);
+});
