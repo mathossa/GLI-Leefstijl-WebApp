@@ -9,11 +9,14 @@ import { amsterdamMonday } from "@/lib/goals-domain.mjs";
 import { isoWeekLabel } from "@/lib/week-labels.mjs";
 import { QuickCompletion } from "@/components/quick-completion";
 import { ActionReviewSheet } from "@/components/action-review-sheet";
+import { MotivationQuote } from "@/components/motivation-quote";
+import { getUserMotivation } from "@/lib/motivation-quotes";
 
 export const metadata: Metadata = { title: "Vandaag" };
 export default async function DashboardPage() {
   const { user } = await requireSession();
   const weekStart = amsterdamMonday();
+  const motivation = await getUserMotivation(user.id);
   // The user's own active goals and weekly snapshots, never shared demo data.
   const goals = await prisma.goal.findMany({
     where: { userId: user.id, status: "ACTIVE" },
@@ -54,7 +57,7 @@ export default async function DashboardPage() {
           <h1 id="today-heading" className="text-[clamp(1.375rem,6.4vw,1.65rem)] font-bold leading-tight tracking-tight text-[#1F5D50] sm:text-4xl">
             Goed dat je er bent <span aria-hidden="true">👋</span>
           </h1>
-          <p className="text-sm leading-relaxed text-[#536B60]">Kleine stappen in je eigen tempo.</p>
+          <MotivationQuote {...motivation}/>
           {goals.length === 0 && <Link href="/dashboard/doelen" className="inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-[#255F50] underline underline-offset-4">Maak je eerste doel <ArrowRight size={16} aria-hidden="true"/></Link>}
         </div>
         <div
