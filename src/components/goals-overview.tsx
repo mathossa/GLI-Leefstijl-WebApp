@@ -54,12 +54,12 @@ const inputClass = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#D8E2D
 const labelClass = "block text-sm font-semibold text-[#233D34]";
 const labelForArea = (key: string) => GOAL_AREAS.find((item) => item.value === key)?.label ?? "Anders";
 const areaStyles = {
-  BEWEGING: { icon: Footprints, idle: "bg-[#EAF0E9] text-[#233D34]", active: "border-[#D8E2D7] bg-[#EAF0E9] text-[#233D34]" },
-  VOEDING: { icon: Utensils, idle: "bg-[#fff3df] text-[#a66619]", active: "border-[#efbf7d] bg-[#FCE8D8] text-[#885115]" },
-  SLAAP: { icon: Moon, idle: "bg-[#EAF0E9] text-[#426cae]", active: "border-[#a3b9e7] bg-[#e1eafb] text-[#305a9a]" },
-  ONTSPANNING: { icon: Heart, idle: "bg-[#EAF0E9] text-[#875cad]", active: "border-[#c8a8dd] bg-[#EAF0E9] text-[#754aa0]" },
-  SOCIAAL: { icon: Users, idle: "bg-[#EAF0E9] text-[#af5e58]", active: "border-[#e9b2ad] bg-[#EAF0E9] text-[#91453e]" },
-  ANDERS: { icon: Ellipsis, idle: "bg-[#EAF0E9] text-[#255F50]", active: "border-[#D8E2D7] bg-[#EAF0E9] text-[#233D34]" },
+  BEWEGING: { icon: Footprints, idle: "bg-[#E8F1E9] text-[#245447]", active: "border-[#8AB49F] bg-[#DDECE2] text-[#245447]" },
+  VOEDING: { icon: Utensils, idle: "bg-[#FFF1DF] text-[#8A4B14]", active: "border-[#E7B783] bg-[#FCE6C9] text-[#8A4B14]" },
+  SLAAP: { icon: Moon, idle: "bg-[#E9EFFB] text-[#315A94]", active: "border-[#A9BDE3] bg-[#DCE7FA] text-[#315A94]" },
+  ONTSPANNING: { icon: Heart, idle: "bg-[#F2EBF8] text-[#70498A]", active: "border-[#CAB2DE] bg-[#EADCF5] text-[#70498A]" },
+  SOCIAAL: { icon: Users, idle: "bg-[#FCEDEB] text-[#964F4B]", active: "border-[#E5B5B1] bg-[#F9DDDA] text-[#964F4B]" },
+  ANDERS: { icon: Ellipsis, idle: "bg-[#EDF0ED] text-[#3A5D57]", active: "border-[#B9CCC5] bg-[#E1EBE5] text-[#3A5D57]" },
 } as const;
 const experienceStyle = {
   GOED: { icon: Smile, text: "Ging goed", color: "bg-[#EAF0E9] text-[#233D34]" },

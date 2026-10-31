@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   applicationName: "Mijn Leefstijl",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/brand/app-icon-approved-v5-32.png", sizes: "32x32", type: "image/png" }, { url: "/brand/app-icon-approved-v5-192.png", sizes: "192x192", type: "image/png" }],
-    shortcut: "/brand/app-icon-approved-v5-32.png",
-    apple: [{ url: "/brand/app-icon-approved-v5-180.png", sizes: "180x180", type: "image/png" }],
+    icon: [{ url: "/brand/app-icon-transparent-v6.svg", type: "image/svg+xml", sizes: "any" }],
+    shortcut: "/brand/app-icon-transparent-v6.svg",
+    apple: [{ url: "/brand/app-icon-user-v6-180.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
