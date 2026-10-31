@@ -5,11 +5,11 @@
   "lang": "nl",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#f8f7f1",
-  "theme_color": "#0f4c5c",
+  "background_color": "#faf6ee",
+  "theme_color": "#1f5d50",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/brand/app-icon-palette-3.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
