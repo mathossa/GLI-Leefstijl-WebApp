@@ -47,8 +47,8 @@ export default async function DashboardPage() {
   const planned = weekActions.reduce((sum, action) => sum + action.target, 0);
   const overall = planned > 0 ? Math.round(completed / planned * 100) : null;
   return (
-    <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-3 sm:space-y-6">
-      <section aria-labelledby="today-heading" className="brand-hero relative min-w-0 overflow-hidden rounded-[26px] border border-border px-5 py-6 sm:min-h-[240px] sm:px-8 sm:py-9 lg:min-h-[275px]">
+    <div className="mx-auto min-w-0 max-w-5xl space-y-4 pb-3 sm:space-y-6">
+      <section aria-labelledby="today-heading" className="brand-hero relative min-h-[225px] min-w-0 overflow-hidden rounded-[24px] border border-border px-5 pb-24 pt-5 sm:min-h-[240px] sm:rounded-[26px] sm:px-8 sm:py-9 lg:min-h-[275px]">
         <div className="relative z-10 max-w-[95%] space-y-2 sm:max-w-[58%]">
           <p className="text-xs font-semibold text-[#255F50]">{isoWeekLabel(weekStart)}</p>
           <h1 id="today-heading" className="text-[1.65rem] font-bold leading-tight tracking-tight text-[#1F5D50] sm:text-4xl">
@@ -58,7 +58,7 @@ export default async function DashboardPage() {
           {goals.length === 0 && <Link href="/dashboard/doelen" className="inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-[#255F50] underline underline-offset-4">Maak je eerste doel <ArrowRight size={16} aria-hidden="true"/></Link>}
         </div>
         <div
-          className="pointer-events-none absolute bottom-0 right-0 hidden w-[65%] max-w-[700px] sm:block"
+          className="pointer-events-none absolute bottom-0 right-0 w-full sm:w-[65%] sm:max-w-[700px]"
           aria-hidden="true"
         >
           <Image
@@ -73,21 +73,21 @@ export default async function DashboardPage() {
       </section>
 
       <section aria-label="Overzicht van de week" className="grid min-w-0 grid-cols-3 gap-2.5 sm:gap-4">
-        <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
+        <Card className="min-w-0 gap-1.5 rounded-[19px] p-3 sm:gap-3 sm:rounded-[21px] sm:p-5">
           <div className="flex min-w-0 items-center gap-2">
             <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#255F50] sm:size-11"><Target size={20}/></span>
             <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{goals.length}</strong>
           </div>
           <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Actieve doelen</p>
         </Card>
-        <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
+        <Card className="min-w-0 gap-1.5 rounded-[19px] p-3 sm:gap-3 sm:rounded-[21px] sm:p-5">
           <div className="flex min-w-0 items-center gap-2">
             <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF6EE] text-[#8B4B26] sm:size-11"><CircleCheck size={20}/></span>
             <strong className="min-w-0 whitespace-nowrap text-lg font-bold tabular-nums sm:text-2xl">{completed}<span className="text-[10px] text-[#536B60] sm:text-xs">/{planned}</span></strong>
           </div>
           <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Deze week</p>
         </Card>
-        <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
+        <Card className="min-w-0 gap-1.5 rounded-[19px] p-3 sm:gap-3 sm:rounded-[21px] sm:p-5">
           <div className="flex min-w-0 items-center gap-2">
             <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#1F5D50] sm:size-11"><TrendingUp size={20}/></span>
             <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{overall === null ? "–" : `${overall}%`}</strong>
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
       </section>
 
       <section aria-labelledby="habits-heading" className="min-w-0">
-        <Card className="min-w-0 gap-4 rounded-[26px] p-3.5 sm:p-6">
+        <Card className="min-w-0 gap-3 rounded-[24px] p-3 sm:gap-4 sm:rounded-[26px] sm:p-6">
           <div className="flex min-w-0 items-center justify-between gap-3 px-0.5">
             <h2 id="habits-heading" className="min-w-0 text-xl font-bold tracking-tight text-[#233D34]">Vandaag afvinken</h2>
             <Link href="/dashboard/doelen" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#255F50] hover:underline sm:text-sm">
@@ -111,9 +111,9 @@ export default async function DashboardPage() {
               <Link href="/dashboard/doelen" className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#255F50] underline">Weekactie toevoegen <ArrowRight size={15} aria-hidden="true"/></Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {weekActions.map((habit) => (
-                <article key={habit.id} className="min-w-0 space-y-3.5 rounded-[22px] border border-[#D8E2D7] bg-white p-3.5 shadow-[0_8px_24px_-23px_rgba(31,93,80,.45)] sm:p-5">
+                <article key={habit.id} className="min-w-0 space-y-2.5 rounded-[20px] border border-[#D8E2D7] bg-white p-3 shadow-[0_8px_24px_-23px_rgba(31,93,80,.45)] sm:space-y-3.5 sm:rounded-[22px] sm:p-5">
                   <ActionReviewSheet actionTitle={habit.title} goalTitle={habit.detail} entries={habit.entries}/>
                   <QuickCompletion actionId={habit.id} title={habit.title}
                     completed={habit.done} target={habit.target} canUndo={habit.canUndo}/>
@@ -124,9 +124,9 @@ export default async function DashboardPage() {
         </Card>
       </section>
 
-      <Link href="/dashboard/reflectie" className="flex min-h-20 min-w-0 items-center gap-3 rounded-[23px] border border-[#D8E2D7] bg-[#EAF0E9] px-5 py-4 text-[#1F5D50] transition-colors hover:bg-[#DEE9DE]">
+      <Link href="/dashboard/reflectie" className="flex min-h-16 min-w-0 items-center gap-3 rounded-[22px] border border-[#D8E2D7] bg-[#EAF0E9] px-4 py-3 text-[#1F5D50] transition-colors hover:bg-[#DEE9DE] sm:min-h-20 sm:rounded-[23px] sm:px-5 sm:py-4">
         <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#FAF6EE] text-[#8B4B26]"><Sun size={22}/></span>
-        <span className="min-w-0 flex-1 text-base font-bold">Even stilstaan</span>
+        <span className="min-w-0 flex-1 text-sm font-bold sm:text-base">Even stilstaan</span>
         <ChevronRight size={20} className="shrink-0" aria-hidden="true"/>
       </Link>
     </div>
