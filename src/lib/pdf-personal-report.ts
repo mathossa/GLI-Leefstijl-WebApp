@@ -162,6 +162,9 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
   donut(W-102,221,37,overall);
   y=300;
 
+  const createTextRows=(value:string,font=regular,size=10,width=CW-36) =>
+    value.trim()?lines(value,font,size,width).map(v=>({value:v,font,size,ink:dark,leading:14})):[];
+
   // Goal cards are grouped by goal. If a goal has many actions, split its
   // actions into chunks rather than clipping or silently omitting them.
   section("Mijn doelen en acties");
@@ -209,6 +212,30 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       text(summary,W-M-20-bold.widthOfTextAtSize(summary,9),top+height-10,9,bold,palette.ink);
       y+=height+11;
     }
+
+    // The JSON export already includes these guided goal/action answers. Keep
+    // the same information in the shareable PDF, directly below each goal.
+    // Only completed answers are rendered; long text uses paginated cards.
+    const goalAnswers=[
+      {caption:"Waarom is dit doel belangrijk?",value:goal.motivation??""},
+      {caption:"Hoe merk ik dat ik mijn doel bereik?",value:goal.progressIndicator??""},
+    ];
+    if(goalAnswers.some(field=>field.value.trim())) {
+      narrativeCard("Mijn doel: "+goal.title,goalAnswers,palette.fill,palette.ink);
+    }
+    for(const action of actions){
+      const actionAnswers=[
+        {caption:"Wanneer ga ik dit doen?",value:action.whenContext??""},
+        {caption:"Haalbaarheid (1-10)",value:action.confidenceScore == null?"":`${action.confidenceScore} / 10`},
+        {caption:"Wat helpt mij nu al?",value:action.existingStrength??""},
+        {caption:"Wat zou mijn haalbaarheid verhogen?",value:action.confidenceBooster??""},
+        {caption:"Wat kan mij tegenhouden?",value:action.obstacle??""},
+        {caption:"Plan B als het niet lukt",value:action.fallbackPlan??""},
+      ];
+      if(actionAnswers.some(field=>field.value.trim())) {
+        narrativeCard("Mijn actie: "+action.title,actionAnswers,palette.fill,palette.ink);
+      }
+    }
   }
 
   // Only real recorded weeks enter the shareable report; no empty placeholders.
@@ -250,8 +277,6 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       y+=height+12;
     }
   }
-  const createTextRows=(value:string,font=regular,size=10,width=CW-36) =>
-    value.trim()?lines(value,font,size,width).map(v=>({value:v,font,size,ink:dark,leading:14})):[];
 
   // Long user-written text is split into continuation cards when required.
   function narrativeCard(title:string,fields:{caption:string;value:string}[],fill:Color,accent:Color) {
