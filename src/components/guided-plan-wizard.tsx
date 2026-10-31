@@ -16,6 +16,7 @@ type Draft = {
 type Props = {
   mode: Mode; goalId?: string; goalTitle?: string;
   onDirty: (dirty: boolean) => void; onSaved: (goalId: string) => void;
+  onQuick: () => void;
 };
 const inputClass = "mt-1.5 block min-h-12 w-full min-w-0 rounded-xl border border-[#cfdecf] bg-white px-3.5 py-3 text-base text-[#263e30] focus-visible:outline-[#38795a]";
 const labelClass = "block text-sm font-semibold text-[#345343]";
@@ -26,7 +27,7 @@ const initial: Draft = {
   confidenceBooster: "", obstacle: "", fallbackPlan: "",
 };
 
-export function GuidedPlanWizard({ mode, goalId, goalTitle, onDirty, onSaved }: Props) {
+export function GuidedPlanWizard({ mode, goalId, goalTitle, onDirty, onSaved, onQuick }: Props) {
   const [draft, setDraft] = useState<Draft>(initial);
   const [step, setStep] = useState(mode === "new-goal" ? 0 : 1);
   const [includeAction, setIncludeAction] = useState(true);
@@ -94,6 +95,10 @@ export function GuidedPlanWizard({ mode, goalId, goalTitle, onDirty, onSaved }: 
           <span className="inline-flex items-center gap-2"><Compass size={17} aria-hidden="true"/> Help mij op weg</span>
           <span>Stap {actualStep} van {total}</span>
         </div>
+        {step === start && <button type="button" onClick={onQuick}
+          className="min-h-10 text-left text-xs font-semibold text-[#327451] underline underline-offset-4">
+          Liever snel toevoegen zonder wizard?
+        </button>}
         <div className="flex gap-1.5" aria-hidden="true">
           {Array.from({ length: total }, (_, i) => (
             <span key={i} className={"h-1.5 flex-1 rounded-full " + (i < actualStep ? "bg-[#438968]" : "bg-[#e3e9df]")}/>
