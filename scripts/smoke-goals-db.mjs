@@ -35,6 +35,16 @@ try {
   await expectDbViolation(insertAction, [randomUUID(), userA, goalA, 8], "23514");
   await client.query(insertAction, [actionA, userA, goalA, 3]);
 
+  // Guided plan fields must accept empty values for pre-existing actions;
+  // the database itself enforces the confidence range.
+  await client.query('UPDATE "habit_action" SET "confidenceScore"=$1, "whenContext"=$2 WHERE "id"=$3',
+    [6, "na het eten", actionA]);
+  const storedPlan = await client.query('SELECT "confidenceScore", "whenContext" FROM "habit_action" WHERE "id"=$1', [actionA]);
+  assert.equal(storedPlan.rows[0].confidenceScore, 6);
+  assert.equal(storedPlan.rows[0].whenContext, "na het eten");
+  await expectDbViolation('UPDATE "habit_action" SET "confidenceScore"=$1 WHERE "id"=$2', [0, actionA], "23514");
+  await expectDbViolation('UPDATE "habit_action" SET "confidenceScore"=$1 WHERE "id"=$2', [11, actionA], "23514");
+
   const insertWeek = `INSERT INTO "habit_week_progress"
     ("id","userId","actionId","weekStart","targetCount","completedCount","updatedAt")
     VALUES ($1,$2,$3,'2026-10-26',3,$4,NOW())`;

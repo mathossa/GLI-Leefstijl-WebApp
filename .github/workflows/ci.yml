@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main, feat/issue-7-portainer-production-deployment]
+    branches: [main, feat/issue-7-portainer-production-deployment, fix/reflectie-mobile-zoom-unsaved-drafts]
 
 permissions:
   contents: read
@@ -45,6 +45,8 @@ jobs:
         run: npm run db:deploy
       - name: Validate goal inputs, limits and Amsterdam week boundaries
         run: node --test tests/goals-domain.test.mjs
+      - name: Verify compact mobile calendar date arithmetic
+        run: node --test tests/goal-calendar-dates.test.mjs
       - name: Validate ISO week labels at New Year and DST
         run: node --test tests/week-labels.test.mjs
       - name: Validate reflection inputs and Amsterdam calendar dates
@@ -287,7 +289,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/mathossa/gli-leefstijl-webapp:sha-${{ github.sha }}
-            ghcr.io/mathossa/gli-leefstijl-webapp:${{ github.ref_name == 'main' && 'main' || 'issue7-test' }}
+            ghcr.io/mathossa/gli-leefstijl-webapp:${{ github.ref_name == 'main' && 'main' || github.ref_name == 'fix/reflectie-mobile-zoom-unsaved-drafts' && 'ios-fixes-test' || 'issue7-test' }}
             ${{ github.ref_name == 'main' && 'ghcr.io/mathossa/gli-leefstijl-webapp:latest' || '' }}
           labels: |
             org.opencontainers.image.source=https://github.com/mathossa/GLI-Leefstijl-WebApp

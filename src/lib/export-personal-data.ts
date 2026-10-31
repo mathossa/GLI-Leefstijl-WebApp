@@ -8,12 +8,14 @@ export async function exportPersonalData(userId: string) {
     prisma.goal.findMany({
       where: { userId }, orderBy: { createdAt: "asc" },
       select: {
-        id: true, title: true, motivation: true, area: true, status: true,
+        id: true, title: true, motivation: true, progressIndicator: true, area: true, status: true,
         startDate: true, endDate: true, createdAt: true, updatedAt: true,
         actions: {
           where: { userId }, orderBy: { createdAt: "asc" },
           select: {
-            id: true, title: true, targetPerWeek: true, archivedAt: true,
+            id: true, title: true, targetPerWeek: true, whenContext: true, confidenceScore: true,
+            existingStrength: true, confidenceBooster: true, obstacle: true, fallbackPlan: true,
+            archivedAt: true,
             createdAt: true, updatedAt: true,
             weeks: {
               where: { userId }, orderBy: { weekStart: "asc" },
@@ -36,7 +38,7 @@ export async function exportPersonalData(userId: string) {
     }),
   ]);
   return {
-    format: "mijn-leefstijl-json", version: 1, exportedAt: new Date().toISOString(),
+    format: "mijn-leefstijl-json", version: 2, exportedAt: new Date().toISOString(),
     timeZone: "Europe/Amsterdam",
     goals: goals.map((g) => ({
       ...g, startDate: g.startDate ? dateOnly(g.startDate) : null,
