@@ -197,7 +197,7 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       const group=chunks[ci];
       const badge=goal.area.toUpperCase();
       const badgeWidth=Math.max(77,Math.min(112,bold.widthOfTextAtSize(safe(badge),8)+22));
-      const nameLines=lines(goal.title,bold,15,CW-62-badgeWidth);
+      const nameLines=lines(goal.title,bold,15,CW-85-badgeWidth);
       const header=Math.max(24,nameLines.length*18);
       const rowInfo=group.map(a=>{
         const titleLines=lines(a.title,regular,10,CW-145);
