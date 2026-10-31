@@ -85,7 +85,7 @@ Er zijn geen externe analyticsdiensten, medische aannames of nieuwe grafieklibra
 
 ## PDF openen en bewaren op mobiel (iOS/Android)
 
-- De knop onder **Inzichten → Mijn gegevens exporteren** gebruikt geen directe navigatielink naar het PDF-endpoint meer. De app haalt de privé-PDF op met dezelfde ingelogde sessie en toont op ondersteunde mobiele apparaten het **native deelmenu** met de mogelijkheid om de PDF op te slaan of te delen.
+- De knop onder **Inzichten → Mijn gegevens exporteren** gebruikt geen directe navigatielink naar het PDF-endpoint meer. De app haalt de privé-PDF op met dezelfde ingelogde sessie. Op ondersteunde mobiele apparaten volgt een korte **PDF staat klaar**-toestand: een tweede, directe tik opent betrouwbaar het native deelmenu met de mogelijkheid om de PDF op te slaan of te delen. Dit tweede tikmoment is nodig omdat WebKit de user activation voor Web Share kan laten vervallen tijdens een asynchrone fetch.
 - Bij een geannuleerd deelmenu blijft de gebruiker op de Inzichten-pagina. Andere moderne browsers krijgen een bestand-download via een tijdelijk Blob-URL met `download`, zonder de huidige pagina te vervangen.
 - Voor iOS als bestandsdeling niet wordt ondersteund of niet kan worden geopend, verschijnt in de webapp een **expliciete link naar een apart browservenster**; geen automatische navigatie naar een fullscreen PDF zonder terugknop.
 - Downloads blijven privé (`Cache-Control: private, no-store`, server-side Better Auth-sessie), delen gebeurt uitsluitend na de keuze van de gebruiker; geen externe PDF-service of nieuwe package.
