@@ -136,9 +136,9 @@ function GoalFields({ goal }: { goal?: GoalView }) {
       <div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor={`goal-start-${prefix}`} className={labelClass}>Startdatum <span className="block text-xs font-normal">(optioneel)</span></label>
+            <span className={labelClass}>Startdatum <span className="block text-xs font-normal">(optioneel)</span></span>
             <input type="hidden" name="startDate" value={startDate}/>
-            <input id={`goal-start-${prefix}`} type="date" className={inputClass + " hidden sm:block"}
+            <input id={`goal-start-${prefix}`} type="date" aria-label="Startdatum" className={inputClass + " hidden sm:block"}
               value={startDate} onChange={(event) => setStartDate(event.target.value)}/>
             <button type="button" id={`goal-start-${prefix}-mobile`}
               onClick={() => setOpenCalendar((value) => value === "start" ? null : "start")}
@@ -148,9 +148,9 @@ function GoalFields({ goal }: { goal?: GoalView }) {
             </button>
           </div>
           <div>
-            <label htmlFor={`goal-end-${prefix}`} className={labelClass}>Einddatum <span className="block text-xs font-normal">(optioneel)</span></label>
+            <span className={labelClass}>Einddatum <span className="block text-xs font-normal">(optioneel)</span></span>
             <input type="hidden" name="endDate" value={endDate}/>
-            <input id={`goal-end-${prefix}`} type="date" className={inputClass + " hidden sm:block"}
+            <input id={`goal-end-${prefix}`} type="date" aria-label="Einddatum" className={inputClass + " hidden sm:block"}
               min={startDate || undefined} value={endDate} onChange={(event) => setEndDate(event.target.value)}/>
             <button type="button" id={`goal-end-${prefix}-mobile`}
               onClick={() => setOpenCalendar((value) => value === "end" ? null : "end")}
