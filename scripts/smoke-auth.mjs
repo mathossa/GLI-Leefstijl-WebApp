@@ -130,7 +130,11 @@ try {
     await connection.query(
       'INSERT INTO "goal" ("id","userId","title","motivation","progressIndicator","area","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,NOW())',
       [id, userId, title,
-        userId === adminId ? "CI-ADMIN-WHY" : "CI-MEMBER-WHY",
+        userId === adminId
+          ? title === "CI-ADMIN-VOEDING-GOAL"
+            ? "CI-ADMIN-WHY;\r\nCI-ADMIN-SECOND-LINE;\r\nCI-ADMIN-THIRD-LINE"
+            : "CI-ADMIN-WHY"
+          : "CI-MEMBER-WHY",
         userId === adminId ? "CI-ADMIN-SUCCESS" : null,
         "BEWEGING"],
     );
@@ -202,7 +206,9 @@ assert.equal(adminExport.goals.filter(g => g.status === "ACTIVE").length, 3, "PD
 assert.equal(adminExport.goals.flatMap(g => g.actions).length, 7, "PDF fixture includes seven actions");
 assert.equal(adminExport.reflections[0].wentWell, "CI-PRIVATE-REFLECTION");
 assert.equal(adminExport.meetings[0].notes, "CI-PRIVATE-MEETING-NOTE");
-assert.equal(adminExport.goals[0].motivation, "CI-ADMIN-WHY");
+assert.ok(adminExport.goals.some(goal => goal.motivation === "CI-ADMIN-WHY"));
+assert.ok(adminExport.goals.some(goal => goal.motivation === "CI-ADMIN-WHY;\r\nCI-ADMIN-SECOND-LINE;\r\nCI-ADMIN-THIRD-LINE"),
+  "JSON export must preserve original Windows newlines without modifying user text");
 assert.equal(adminExport.goals[0].progressIndicator, "CI-ADMIN-SUCCESS");
 assert.equal(adminExport.goals[0].actions[0].confidenceScore, 8);
 assert.equal(adminExport.goals[0].actions[0].fallbackPlan, "CI-ACTION-PLAN-B");
@@ -266,6 +272,13 @@ for (const cookie of [adminCookie, memberCookie]) {
       "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"]) {
       assert.ok(printed.includes(field), "PDF is missing guided answer: " + field);
     }
+    // A pasted Windows multiline answer must create separate PDF lines, not
+    // literal question marks after punctuation (e.g. "voelen;?").
+    assert.ok(printed.includes("CI-ADMIN-WHY;"), "PDF must keep first CRLF paragraph line");
+    assert.ok(printed.includes("CI-ADMIN-SECOND-LINE;"), "PDF must keep second CRLF line");
+    assert.ok(printed.includes("CI-ADMIN-THIRD-LINE"), "PDF must keep third CRLF line");
+    assert.ok(!printed.includes("CI-ADMIN-WHY;?"), "CR must not appear as ? before the linebreak");
+    assert.ok(!printed.includes("CI-ADMIN-SECOND-LINE;?"), "CR must not appear as ? before the linebreak");
     assert.ok(!printed.includes("CI-MEMBER-WHY"), "PDF must not leak another user's motivation");
   } else {
     assert.ok(printed.includes("CI-MEMBER-WHY"), "Member PDF must include own motivation");

@@ -30,7 +30,10 @@ const variants = [
 ];
 
 function safe(value: unknown) {
-  return String(value ?? "").replace(/[\u2018\u2019]/g, "'")
+  // Preserve Windows (CRLF) and old-Mac (CR) paragraph breaks rather than
+  // turning the carriage return into a literal "?" in the generated PDF.
+  return String(value ?? "").replace(/\r\n?/g, "\n")
+    .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, "-")
     .replace(/\u2022/g, "-").replace(/\u2026/g, "...")
     .replace(/[\u00A0\u202F]/g, " ")
