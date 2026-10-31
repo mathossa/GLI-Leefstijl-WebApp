@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Leaf, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
+import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,17 +36,17 @@ export function SignInForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#edf3e9] px-4 py-12">
-      <Card className="w-full max-w-md space-y-6 bg-white px-6 py-8 sm:px-9 sm:py-10">
+    <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(140deg,#e8f5f2,#f8f7f1_56%,#faf6ee)] px-4 py-12">
+      <Card className="w-full max-w-md space-y-6 bg-card px-6 py-8 sm:px-9 sm:py-10">
         <div className="flex items-center gap-3">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-primary text-white"><Leaf size={25}/></span>
-          <div><p className="text-xl font-bold tracking-tight">Mijn Leefstijl</p><p className="text-xs text-muted-foreground">Elke stap telt</p></div>
+          <Image src="/brand/mark-user-v6.svg" alt="" width={50} height={40} priority/>
+          <div><p className="text-xl font-bold tracking-tight">Mijn Leefstijl</p><p className="text-xs text-muted-foreground">Kleine stappen, groot verschil</p></div>
         </div>
         <div><h1 className="text-2xl font-bold">Welkom terug</h1><p className="mt-2 text-sm leading-relaxed text-muted-foreground">Log in om jouw persoonlijke omgeving te bekijken.</p></div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label htmlFor="email" className="text-sm font-semibold">E-mailadres</label>
-            <input id="email" type="email" autoComplete="username" required value={email} onChange={(e)=>setEmail(e.target.value)} className="h-11 w-full rounded-xl border border-border bg-white px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="jij@voorbeeld.nl" />
+            <input id="email" type="email" autoComplete="username" required value={email} onChange={(e)=>setEmail(e.target.value)} className="h-12 w-full rounded-xl border border-border bg-white px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="jij@voorbeeld.nl" />
           </div>
           <div className="space-y-1.5">
             <label htmlFor="password" className="text-sm font-semibold">Wachtwoord</label>

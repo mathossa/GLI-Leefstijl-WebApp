@@ -1,23 +1,31 @@
 @import "tailwindcss";
 
+/* Palette 3 — Rust & Groei: selected 31 October 2026. */
 :root {
-  --background: #f8f7f1;
-  --foreground: #22392d;
-  --card: #fffefb;
-  --card-foreground: #22392d;
-  --primary: #2e6b52;
+  --background: #faf6ee;
+  --foreground: #233d34;
+  --card: #fffdfa;
+  --card-foreground: #233d34;
+  --primary: #1f5d50;
   --primary-foreground: #ffffff;
-  --secondary: #e5eee3;
-  --secondary-foreground: #315841;
-  --muted: #eef1e9;
-  --muted-foreground: #536454;
-  --accent: #eaf2e6;
-  --accent-foreground: #274d39;
-  --border: #e7e9df;
-  --ring: #568e6e;
+  --secondary: #eaf0e9;
+  --secondary-foreground: #1f5d50;
+  --muted: #f0f3ed;
+  --muted-foreground: #536b60;
+  --accent: #fce8d8;
+  --accent-foreground: #1f5d50;
+  --border: #d8e2d7;
+  --ring: #255f50;
+  --brand-navy: #1f5d50; /* legacy variable alias for existing components */
+  --brand-teal: #7ba892;
+  --brand-mint: #d8e2d7;
+  --brand-orange: #f4a261;
+  --brand-cream: #faf6ee;
+  --brand-deep: #1f5d50;
+  --brand-sage: #7ba892;
+  --brand-peach: #f4a261;
   --radius: 1.2rem;
 }
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -33,31 +41,34 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
   --color-ring: var(--ring);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-mint: var(--brand-mint);
+  --color-brand-orange: var(--brand-orange);
   --font-sans: "Inter", "Segoe UI", Arial, sans-serif;
 }
-
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
 button, a { -webkit-tap-highlight-color: transparent; }
-:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
-
-.wellness-pattern {
-  background:
-    radial-gradient(circle at 91% 15%, rgba(202,225,194,.45) 0 7%, transparent 7.5%),
-    radial-gradient(circle at 88% 73%, rgba(250,233,195,.5) 0 11%, transparent 11.5%),
-    linear-gradient(114deg, #e8f0e5 2%, #f6f4e9 95%);
+:where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
 }
-
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]), textarea, select { font-size: 16px; }
+}
+.wellness-pattern { background: linear-gradient(116deg, #eaf0e9 0%, #faf6ee 80%, #fce8d8 100%); }
+.brand-hero { background: linear-gradient(110deg, #f0f3ed 0%, #faf6ee 67%, #fce8d8 100%); }
+.brand-progress { background: linear-gradient(90deg, #1f5d50, #64967c); }
+.brand-surface { background: #eaf0e9; }
 .page-enter { animation: rise .32s ease both; }
 @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .page-enter { animation: none; }
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
-
-/* Native modal bottom sheet: accessible Escape/backdrop and keyboard behavior,
-   without adding a new dependency. Stays above the mobile bottom navigation. */
 .review-dialog {
   position: fixed;
   inset: auto 0 0;
@@ -69,11 +80,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
   padding: 0;
   border: 0;
   border-radius: 28px 28px 0 0;
-  background: #fffefb;
-  color: #203c2e;
-  box-shadow: 0 -12px 60px rgb(20 45 31 / 16%);
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 -12px 60px rgb(31 93 80 / 15%);
 }
-.review-dialog::backdrop { background: rgb(20 40 30 / 45%); }
+.review-dialog::backdrop { background: rgb(27 54 45 / 45%); }
 @media (min-width: 640px) {
   .review-dialog {
     inset: 0;
@@ -81,10 +92,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
     max-height: min(90dvh, 740px);
     margin: auto;
     border-radius: 28px;
-    box-shadow: 0 22px 90px rgb(20 45 31 / 22%);
+    box-shadow: 0 22px 90px rgb(31 93 80 / 20%);
   }
 }
-
 /* iOS Safari auto-zooms when a focused form control renders below 16px.
    Keep normal pinch-zoom accessible; only raise the input text size. */
 @media (max-width: 639px) {

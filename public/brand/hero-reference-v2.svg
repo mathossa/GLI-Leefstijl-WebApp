@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" fill="none" aria-hidden="true">
+<defs><linearGradient id="mist" x1="50" y1="150" x2="340" y2="330" gradientUnits="userSpaceOnUse"><stop stop-color="#B7CFBE"/><stop offset="1" stop-color="#7BA892"/></linearGradient><linearGradient id="hill" x1="250" y1="170" x2="520" y2="330" gradientUnits="userSpaceOnUse"><stop stop-color="#77A991"/><stop offset="1" stop-color="#1F5D50"/></linearGradient></defs>
+<circle cx="580" cy="73" r="34" fill="#F4A261"/>
+<!-- Rounded receding mountains and a rising path on the right like the chosen desktop mockup. -->
+<path d="M0 330V308 C73 289 136 228 211 226 C277 224 296 278 363 260 C430 243 469 143 533 143 C595 143 618 239 720 216 V330Z" fill="#D8E2D7"/>
+<path d="M30 330 C141 307 183 269 250 284 C320 299 345 252 405 260 C462 267 493 218 545 211 C602 203 636 286 720 247 V330Z" fill="url(#mist)"/>
+<path d="M265 330 C327 308 345 279 389 282 C431 284 465 322 497 316 C552 303 586 212 638 194 C665 185 688 217 720 225 V330Z" fill="#1F5D50"/>
+<path d="M385 330 C449 303 496 255 547 218 C599 178 640 206 720 252 V330Z" fill="url(#hill)"/>
+<path d="M480 330 C532 293 553 238 600 219 C644 199 670 113 720 42 L720 330Z" fill="#1F5D50"/>
+<path d="M506 330 C566 294 585 245 628 228 C672 205 702 155 720 142 V330Z" fill="#7BA892"/>
+<path d="M477 330 C529 312 551 280 574 246 C600 213 632 204 655 182" stroke="#FAF6EE" stroke-width="19" stroke-linecap="round"/>
+<!-- Small figure ascending uphill to the right, with a peach backpack. -->
+<circle cx="637" cy="134" r="10" fill="#1F5D50"/>
+<rect x="615" y="150" width="16" height="32" rx="8" transform="rotate(19 623 166)" fill="#F4A261"/>
+<path d="M639 147 Q630 165 622 187 M636 155 656 164 671 161 M624 187 614 215 605 238 M625 187 644 201 642 224" stroke="#1F5D50" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
