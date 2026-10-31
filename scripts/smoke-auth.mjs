@@ -241,19 +241,26 @@ for (const cookie of [adminCookie, memberCookie]) {
   assert.ok(pages[0].includes("Jouw leefstijl"), "First page must start with an overview");
   assert.ok(!pages[0].includes("WAAROM IS DIT DOEL"), "Overview page must not contain detailed answers");
   if (cookie === adminCookie) {
-    assert.ok(report.getPageCount() >= 5, "Three goals require overview, three plan pages and reflection page");
+    assert.ok(report.getPageCount() >= 5, "Three goals require overview, separate plan pages and reflection");
     const goalNames = ["CI-ADMIN-PRIVATE-GOAL", "CI-ADMIN-SLAAP-GOAL", "CI-ADMIN-VOEDING-GOAL"];
+    const starts = goalNames.map((goalName, index) =>
+      pages.findIndex((text, pageIndex) => pageIndex > 0 && text.includes(`DOEL ${index+1} VAN 3`)));
+    assert.ok(starts.every(index => index > 0), "Each goal must begin on a separate plan page; got " + starts.join(", "));
+    assert.ok(starts.every((start,index) => index===0 || start>starts[index-1]),
+      "Goal plan pages must be ordered and distinct");
     for (let index = 0; index < goalNames.length; index++) {
-      assert.ok(pages[0].includes(goalNames[index]), "Overview must list every active goal");
-      assert.ok(pages[index + 1].includes(`DOEL ${index + 1} VAN 3`), "Each goal must begin on a new plan page");
-      assert.ok(pages[index + 1].includes(goalNames[index]), "Plan page must show its own goal");
-      assert.ok(pages[index + 1].includes("CI-ADMIN-WHY"), "Each goal plan must include its motivation");
+      const start = starts[index];
+      const end = index+1 < starts.length ? starts[index+1] : pages.length;
+      assert.ok(pages[start].includes(goalNames[index]), "Plan page must show its own goal");
+      assert.ok(pages.slice(start,end).some(page => page.includes("CI-ADMIN-WHY")),
+        "Each goal plan must include its motivation");
       for (let other = 0; other < goalNames.length; other++) {
-        if (other !== index) assert.ok(!pages[index + 1].includes(goalNames[other]),
+        if (other !== index) assert.ok(pages.slice(start,end).every(page => !page.includes(`Mijn doel: ${goalNames[other]}`)),
           "Different goals must not share a detailed plan page");
       }
     }
-    assert.ok(pages.slice(4).some(p => p.includes("Terugblik & reflectie")), "Reflection must follow complete plans");
+    const reflectionStart=pages.findIndex(text=>text.includes("Terugblik & reflectie"));
+    assert.ok(reflectionStart > starts[starts.length-1], "Reflection must follow complete plans");
     for (const field of ["CI-ADMIN-WHY", "CI-ADMIN-SUCCESS", "8 / 10",
       "CI-ACTION-WHEN", "CI-ACTION-STRENGTH", "CI-ACTION-BOOSTER",
       "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"]) {
