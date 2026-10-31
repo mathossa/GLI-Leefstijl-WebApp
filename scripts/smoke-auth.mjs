@@ -2,6 +2,7 @@
 // Invoked only in CI against an isolated disposable PostgreSQL database.
 import assert from "node:assert/strict";
 import { randomUUID, createHash } from "node:crypto";
+import { inflateSync } from "node:zlib";
 import { mkdir, writeFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
@@ -25,6 +26,18 @@ async function post(path, body, cookie = "") {
 }
 function cookies(response) {
   return response.headers.getSetCookie().map(v => v.split(";")[0]).join("; ");
+}
+// pdf-lib encodes text as WinAnsi hex strings inside deflated content streams.
+// Inspect the generated drawing operators without adding a PDF parser dependency.
+function drawnPdfText(bytes) {
+  const binary = bytes.toString("latin1");
+  return [...binary.matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)].flatMap((match) => {
+    let content;
+    try { content = inflateSync(Buffer.from(match[1], "latin1")).toString("latin1"); }
+    catch { return []; } // Font/binary streams are not page text.
+    return [...content.matchAll(/<([0-9a-fA-F]+)>\s*Tj/g)]
+      .map((item) => Buffer.from(item[1], "hex").toString("latin1"));
+  }).join("\n");
 }
 function expectsRedirect(response) {
   assert.ok([302,303,307,308].includes(response.status), `Expected redirect, received ${response.status}`);
@@ -97,14 +110,18 @@ try {
     [randomUUID(), memberId, "CI-MEMBER-PRIVATE-GOAL"],
   ]) {
     await connection.query(
-      'INSERT INTO "goal" ("id","userId","title","motivation","area","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
-      [id, userId, title, "", "BEWEGING"],
+      'INSERT INTO "goal" ("id","userId","title","motivation","progressIndicator","area","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,NOW())',
+      [id, userId, title,
+        userId === adminId ? "CI-ADMIN-WHY" : "CI-MEMBER-WHY",
+        userId === adminId ? "CI-ADMIN-SUCCESS" : null,
+        "BEWEGING"],
     );
     if (userId === adminId) {
       const actionId = randomUUID(), weekId = randomUUID();
       await connection.query(
-        'INSERT INTO "habit_action" ("id","userId","goalId","title","targetPerWeek","updatedAt") VALUES ($1,$2,$3,$4,3,NOW())',
-        [actionId, adminId, id, "CI Action"],
+        'INSERT INTO "habit_action" ("id","userId","goalId","title","targetPerWeek","whenContext","confidenceScore","existingStrength","confidenceBooster","obstacle","fallbackPlan","updatedAt") VALUES ($1,$2,$3,$4,3,$5,$6,$7,$8,$9,$10,NOW())',
+        [actionId, adminId, id, "CI Action", "CI-ACTION-WHEN", 8,
+          "CI-ACTION-STRENGTH", "CI-ACTION-BOOSTER", "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"],
       );
       await connection.query(
         'INSERT INTO "habit_week_progress" ("id","userId","actionId","weekStart","targetCount","completedCount","updatedAt") VALUES ($1,$2,$3,$4,3,1,NOW())',
@@ -167,6 +184,10 @@ assert.equal(adminExport.goals.filter(g => g.status === "ACTIVE").length, 3, "PD
 assert.equal(adminExport.goals.flatMap(g => g.actions).length, 7, "PDF fixture includes seven actions");
 assert.equal(adminExport.reflections[0].wentWell, "CI-PRIVATE-REFLECTION");
 assert.equal(adminExport.meetings[0].notes, "CI-PRIVATE-MEETING-NOTE");
+assert.equal(adminExport.goals[0].motivation, "CI-ADMIN-WHY");
+assert.equal(adminExport.goals[0].progressIndicator, "CI-ADMIN-SUCCESS");
+assert.equal(adminExport.goals[0].actions[0].confidenceScore, 8);
+assert.equal(adminExport.goals[0].actions[0].fallbackPlan, "CI-ACTION-PLAN-B");
 assert.equal(memberExport.reflections.length, 0);
 assert.equal(memberExport.meetings.length, 0);
 for (const report of [adminExport, memberExport]) {
@@ -197,8 +218,18 @@ for (const cookie of [adminCookie, memberCookie]) {
   assert.equal(pdfBytes.subarray(0, 5).toString("ascii"), "%PDF-", "PDF must be a valid PDF document");
   const report = await PDFDocument.load(pdfBytes);
   assert.ok(report.getPageCount() >= 1, "PDF must have pages");
+  const printed = drawnPdfText(pdfBytes);
   if (cookie === adminCookie) {
     assert.ok(report.getPageCount() >= 2, "Three-goal PDF report must paginate with reflections");
+    for (const field of ["CI-ADMIN-WHY", "CI-ADMIN-SUCCESS", "8 / 10",
+      "CI-ACTION-WHEN", "CI-ACTION-STRENGTH", "CI-ACTION-BOOSTER",
+      "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"]) {
+      assert.ok(printed.includes(field), "PDF is missing guided answer: " + field);
+    }
+    assert.ok(!printed.includes("CI-MEMBER-WHY"), "PDF must not leak another user's motivation");
+  } else {
+    assert.ok(printed.includes("CI-MEMBER-WHY"), "Member PDF must include own motivation");
+    assert.ok(!printed.includes("CI-ADMIN-WHY"), "Member PDF must not leak admin answers");
   }
 }
 console.log("Protected CooL photos and branded PDF download verified.");
