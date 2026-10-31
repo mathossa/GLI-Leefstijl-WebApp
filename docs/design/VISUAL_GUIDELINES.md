@@ -180,3 +180,15 @@ Na gebruikersfeedback is de richting van de **kleine logoklimmer** expliciet gec
 **Scheid logo en dashboardvisual:** dit logo wordt exact als laatst goedgekeurd getoond; de grote dashboardillustratie `public/brand/hero-reference-v2.svg` is in deze update **niet veranderd** en blijft apart. Palet 3 blijft ongewijzigd.
 
 **Praktijkcontrole:** inspecteer 16/32/44px favicon en header, 180/192/512px app-icoon, iOS Safari/Chrome en contrast op de standaard achtergrond. Een echte SVG blijft optioneel, alleen na review. Geen verplichting voor deployment.
+
+## Definitieve iconbron en leefstijlgebied-kleuren — 31 oktober 2026
+
+**Deze sectie vervangt oudere experimenten met PNG's, SVG-rasterwrappers en handmatig getekende logo's hierboven.** De gebruiker heeft eigen vectorbron `Minimalistisch bergklimlogo met zon.svg` aangeleverd. We gebruiken **precies de oorspronkelijke 3 gekleurde vectorpaths** uit dat bestand. De grote effen `#FEFBF6`-achtergrondpath is verwijderd voor transparantie; de grafische paden en hun kleuren zijn ongemoeid gelaten.
+
+- Desktop/mobiele merkicoon en inloggen: `public/brand/mark-user-v6.svg`, met een uitsnede rond het oorspronkelijke ontwerp.
+- Favicon (zonder achtergrondkleur): `public/brand/app-icon-transparent-v6.svg`; echte vectorpaths, géén base64-PNG. Oude browsericonen blijven historisch maar zijn niet actief.
+- Apple-touch/PWA: uit dezelfde gebruikersvector gerasteriseerde transparante PNGs van 180/192/512 pixels. Manifest en metadata refereren alleen aan versie 6.
+- Compatibiliteitsbestanden `public/brand/mark.svg` en `public/icon.svg` bevatten nu dezelfde bronvectors, zonder rasterafbeelding.
+- De **grote dashboardillustratie is niet veranderd**. Het logo en de hero kunnen verschillende kijkrichtingen hebben; spiegel assets niet automatisch.
+- `src/components/goals-overview.tsx` gebruikt zes subtiele thema-achtergronden met leesbare bijpassende pictogram-/tekstkleuren: beweging groen, voeding warm crème, slaap lichtblauw, ontspanning lavendel, sociaal koraal, anders neutraal saliegrijs. Geselecteerde knoppen hebben een eigen hogere-contrast border/background; `aria-pressed` blijft.
+- **Hydration mismatch bij wisselen tussen SVG- en PNG-branches:** de log toont oude client HTML (`mark.svg`) naast nieuwe SSR HTML (`mark-approved-v5.png`). Dat wijst op een stale Next.js development/client cache, niet op de datum-/formulierlogica. Stop `next dev`, voer `npm run dev:fresh` uit (wist alleen `.next`), heropen tab en herlaad hard. Als er dan opnieuw een mismatch optreedt, afzonderlijk onderzoeken; geen `suppressHydrationWarning` toevoegen.
