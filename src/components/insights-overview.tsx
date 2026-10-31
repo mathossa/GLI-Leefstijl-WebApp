@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChartNoAxesCombined, ChevronRight, Download, Heart, TrendingUp } from "lucide-react";
+import { ChartNoAxesCombined, ChevronRight, Download, Heart, LoaderCircle, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export type TrendPoint = {
@@ -18,7 +18,73 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
   registeredWeeks: number;
 }) {
   const [period, setPeriod] = useState<"weeks" | "months">("weeks");
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+  const [showPdfBrowserFallback, setShowPdfBrowserFallback] = useState(false);
   const rows = period === "weeks" ? weeks : months;
+
+  async function exportPdf() {
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    setPdfError("");
+    setShowPdfBrowserFallback(false);
+
+    try {
+      // Fetch as a file rather than navigating the standalone PWA to a PDF.
+      // iOS can otherwise leave the user in a native PDF screen without a
+      // visible close/back control.
+      const response = await fetch("/api/export/pdf", { credentials: "same-origin", cache: "no-store" });
+      if (!response.ok || !response.headers.get("content-type")?.includes("application/pdf")) {
+        throw new Error("PDF request failed");
+      }
+      const blob = await response.blob();
+      if (!blob.size) throw new Error("Empty PDF");
+      const filename = "mijn-leefstijl-overzicht.pdf";
+      const file = new File([blob], filename, { type: "application/pdf" });
+      const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+      const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+      // The native sharing sheet allows 'Save to Files', AirDrop and sharing
+      // without leaving the app. Only called after a deliberate user tap.
+      if (isTouchDevice && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+        let canShare = false;
+        try { canShare = navigator.canShare({ files: [file] }); } catch { /* unsupported file */ }
+        if (canShare) {
+          try {
+            await navigator.share({ files: [file], title: "Mijn Leefstijl" });
+            return;
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
+            // If the share-sheet lost user activation while building the PDF,
+            // offer a new browser tab on iOS rather than trapping the PWA.
+          }
+        }
+      }
+
+      if (isAppleMobile) {
+        setPdfError("Delen of bewaren via het systeemmenu is niet beschikbaar. Open de PDF in een apart browsertabblad.");
+        setShowPdfBrowserFallback(true);
+        return;
+      }
+
+      // On browsers that support programmatic downloads, keep the current
+      // page mounted instead of replacing it with the document viewer.
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.hidden = true;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    } catch {
+      setPdfError("De PDF kon niet worden klaargemaakt. Probeer het opnieuw.");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
 
   return (
     <div className="mx-auto min-w-0 max-w-4xl space-y-6">
@@ -79,10 +145,20 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
 
       <section className="space-y-3 rounded-[24px] border border-[#D8E2D7] bg-[#EAF0E9] p-5">
         <h2 className="font-bold text-[#233D34]">Mijn gegevens exporteren</h2>
-        <p className="text-sm text-[#255F50]">Download jouw doelen, acties, individuele ervaringen, reflecties en CooL-notities als JSON.</p>
-        <a href="/api/export/pdf" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#1F5D50] px-4 text-sm font-semibold text-white hover:bg-[#17483D]">
-          <Download size={18} aria-hidden="true"/> PDF-overzicht voor delen <ChevronRight size={16} aria-hidden="true"/>
-        </a>
+        <p className="text-sm text-[#255F50]">Bewaar of deel een PDF-overzicht, of download je volledige gegevens als JSON.</p>
+        <button type="button" onClick={exportPdf} disabled={pdfBusy}
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1F5D50] px-4 text-sm font-semibold text-white hover:bg-[#17483D] disabled:cursor-wait disabled:opacity-70">
+          {pdfBusy ? <LoaderCircle size={18} className="animate-spin" aria-hidden="true"/> : <Download size={18} aria-hidden="true"/>}
+          {pdfBusy ? "PDF voorbereiden..." : "PDF bewaren of delen"}
+          {!pdfBusy && <ChevronRight size={16} aria-hidden="true"/>}
+        </button>
+        {pdfError && <p role="alert" className="text-sm text-[#8B3324]">{pdfError}</p>}
+        {showPdfBrowserFallback && (
+          <a href="/api/export/pdf" target="_blank" rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 text-[#1F5D50]">
+            Open PDF in apart browservenster
+          </a>
+        )}
         <a href="/api/export" download className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#D8E2D7] bg-white px-4 text-sm font-semibold text-[#233D34] hover:bg-[#EAF0E9]">
           <Download size={18} aria-hidden="true"/> Volledige JSON-export <ChevronRight size={16} aria-hidden="true"/>
         </a>
