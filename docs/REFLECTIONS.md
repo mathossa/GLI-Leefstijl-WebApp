@@ -81,3 +81,12 @@ Er zijn geen externe analyticsdiensten, medische aannames of nieuwe grafieklibra
 - De PDF hergebruikt de bestaande gebruikersgebonden JSON-exportdata en `pdf-lib`; geen migratie, nieuwe dependency of extra persoonsgegevens nodig. Privéfoto's blijven buiten de PDF.
 - Visuele stijl: volgt **Palet 3 - Rust & Groei** met linnen `#FAF6EE`, bosgroen `#1F5D50`, salie `#7BA892` en warme perzikaccenten. Het PDF-hoofd en het weekoverzicht gebruiken het goedgekeurde **berg-/klimmerlogo** uit `public/brand/mark-user-v6.svg` (dezelfde echte vectorpaden als de ontwerpbranch). Het reeds aanwezige `sharp` zet dit lokaal om naar PNG voor `pdf-lib`; geen netwerkverzoeken en geen nieuw afbeeldingsmodel.
 - De HTTP-smoketest gebruikt uitsluitend fictieve antwoorden, controleert alle vragen inclusief **haalbaarheid** en **plan B**, en bevestigt dat gegevens van het tweede testaccount niet in de PDF van het eerste verschijnen.
+
+
+## PDF openen en bewaren op mobiel (iOS/Android)
+
+- De knop onder **Inzichten → Mijn gegevens exporteren** gebruikt geen directe navigatielink naar het PDF-endpoint meer. De app haalt de privé-PDF op met dezelfde ingelogde sessie. Op ondersteunde mobiele apparaten volgt een korte **PDF staat klaar**-toestand: een tweede, directe tik opent betrouwbaar het native deelmenu met de mogelijkheid om de PDF op te slaan of te delen. Dit tweede tikmoment is nodig omdat WebKit de user activation voor Web Share kan laten vervallen tijdens een asynchrone fetch.
+- Bij een geannuleerd deelmenu blijft de gebruiker op de Inzichten-pagina. Andere moderne browsers krijgen een bestand-download via een tijdelijk Blob-URL met `download`, zonder de huidige pagina te vervangen.
+- Voor iOS als bestandsdeling niet wordt ondersteund of niet kan worden geopend, verschijnt in de webapp een **expliciete link naar een apart browservenster**; geen automatische navigatie naar een fullscreen PDF zonder terugknop.
+- Downloads blijven privé (`Cache-Control: private, no-store`, server-side Better Auth-sessie), delen gebeurt uitsluitend na de keuze van de gebruiker; geen externe PDF-service of nieuwe package.
+- **Handmatige regressietest:** iPhone Safari en standalone PWA → tik PDF, annuleer deelmenu, controleer dat Inzichten bruikbaar blijft; probeer daarna `Bewaar in Bestanden` of delen. Test Android Chrome/PWA en desktop: PDF bruikbaar, geen navigatie weg van Inzichten. Test uitgelogde export (401), netwerkfoutmelding en JSON-export. Controleer vooral gedrag na de native deel-sheet en de zichtbare browserfallback.
