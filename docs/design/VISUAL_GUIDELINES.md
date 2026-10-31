@@ -165,3 +165,18 @@ Na gebruikersfeedback is de richting van de **kleine logoklimmer** expliciet gec
 ## Exacte gebruikersbron voor het icoon — 31 oktober 2026 (vervangt eerdere icooninterpretaties)
 
 **De gebruiker heeft de iconreferentie van 98×86 px expliciet als exact eindbeeld aangewezen.** De huidige icoonbestanden gebruiken die bronpixels ongewijzigd, dus geen interpretatie van de klimmer of bergcontouren: `public/brand/mark-exact-source-v4.svg`, `public/brand/app-icon-exact-source-v4.svg`. Sidebar, mobile header, inlog, favicon en PWA verwijzen naar deze assets. Deze `.svg`-bestanden bevatten een **ingebedde rasterafbeelding**: ze zijn niet daadwerkelijk vectoriseerbaar zonder opnieuw tekenen. Scherpte bij sterk vergroten is daarom beperkt tot de bronresolutie. Alleen het icoon is veranderd; de grote dashboardillustratie en het kleurenpalet zijn niet opnieuw aangepast. Bij beoordeling eerst de afbeelding naast de originele bron leggen.
+
+## Goedgekeurde PNG-implementatie (31 oktober 2026) — vervangt eerdere SVG-icoonexperimenten
+
+**De gebruiker heeft het tekstloze bergklim-icoon als PNG expliciet goedgekeurd.** De afbeelding hoeft **niet** eerst naar SVG te worden omgezet. We gebruiken de daadwerkelijk goedgekeurde 1254×1254 PNG-bron (zonder opnieuw genereren of contouren opnieuw tekenen), met alleen crops, transparantmaking van de bijna effen achtergrond, en export op gebruiksafmetingen.
+
+**Actuele, aan de app gekoppelde assets:**
+- `public/brand/mark-approved-v5.png` (640×507 px): desktopzijbalk, mobiele header en login. De typografie naast het icoon blijft gewone HTML-tekst.
+- `public/brand/app-icon-approved-v5-32.png`: browserfavicon.
+- `public/brand/app-icon-approved-v5-180.png`: Apple touch icon.
+- `public/brand/app-icon-approved-v5-192.png` en `app-icon-approved-v5-512.png`: PWA-manifest.
+- Cachebuster: nieuwe versiegebonden PNG-bestandsnamen. Oude `.svg`-assets zijn historisch en **niet langer actieve bronnen**.
+
+**Scheid logo en dashboardvisual:** dit logo wordt exact als laatst goedgekeurd getoond; de grote dashboardillustratie `public/brand/hero-reference-v2.svg` is in deze update **niet veranderd** en blijft apart. Palet 3 blijft ongewijzigd.
+
+**Praktijkcontrole:** inspecteer 16/32/44px favicon en header, 180/192/512px app-icoon, iOS Safari/Chrome en contrast op de standaard achtergrond. Een echte SVG blijft optioneel, alleen na review. Geen verplichting voor deployment.
