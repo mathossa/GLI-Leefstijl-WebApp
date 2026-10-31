@@ -39,8 +39,8 @@ export function QuickCompletion({ actionId, title, completed, target, canUndo }:
   }
 
   return (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-3">
-      <div className="min-w-[90px] flex-1 space-y-2">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+      <div className="min-w-[90px] flex-1 space-y-1.5 sm:space-y-2">
         <span className="block text-xs font-medium tabular-nums text-[#255F50]" aria-live="polite">{count} / {target} deze week</span>
         <div role="progressbar" aria-label={`Voortgang ${title}`} aria-valuemin={0}
           aria-valuemax={target} aria-valuenow={count}
