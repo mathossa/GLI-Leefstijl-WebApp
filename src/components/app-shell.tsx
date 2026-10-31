@@ -80,12 +80,12 @@ export function AppShell({ children, userName, isAdmin }: { children: React.Reac
               </div>
             </div>
           </header>
-          <main id="main" className="page-enter mx-auto w-full min-w-0 max-w-6xl px-4 pb-28 pt-5 sm:px-8 md:pb-12 lg:px-12 lg:pt-9">
+          <main id="main" className="page-enter mx-auto w-full min-w-0 max-w-6xl px-4 pb-[calc(6.75rem+env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:pt-5 md:pb-12 lg:px-12 lg:pt-9">
             {children}
           </main>
         </div>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-card/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-8px_24px_-16px_rgba(31,93,80,.3)] backdrop-blur md:hidden" aria-label="Mobiele navigatie">
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-card/95 px-3 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-8px_24px_-16px_rgba(31,93,80,.3)] backdrop-blur md:hidden" aria-label="Mobiele navigatie">
           {items.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} aria-current={isActive(pathname, href) ? "page" : undefined}
               className={cn("flex min-h-13 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium text-[#536B60]",
