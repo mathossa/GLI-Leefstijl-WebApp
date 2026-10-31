@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChartNoAxesCombined, ChevronRight, Download, Heart, LoaderCircle, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
@@ -19,20 +19,35 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
 }) {
   const [period, setPeriod] = useState<"weeks" | "months">("weeks");
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfReady, setPdfReady] = useState(false);
+  const readyPdf = useRef<File | null>(null);
   const [pdfError, setPdfError] = useState("");
   const [showPdfBrowserFallback, setShowPdfBrowserFallback] = useState(false);
   const rows = period === "weeks" ? weeks : months;
 
   async function exportPdf() {
     if (pdfBusy) return;
-    setPdfBusy(true);
     setPdfError("");
     setShowPdfBrowserFallback(false);
 
+    // On a second, direct tap, Safari still has a live user gesture.
+    // Sharing after an awaited fetch can be rejected by WebKit.
+    if (pdfReady && readyPdf.current) {
+      try {
+        await navigator.share({ files: [readyPdf.current], title: "Mijn Leefstijl" });
+        readyPdf.current = null;
+        setPdfReady(false);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setPdfError("Het deelmenu kon niet worden geopend. Je kunt de PDF ook in een apart browservenster openen.");
+        setShowPdfBrowserFallback(true);
+      }
+      return;
+    }
+
+    setPdfBusy(true);
     try {
-      // Fetch as a file rather than navigating the standalone PWA to a PDF.
-      // iOS can otherwise leave the user in a native PDF screen without a
-      // visible close/back control.
+      // Fetch as a file, not by navigating the installed PWA to a PDF viewer.
       const response = await fetch("/api/export/pdf", { credentials: "same-origin", cache: "no-store" });
       if (!response.ok || !response.headers.get("content-type")?.includes("application/pdf")) {
         throw new Error("PDF request failed");
@@ -45,31 +60,23 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
       const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-      // The native sharing sheet allows 'Save to Files', AirDrop and sharing
-      // without leaving the app. Only called after a deliberate user tap.
       if (isTouchDevice && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
         let canShare = false;
         try { canShare = navigator.canShare({ files: [file] }); } catch { /* unsupported file */ }
         if (canShare) {
-          try {
-            await navigator.share({ files: [file], title: "Mijn Leefstijl" });
-            return;
-          } catch (error) {
-            if (error instanceof DOMException && error.name === "AbortError") return;
-            // If the share-sheet lost user activation while building the PDF,
-            // offer a new browser tab on iOS rather than trapping the PWA.
-          }
+          readyPdf.current = file;
+          setPdfReady(true);
+          return;
         }
       }
 
       if (isAppleMobile) {
-        setPdfError("Delen of bewaren via het systeemmenu is niet beschikbaar. Open de PDF in een apart browsertabblad.");
+        setPdfError("Het PDF-deelmenu wordt op dit toestel niet ondersteund. Open de PDF in een apart browservenster.");
         setShowPdfBrowserFallback(true);
         return;
       }
 
-      // On browsers that support programmatic downloads, keep the current
-      // page mounted instead of replacing it with the document viewer.
+      // Blob download keeps Inzichten open on desktop and other browsers.
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -149,9 +156,18 @@ export function InsightsOverview({ weeks, months, reflectionCount, registeredWee
         <button type="button" onClick={exportPdf} disabled={pdfBusy}
           className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1F5D50] px-4 text-sm font-semibold text-white hover:bg-[#17483D] disabled:cursor-wait disabled:opacity-70">
           {pdfBusy ? <LoaderCircle size={18} className="animate-spin" aria-hidden="true"/> : <Download size={18} aria-hidden="true"/>}
-          {pdfBusy ? "PDF voorbereiden..." : "PDF bewaren of delen"}
+          {pdfBusy ? "PDF voorbereiden..." : pdfReady ? "PDF klaar - tik om te bewaren" : "PDF bewaren of delen"}
           {!pdfBusy && <ChevronRight size={16} aria-hidden="true"/>}
         </button>
+        {pdfReady && (
+          <div className="flex items-center justify-between gap-3 text-sm text-[#255F50]">
+            <span>De PDF staat klaar. Tik op de knop voor het deelmenu.</span>
+            <button type="button" className="shrink-0 min-h-11 font-semibold underline underline-offset-4"
+              onClick={() => { readyPdf.current = null; setPdfReady(false); setPdfError(""); setShowPdfBrowserFallback(false); }}>
+              Annuleren
+            </button>
+          </div>
+        )}
         {pdfError && <p role="alert" className="text-sm text-[#8B3324]">{pdfError}</p>}
         {showPdfBrowserFallback && (
           <a href="/api/export/pdf" target="_blank" rel="noopener noreferrer"
