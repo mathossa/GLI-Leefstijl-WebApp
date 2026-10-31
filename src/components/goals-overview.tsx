@@ -329,11 +329,13 @@ export function GoalsOverview({ goals, currentWeek, message }: {
           )}
 
           {view?.kind === "new-goal-guided" && (
-            <GuidedPlanWizard mode="new-goal" onDirty={setWizardDirty} onSaved={guidedSaved}/>
+            <GuidedPlanWizard mode="new-goal" onDirty={setWizardDirty} onSaved={guidedSaved}
+              onQuick={() => open({kind: "new-goal-quick"})}/>
           )}
           {view?.kind === "new-action-guided" && goal && (
             <GuidedPlanWizard mode="new-action" goalId={goal.id} goalTitle={goal.title}
-              onDirty={setWizardDirty} onSaved={guidedSaved}/>
+              onDirty={setWizardDirty} onSaved={guidedSaved}
+              onQuick={() => open({kind: "new-action", goalId: goal.id})}/>
           )}
 
           {view?.kind === "new-goal-quick" && (
