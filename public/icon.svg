@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="#FFF4E6"/><path d="M9 107 54 35c3-5 7-5 10 0l18 28 11 44Z" fill="#0F4C5C"/><path d="M37 107 64 40l18 23 11 44Z" fill="#2A9D8F"/><path d="M45 107c10-18 17-27 24-34 7-7 17-10 25-20" fill="none" stroke="#FFF4E6" stroke-width="10" stroke-linecap="round"/><path d="M70 107c7-12 17-18 25-32" fill="none" stroke="#FFF4E6" stroke-width="8" stroke-linecap="round"/><path d="M79 104 100 77l15 30Z" fill="#FF9F1C"/><circle cx="107" cy="25" r="11" fill="#FF9F1C"/><circle cx="97" cy="51" r="5" fill="#0F4C5C"/><path d="M95 59c-5 5-6 10-5 15m5-15 11 7m-14 7-8 11m8-11 7 12" fill="none" stroke="#0F4C5C" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Mijn Leefstijl app-icoon">
+<rect width="128" height="128" rx="27" fill="#FAF6EE"/>
+<path d="M8 108 52 36Q56 31 61 37L107 108Z" fill="#1F5D50"/>
+<path d="M33 108 67 42 110 108Z" fill="#7BA892"/>
+<path d="M34 108Q59 78 68 75Q77 69 82 59" fill="none" stroke="#FAF6EE" stroke-width="9" stroke-linecap="round"/>
+<path d="M82 108 106 82 121 108Z" fill="#F4A261"/>
+<circle cx="106" cy="22" r="9" fill="#F4A261"/>
+<circle cx="108" cy="52" r="5.5" fill="#1F5D50"/>
+<path d="M107 62 96 74 88 83M100 69 85 65 77 58M96 74 88 91 79 93M96 74 107 90" stroke="#1F5D50" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
