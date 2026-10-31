@@ -157,3 +157,7 @@ De laatst meegestuurde goedgekeurde *Palette 3 — Rust & Groei* screenshot is d
 - `public/brand/hero-reference-v2.svg`: zachtere gelaagde bergen met een duidelijk **bergop lopende figuur rechts**, inclusief oranje rugzak. Geen grote losstaande stickfigure of hard driehoeklandschap.
 
 Het zijn originele, lichtgewicht vectorinterpretaties van de gebruikersreferentie; nog visueel te reviewen door de opdrachtgever. **Palet 3 is onveranderd**.
+
+## Correctie kijkrichting klimmer — 31 oktober 2026
+
+Na gebruikersfeedback is de richting van de **kleine logoklimmer** expliciet gecorrigeerd: **naar links (←) opklimmen**, met het oranje rugzakje rechts op zijn rug, een voorwaarts reikende linkerarm en een voorwaarts geplaatste voet naar links. Houd de twee bergvormen, zon, oranje driehoek en alle vijf palet-3-kleuren gelijk. De reeds goedgekeurde **grote dashboardillustratie niet veranderen**. Productieassets zijn `public/brand/mark-left-v3.svg` en `public/brand/app-icon-left-v3.svg`; beide worden via de app en Next Metadata geladen. Eerst visueel beoordelen, dan pas mergen.
