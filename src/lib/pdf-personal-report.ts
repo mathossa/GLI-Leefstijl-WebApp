@@ -122,7 +122,15 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
     text(reportDate,W-M-regular.widthOfTextAtSize(safe(reportDate),9),78,9,regular,grey);
     y=105;
   };
-  const next=()=>pageFrame();
+  let continuationGoal: string | null = null;
+  const next=()=>{
+    pageFrame();
+    if (continuationGoal) {
+      text("Leefstijlplan (vervolg)",M,120,21,bold,dark);
+      textLines(continuationGoal,M,145,CW-16,10,regular,grey,14);
+      y=145+lines(continuationGoal,regular,10,CW-16).length*14+13;
+    }
+  };
   const ensure=(h:number)=>{
     if(y+h>H-74)next();
   };
@@ -178,12 +186,9 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
   const createTextRows=(value:string,font=regular,size=10,width=CW-36) =>
     value.trim()?lines(value,font,size,width).map(v=>({value:v,font,size,ink:dark,leading:14})):[];
 
-  // Goal cards are grouped by goal. If a goal has many actions, split its
-  // actions into chunks rather than clipping or silently omitting them.
-  section("Mijn doelen en acties");
-  if(!active.length){box(M,y,CW,55,lime,16);text("Nog geen actieve doelen.",M+16,y+31,11,regular,grey);y+=70;}
-  for(let gi=0;gi<active.length;gi++){
-    const goal=active[gi], actions=goalActions(goal);
+  // A summary-only page first; no guided answers are mixed into the overview.
+  // Large overviews can continue on another overview page, never inside a plan.
+  const goalSummaryCard=(goal:Goal,gi:number,actions:Action[])=>{
     const palette=variants[gi%variants.length];
     const chunks:Action[][]=[];
     if(!actions.length)chunks.push([]);
@@ -226,6 +231,34 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       y+=height+11;
     }
 
+  };
+
+  section("Mijn doelen en acties");
+  if(!active.length){
+    box(M,y,CW,55,lime,16);
+    text("Nog geen actieve doelen.",M+16,y+31,11,regular,grey);
+    y+=70;
+  }
+  for(let gi=0;gi<active.length;gi++){
+    goalSummaryCard(active[gi],gi,goalActions(active[gi]));
+  }
+  if(active.length && y+28<H-74){
+    text("De volledige plannen staan op de volgende pagina's.",M,y+15,9,regular,grey);
+  }
+
+  // Each individual goal begins on its own page; a long plan continues only
+  // with that same goal and never shares a page with another goal.
+  for(let gi=0;gi<active.length;gi++){
+    const goal=active[gi],actions=goalActions(goal);
+    const palette=variants[gi%variants.length];
+    continuationGoal=null;
+    next();
+    text("Mijn leefstijlplan",M,120,25,bold,dark);
+    text(`DOEL ${gi+1} VAN ${active.length}`,M,146,10,bold,green);
+    y=168;
+    continuationGoal=`Doel ${gi+1}: ${goal.title}`;
+    goalSummaryCard(goal,gi,actions);
+
     // The JSON export already includes these guided goal/action answers. Keep
     // the same information in the shareable PDF, directly below each goal.
     // Only completed answers are rendered; long text uses paginated cards.
@@ -250,6 +283,7 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       }
     }
   }
+  continuationGoal=null;
 
   // Only real recorded weeks enter the shareable report; no empty placeholders.
   const weekly: {week:string;done:number;target:number;percentage:number}[]=[];
