@@ -21,9 +21,11 @@ export function GoalCalendar({ title, value, minDate, onSelect, onClose }: {
   onClose: () => void;
 }) {
   const today = amsterdamToday();
-  const initial = monthFromIso(value || today);
+  // For an end date after a future start, open at the first selectable month.
+  const firstDay = minDate && (value || today) < minDate ? minDate : value || today;
+  const initial = monthFromIso(firstDay);
   const [month, setMonth] = useState(initial);
-  const [focused, setFocused] = useState(value || today);
+  const [focused, setFocused] = useState(firstDay);
   const panel = useRef<HTMLDivElement>(null);
   const dayRef = useRef<HTMLButtonElement>(null);
   const cells = calendarCells(month.year, month.month);
