@@ -1,26 +1,29 @@
 @import "tailwindcss";
 
-/* Concept 2B — Energie & Focus. Semantic tokens stay compatible with shadcn/ui. */
+/* Palette 3 — Rust & Groei: selected 31 October 2026. */
 :root {
-  --background: #f8f7f1;
-  --foreground: #153540;
-  --card: #fffdf9;
-  --card-foreground: #153540;
-  --primary: #0f4c5c;
+  --background: #faf6ee;
+  --foreground: #233d34;
+  --card: #fffdfa;
+  --card-foreground: #233d34;
+  --primary: #1f5d50;
   --primary-foreground: #ffffff;
-  --secondary: #e9f6f4;
-  --secondary-foreground: #0f4c5c;
-  --muted: #edf4f1;
-  --muted-foreground: #536873;
-  --accent: #fff4e6;
-  --accent-foreground: #0f4c5c;
-  --border: #dde9e8;
-  --ring: #126b68;
-  --brand-navy: #0f4c5c;
-  --brand-teal: #2a9d8f;
-  --brand-mint: #a7d8d0;
-  --brand-orange: #ff9f1c;
-  --brand-cream: #fff4e6;
+  --secondary: #eaf0e9;
+  --secondary-foreground: #1f5d50;
+  --muted: #f0f3ed;
+  --muted-foreground: #536b60;
+  --accent: #fce8d8;
+  --accent-foreground: #1f5d50;
+  --border: #d8e2d7;
+  --ring: #255f50;
+  --brand-navy: #1f5d50; /* legacy variable alias for existing components */
+  --brand-teal: #7ba892;
+  --brand-mint: #d8e2d7;
+  --brand-orange: #f4a261;
+  --brand-cream: #faf6ee;
+  --brand-deep: #1f5d50;
+  --brand-sage: #7ba892;
+  --brand-peach: #f4a261;
   --radius: 1.2rem;
 }
 @theme inline {
@@ -52,16 +55,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
   outline: 3px solid var(--ring);
   outline-offset: 3px;
 }
-/* No mobile Safari focus zoom in dialogs or goal forms. */
 @media (max-width: 767px) {
   input:not([type="checkbox"]):not([type="radio"]), textarea, select { font-size: 16px; }
 }
-.wellness-pattern {
-  background: linear-gradient(116deg, #e6f4f2 0%, #f5faf7 55%, #fff4e6 100%);
-}
-.brand-hero { background: linear-gradient(110deg, #e6f4f2 0%, #f8faf5 68%, #fff4e6 100%); }
-.brand-progress { background: linear-gradient(90deg, #0f4c5c, #2a9d8f); }
-.brand-surface { background: #e9f6f4; }
+.wellness-pattern { background: linear-gradient(116deg, #eaf0e9 0%, #faf6ee 80%, #fce8d8 100%); }
+.brand-hero { background: linear-gradient(110deg, #f0f3ed 0%, #faf6ee 67%, #fce8d8 100%); }
+.brand-progress { background: linear-gradient(90deg, #1f5d50, #64967c); }
+.brand-surface { background: #eaf0e9; }
 .page-enter { animation: rise .32s ease both; }
 @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
@@ -69,7 +69,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .page-enter { animation: none; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
-/* Native mobile bottom sheet. Preserve focus/backdrop and bottom safe area. */
 .review-dialog {
   position: fixed;
   inset: auto 0 0;
@@ -83,9 +82,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   border-radius: 28px 28px 0 0;
   background: var(--card);
   color: var(--foreground);
-  box-shadow: 0 -12px 60px rgb(15 76 92 / 16%);
+  box-shadow: 0 -12px 60px rgb(31 93 80 / 15%);
 }
-.review-dialog::backdrop { background: rgb(10 40 48 / 50%); }
+.review-dialog::backdrop { background: rgb(27 54 45 / 45%); }
 @media (min-width: 640px) {
   .review-dialog {
     inset: 0;
@@ -93,6 +92,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
     max-height: min(90dvh, 740px);
     margin: auto;
     border-radius: 28px;
-    box-shadow: 0 22px 90px rgb(15 76 92 / 22%);
+    box-shadow: 0 22px 90px rgb(31 93 80 / 20%);
   }
 }
