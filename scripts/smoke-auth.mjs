@@ -2,11 +2,12 @@
 // Invoked only in CI against an isolated disposable PostgreSQL database.
 import assert from "node:assert/strict";
 import { randomUUID, createHash } from "node:crypto";
+import { inflateSync } from "node:zlib";
 import { mkdir, writeFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
 import pg from "pg";
-import { PDFDocument } from "pdf-lib";
+import { PDFArray, PDFDocument } from "pdf-lib";
 
 const base = process.env.BETTER_AUTH_URL || "http://127.0.0.1:3000";
 const origin = new URL(base).origin;
@@ -25,6 +26,36 @@ async function post(path, body, cookie = "") {
 }
 function cookies(response) {
   return response.headers.getSetCookie().map(v => v.split(";")[0]).join("; ");
+}
+// pdf-lib encodes text as WinAnsi hex strings inside deflated content streams.
+// Inspect the generated drawing operators without adding a PDF parser dependency.
+function drawnPdfText(bytes) {
+  const binary = bytes.toString("latin1");
+  return [...binary.matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)].flatMap((match) => {
+    let content;
+    try { content = inflateSync(Buffer.from(match[1], "latin1")).toString("latin1"); }
+    catch { return []; } // Font/binary streams are not page text.
+    return [...content.matchAll(/<([0-9a-fA-F]+)>\s*Tj/g)]
+      .map((item) => Buffer.from(item[1], "hex").toString("latin1"));
+  }).join("\n");
+}
+// Inspect pages separately to ensure the overview and each complete goal plan
+// have distinct pages. Reuses the existing test PDF parser; no extra dependency.
+function drawnPdfPageText(report) {
+  return report.getPages().map(page => {
+    const contents = page.node.Contents();
+    if (!contents) return "";
+    const refs = contents instanceof PDFArray ? contents.asArray() : [contents];
+    return refs.flatMap(ref => {
+      const stream = report.context.lookup(ref);
+      if (!stream || typeof stream.getContents !== "function") return [];
+      let decoded;
+      try { decoded = inflateSync(Buffer.from(stream.getContents())).toString("latin1"); }
+      catch { return []; }
+      return [...decoded.matchAll(/<([0-9a-fA-F]+)>\s*Tj/g)]
+        .map(match => Buffer.from(match[1], "hex").toString("latin1"));
+    }).join("\n");
+  });
 }
 function expectsRedirect(response) {
   assert.ok([302,303,307,308].includes(response.status), `Expected redirect, received ${response.status}`);
@@ -97,14 +128,18 @@ try {
     [randomUUID(), memberId, "CI-MEMBER-PRIVATE-GOAL"],
   ]) {
     await connection.query(
-      'INSERT INTO "goal" ("id","userId","title","motivation","area","updatedAt") VALUES ($1,$2,$3,$4,$5,NOW())',
-      [id, userId, title, "", "BEWEGING"],
+      'INSERT INTO "goal" ("id","userId","title","motivation","progressIndicator","area","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,NOW())',
+      [id, userId, title,
+        userId === adminId ? "CI-ADMIN-WHY" : "CI-MEMBER-WHY",
+        userId === adminId ? "CI-ADMIN-SUCCESS" : null,
+        "BEWEGING"],
     );
     if (userId === adminId) {
       const actionId = randomUUID(), weekId = randomUUID();
       await connection.query(
-        'INSERT INTO "habit_action" ("id","userId","goalId","title","targetPerWeek","updatedAt") VALUES ($1,$2,$3,$4,3,NOW())',
-        [actionId, adminId, id, "CI Action"],
+        'INSERT INTO "habit_action" ("id","userId","goalId","title","targetPerWeek","whenContext","confidenceScore","existingStrength","confidenceBooster","obstacle","fallbackPlan","updatedAt") VALUES ($1,$2,$3,$4,3,$5,$6,$7,$8,$9,$10,NOW())',
+        [actionId, adminId, id, "CI Action", "CI-ACTION-WHEN", 8,
+          "CI-ACTION-STRENGTH", "CI-ACTION-BOOSTER", "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"],
       );
       await connection.query(
         'INSERT INTO "habit_week_progress" ("id","userId","actionId","weekStart","targetCount","completedCount","updatedAt") VALUES ($1,$2,$3,$4,3,1,NOW())',
@@ -167,6 +202,10 @@ assert.equal(adminExport.goals.filter(g => g.status === "ACTIVE").length, 3, "PD
 assert.equal(adminExport.goals.flatMap(g => g.actions).length, 7, "PDF fixture includes seven actions");
 assert.equal(adminExport.reflections[0].wentWell, "CI-PRIVATE-REFLECTION");
 assert.equal(adminExport.meetings[0].notes, "CI-PRIVATE-MEETING-NOTE");
+assert.equal(adminExport.goals[0].motivation, "CI-ADMIN-WHY");
+assert.equal(adminExport.goals[0].progressIndicator, "CI-ADMIN-SUCCESS");
+assert.equal(adminExport.goals[0].actions[0].confidenceScore, 8);
+assert.equal(adminExport.goals[0].actions[0].fallbackPlan, "CI-ACTION-PLAN-B");
 assert.equal(memberExport.reflections.length, 0);
 assert.equal(memberExport.meetings.length, 0);
 for (const report of [adminExport, memberExport]) {
@@ -197,8 +236,40 @@ for (const cookie of [adminCookie, memberCookie]) {
   assert.equal(pdfBytes.subarray(0, 5).toString("ascii"), "%PDF-", "PDF must be a valid PDF document");
   const report = await PDFDocument.load(pdfBytes);
   assert.ok(report.getPageCount() >= 1, "PDF must have pages");
+  const printed = drawnPdfText(pdfBytes);
+  const pages = drawnPdfPageText(report);
+  assert.ok(pages[0].includes("Jouw leefstijl"), "First page must start with an overview");
+  assert.ok(!pages[0].includes("WAAROM IS DIT DOEL"), "Overview page must not contain detailed answers");
   if (cookie === adminCookie) {
-    assert.ok(report.getPageCount() >= 2, "Three-goal PDF report must paginate with reflections");
+    assert.ok(report.getPageCount() >= 5, "Three goals require overview, separate plan pages and reflection");
+    const goalNames = ["CI-ADMIN-PRIVATE-GOAL", "CI-ADMIN-SLAAP-GOAL", "CI-ADMIN-VOEDING-GOAL"];
+    const starts = goalNames.map((goalName, index) =>
+      pages.findIndex((text, pageIndex) => pageIndex > 0 && text.includes(`DOEL ${index+1} VAN 3`)));
+    assert.ok(starts.every(index => index > 0), "Each goal must begin on a separate plan page; got " + starts.join(", "));
+    assert.ok(starts.every((start,index) => index===0 || start>starts[index-1]),
+      "Goal plan pages must be ordered and distinct");
+    for (let index = 0; index < goalNames.length; index++) {
+      const start = starts[index];
+      const end = index+1 < starts.length ? starts[index+1] : pages.length;
+      assert.ok(pages[start].includes(goalNames[index]), "Plan page must show its own goal");
+      assert.ok(pages.slice(start,end).some(page => page.includes("CI-ADMIN-WHY")),
+        "Each goal plan must include its motivation");
+      for (let other = 0; other < goalNames.length; other++) {
+        if (other !== index) assert.ok(pages.slice(start,end).every(page => !page.includes(`Mijn doel: ${goalNames[other]}`)),
+          "Different goals must not share a detailed plan page");
+      }
+    }
+    const reflectionStart=pages.findIndex(text=>text.includes("Terugblik & reflectie"));
+    assert.ok(reflectionStart > starts[starts.length-1], "Reflection must follow complete plans");
+    for (const field of ["CI-ADMIN-WHY", "CI-ADMIN-SUCCESS", "8 / 10",
+      "CI-ACTION-WHEN", "CI-ACTION-STRENGTH", "CI-ACTION-BOOSTER",
+      "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"]) {
+      assert.ok(printed.includes(field), "PDF is missing guided answer: " + field);
+    }
+    assert.ok(!printed.includes("CI-MEMBER-WHY"), "PDF must not leak another user's motivation");
+  } else {
+    assert.ok(printed.includes("CI-MEMBER-WHY"), "Member PDF must include own motivation");
+    assert.ok(!printed.includes("CI-ADMIN-WHY"), "Member PDF must not leak admin answers");
   }
 }
 console.log("Protected CooL photos and branded PDF download verified.");

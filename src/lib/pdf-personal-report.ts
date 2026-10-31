@@ -1,4 +1,7 @@
 import "server-only";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import sharp from "sharp";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { amsterdamMonday } from "@/lib/goals-domain.mjs";
 import { isoWeekInfo, isoWeekLabel } from "@/lib/week-labels.mjs";
@@ -12,15 +15,18 @@ type Reflection = Data["reflections"][number];
 type Meeting = Data["meetings"][number];
 
 const W = 595.28, H = 841.89, M = 42, CW = W - M * 2;
-const dark = rgb(.13,.28,.21), green = rgb(.19,.46,.33), grey = rgb(.39,.49,.43);
-const cream = rgb(.986,.982,.967), white = rgb(1,1,1), line = rgb(.87,.91,.86);
-const mint = rgb(.88,.94,.87), lime = rgb(.93,.96,.91), peach = rgb(.99,.93,.86);
-const lilac = rgb(.94,.92,.98), butter = rgb(.99,.94,.82), pink = rgb(.98,.91,.92);
-const blue = rgb(.91,.94,.98);
+// Palet 3 - Rust & Groei; match the app's approved visual guidelines.
+const dark = rgb(35/255,61/255,52/255), green = rgb(31/255,93/255,80/255);
+const grey = rgb(83/255,107/255,96/255), sage = rgb(123/255,168/255,146/255);
+const cream = rgb(250/255,246/255,238/255), white = rgb(1,253/255,250/255);
+const line = rgb(216/255,226/255,215/255), mint = rgb(216/255,226/255,215/255);
+const lime = rgb(234/255,240/255,233/255), peach = rgb(252/255,232/255,216/255);
+const lilac = rgb(240/255,234/255,249/255);
+const pink = rgb(252/255,234/255,229/255), blue = rgb(234/255,241/255,253/255);
 const variants = [
-  { fill:lime, ink:green }, { fill:lilac, ink:rgb(.45,.36,.61) },
-  { fill:peach, ink:rgb(.62,.37,.19) }, { fill:blue, ink:rgb(.30,.43,.66) },
-  { fill:pink, ink:rgb(.60,.33,.42) }, { fill:mint, ink:green },
+  { fill:lime, ink:green }, { fill:peach, ink:dark },
+  { fill:blue, ink:green }, { fill:lilac, ink:dark },
+  { fill:pink, ink:green }, { fill:mint, ink:dark },
 ];
 
 function safe(value: unknown) {
@@ -69,6 +75,11 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
   document.setSubject("Persoonlijk leefstijloverzicht");
   const regular = await document.embedFont(StandardFonts.Helvetica);
   const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  // Reuse the exact vector mountain/climber mark from the approved app branch.
+  // sharp is already installed for private meeting-photo processing.
+  const markSvg = await readFile(join(process.cwd(), "public/brand/mark-user-v6.svg"));
+  const markPng = await sharp(markSvg).resize({width: 320}).png().toBuffer();
+  const mark = await document.embedPng(markPng);
   let page!: PDFPage, y = 0;
   const text = (value: unknown, x: number, top: number, size=10, font=regular, ink:Color=dark) => {
     page.drawText(safe(value), {x,y:H-top,size,font,color:ink});
@@ -101,17 +112,25 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
   const pageFrame=()=>{
     page=document.addPage([W,H]);
     box(0,0,W,H,cream);
-    circle(W+10,12,75,lime);circle(W+18,10,34,lilac);
-    box(M,37,29,29,green,8);
-    circle(M+14,51,6,white);stroke(M+11,57,M+19,45,green,2.5);
-    text("MIJN LEEFSTIJL",M+40,57,10.7,bold,green);
+    // The branding is part of the page, but the small climber never obscures content.
+    circle(W+24,7,56,lime);circle(W+15,3,17,peach);
+    page.drawImage(mark,{x:M,y:H-39-29,width:36.4,height:29});
+    text("MIJN LEEFSTIJL",M+44,57,10.7,bold,green);
     const reportDate=new Intl.DateTimeFormat("nl-NL", {
       timeZone:"Europe/Amsterdam",day:"numeric",month:"long",year:"numeric",
     }).format(new Date());
     text(reportDate,W-M-regular.widthOfTextAtSize(safe(reportDate),9),78,9,regular,grey);
     y=105;
   };
-  const next=()=>pageFrame();
+  let continuationGoal: string | null = null;
+  const next=()=>{
+    pageFrame();
+    if (continuationGoal) {
+      text("Leefstijlplan (vervolg)",M,120,21,bold,dark);
+      textLines(continuationGoal,M,145,CW-16,10,regular,grey,14);
+      y=145+lines(continuationGoal,regular,10,CW-16).length*14+13;
+    }
+  };
   const ensure=(h:number)=>{
     if(y+h>H-74)next();
   };
@@ -154,20 +173,22 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
   text("Jouw leefstijl",M,121,29,bold,dark);
   text(`${active.length} ${active.length===1?"doel":"doelen"}, ${all.length} ${all.length===1?"actie":"acties"}`,M,145,11,regular,grey);
   box(M,157,CW,123,lime,20);
-  circle(W-78,181,42,mint);circle(W-55,168,21,butter);
+  // Warm accent sun and the actual climber/peaks motif - no improvised figure.
+  circle(W-248,179,15,peach);
+  page.drawImage(mark,{x:W-259,y:H-180-86,width:108,height:86});
   labelPill(isoWeekLabel(thisWeek).replace("Week ","WEEK ").split(" · ")[0],M+20,175,green,81);
   text(`${done} van ${total}`,M+20,219,25,bold,dark);
   text("keer uitgevoerd",M+20,239,11,regular,grey);
   text(String(isoWeekInfo(thisWeek).year),M+20,263,9,regular,grey);
-  donut(W-102,221,37,overall);
+  donut(W-101,221,37,overall);
   y=300;
 
-  // Goal cards are grouped by goal. If a goal has many actions, split its
-  // actions into chunks rather than clipping or silently omitting them.
-  section("Mijn doelen en acties");
-  if(!active.length){box(M,y,CW,55,lime,16);text("Nog geen actieve doelen.",M+16,y+31,11,regular,grey);y+=70;}
-  for(let gi=0;gi<active.length;gi++){
-    const goal=active[gi], actions=goalActions(goal);
+  const createTextRows=(value:string,font=regular,size=10,width=CW-36) =>
+    value.trim()?lines(value,font,size,width).map(v=>({value:v,font,size,ink:dark,leading:14})):[];
+
+  // A summary-only page first; no guided answers are mixed into the overview.
+  // Large overviews can continue on another overview page, never inside a plan.
+  const goalSummaryCard=(goal:Goal,gi:number,actions:Action[])=>{
     const palette=variants[gi%variants.length];
     const chunks:Action[][]=[];
     if(!actions.length)chunks.push([]);
@@ -176,7 +197,7 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       const group=chunks[ci];
       const badge=goal.area.toUpperCase();
       const badgeWidth=Math.max(77,Math.min(112,bold.widthOfTextAtSize(safe(badge),8)+22));
-      const nameLines=lines(goal.title,bold,15,CW-62-badgeWidth);
+      const nameLines=lines(goal.title,bold,15,CW-85-badgeWidth);
       const header=Math.max(24,nameLines.length*18);
       const rowInfo=group.map(a=>{
         const titleLines=lines(a.title,regular,10,CW-145);
@@ -209,7 +230,63 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       text(summary,W-M-20-bold.widthOfTextAtSize(summary,9),top+height-10,9,bold,palette.ink);
       y+=height+11;
     }
+
+  };
+
+  section("Mijn doelen en acties");
+  if(!active.length){
+    box(M,y,CW,55,lime,16);
+    text("Nog geen actieve doelen.",M+16,y+31,11,regular,grey);
+    y+=70;
   }
+  for(let gi=0;gi<active.length;gi++){
+    goalSummaryCard(active[gi],gi,goalActions(active[gi]));
+  }
+  if(active.length && y+28<H-74){
+    text("De volledige plannen staan op de volgende pagina's.",M,y+15,9,regular,grey);
+  }
+
+  // Each individual goal begins on its own page; a long plan continues only
+  // with that same goal and never shares a page with another goal.
+  for(let gi=0;gi<active.length;gi++){
+    const goal=active[gi],actions=goalActions(goal);
+    const palette=variants[gi%variants.length];
+    continuationGoal=null;
+    next();
+    text("Mijn leefstijlplan",M,120,25,bold,dark);
+    text(`DOEL ${gi+1} VAN ${active.length}`,M,146,10,bold,green);
+    const gp=actions.reduce((acc,a)=>({
+      done:acc.done+progressFor(a).done,target:acc.target+progressFor(a).target,
+    }),{done:0,target:0});
+    const activityLabel=actions.length===1?"weekactie":"weekacties";
+    text(`${actions.length} ${activityLabel}  -  ${gp.done} van ${gp.target} deze week`,M,164,9.5,regular,grey);
+    y=181;
+    continuationGoal=`Doel ${gi+1}: ${goal.title}`;
+
+    // The JSON export already includes these guided goal/action answers. Keep
+    // the same information in the shareable PDF, directly below each goal.
+    // Only completed answers are rendered; long text uses paginated cards.
+    const goalAnswers=[
+      {caption:"Waarom is dit doel belangrijk?",value:goal.motivation??""},
+      {caption:"Hoe merk ik dat ik mijn doel bereik?",value:goal.progressIndicator??""},
+    ];
+    // Always show the goal, even when its optional wizard answers are empty.
+    narrativeCard("Mijn doel: "+goal.title,goalAnswers,palette.fill,palette.ink);
+    for(const action of actions){
+      const actionAnswers=[
+        {caption:"Wanneer ga ik dit doen?",value:action.whenContext??""},
+        {caption:"Haalbaarheid (1-10)",value:action.confidenceScore == null?"":`${action.confidenceScore} / 10`},
+        {caption:"Wat helpt mij nu al?",value:action.existingStrength??""},
+        {caption:"Wat zou mijn haalbaarheid verhogen?",value:action.confidenceBooster??""},
+        {caption:"Wat kan mij tegenhouden?",value:action.obstacle??""},
+        {caption:"Plan B als het niet lukt",value:action.fallbackPlan??""},
+      ];
+      // Keep actions visible in the full plan even if no answers were given.
+      narrativeCard(`Mijn actie: ${action.title} (${action.targetPerWeek}x per week)`,
+        actionAnswers,palette.fill,palette.ink);
+    }
+  }
+  continuationGoal=null;
 
   // Only real recorded weeks enter the shareable report; no empty placeholders.
   const weekly: {week:string;done:number;target:number;percentage:number}[]=[];
@@ -243,15 +320,13 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
         const top=y+44+i*28;
         const label=isoWeekLabel(row.week).replace("Week ","W");
         text(label,M+20,top,9.2,bold,dark);
-        bar(M+138,top-10,CW-226,row.percentage,green,7);
+        bar(M+138,top-10,CW-226,row.percentage,sage,7);
         const pct=row.percentage+"%";
         text(pct,W-M-20-bold.widthOfTextAtSize(pct,9),top,9,bold,green);
       });
       y+=height+12;
     }
   }
-  const createTextRows=(value:string,font=regular,size=10,width=CW-36) =>
-    value.trim()?lines(value,font,size,width).map(v=>({value:v,font,size,ink:dark,leading:14})):[];
 
   // Long user-written text is split into continuation cards when required.
   function narrativeCard(title:string,fields:{caption:string;value:string}[],fill:Color,accent:Color) {
