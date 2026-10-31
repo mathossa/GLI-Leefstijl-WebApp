@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title id="title">Mijn Leefstijl — tegen de stroom in omhoog</title>
+<path d="M9 108 52 37Q56 30 61 37L108 108Z" fill="#1F5D50"/>
+<path d="M34 108 67 42 110 108Z" fill="#7BA892"/>
+<path d="M34 108c13-15 21-22 33-31 7-6 11-12 15-19" stroke="#FAF6EE" stroke-width="9" fill="none" stroke-linecap="round"/>
+<path d="M67 108c9-9 15-14 20-21" stroke="#FAF6EE" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M81 108 105 82 121 108Z" fill="#F4A261"/>
+<circle cx="106" cy="24" r="9" fill="#F4A261"/>
+<!-- Climber approaches the summit from the right, reaching left/up against the descending mountain contours. -->
+<circle cx="108" cy="53" r="5.5" fill="#1F5D50"/>
+<path d="M107 62 96 74 88 83M100 69 85 65 77 58M96 74 88 91 79 93M96 74 107 90" stroke="#1F5D50" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

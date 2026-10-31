@@ -142,7 +142,7 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
   return (
     <section aria-labelledby="users-heading" className="space-y-4">
       <div><h2 id="users-heading" className="text-xl font-semibold">Gebruikersbeheer</h2><p className="mt-1 text-sm text-muted-foreground">Accounts en rechten via de officiële Better Auth Admin-plugin. Publieke registratie is uitgeschakeld.</p></div>
-      <form onSubmit={createUser} className="grid gap-3 rounded-xl border bg-[#f8faf6] p-4 sm:grid-cols-2">
+      <form onSubmit={createUser} className="grid gap-3 rounded-xl border bg-[#EAF0E9] p-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm font-medium">Naam<input className={field} value={name} onChange={e=>setName(e.target.value)} maxLength={120} required autoComplete="off"/></label>
         <label className="space-y-1 text-sm font-medium">E-mailadres<input className={field} value={email} onChange={e=>setEmail(e.target.value)} type="email" required autoComplete="off"/></label>
         <label className="space-y-1 text-sm font-medium sm:col-span-2">Tijdelijk wachtwoord (minimaal 12 tekens)<input className={field} value={password} onChange={e=>setPassword(e.target.value)} type="password" minLength={12} required autoComplete="new-password"/></label>
@@ -182,11 +182,11 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
         className="review-dialog">
         {selected && <div className="px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-5 sm:px-7 sm:py-7">
           <header className="mb-5 flex items-center gap-3">
-            <h3 className="min-w-0 flex-1 text-xl font-bold text-[#203d2e]">
+            <h3 className="min-w-0 flex-1 text-xl font-bold text-[#233D34]">
               {mode === "edit" ? "Naam wijzigen" : "Gebruiker verwijderen"}
             </h3>
             <button type="button" aria-label="Sluiten" onClick={closeEditor} disabled={busy}
-              className="flex size-10 shrink-0 items-center justify-center rounded-xl hover:bg-[#edf3ed]">
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl hover:bg-[#EAF0E9]">
               <X size={20} aria-hidden="true"/>
             </button>
           </header>
@@ -205,13 +205,13 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
           ) : (
             <form className="space-y-4" onSubmit={removeUser}>
               <p className="text-sm font-semibold text-red-800">Dit verwijdert het account definitief.</p>
-              <p className="text-sm leading-relaxed text-[#5b6d5f]">
+              <p className="text-sm leading-relaxed text-[#255F50]">
                 Alle doelen, registraties, reflecties en CooL-notities van deze gebruiker worden verwijderd,
                 inclusief privéfoto’s. Deze actie kun je niet ongedaan maken.
               </p>
               <label className="block space-y-2 text-sm font-semibold">
                 Typ ter bevestiging het e-mailadres:
-                <span className="block break-all rounded-xl bg-[#f5f7f3] p-3 font-mono text-xs font-normal">{selected.email}</span>
+                <span className="block break-all rounded-xl bg-[#EAF0E9] p-3 font-mono text-xs font-normal">{selected.email}</span>
                 <input autoFocus required autoComplete="off" className={field}
                   value={confirmEmail} onChange={event => setConfirmEmail(event.target.value)}/>
               </label>
