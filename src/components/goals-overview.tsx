@@ -6,6 +6,7 @@ import { Activity, Archive, ArrowLeft, CalendarDays, ChevronDown, ChevronRight, 
 import { Button } from "@/components/ui/button";
 import type { EntryView } from "@/components/action-entry-feedback";
 import { EntryReviewForm } from "@/components/action-review-sheet";
+import { GoalCalendar } from "@/components/goal-calendar";
 import {
   archiveGoal, archiveHabitAction, createGoal, createHabitAction,
   saveWeekReflection, updateGoal, updateHabitAction,
@@ -96,6 +97,9 @@ function Bar({ value }: { value: number }) {
 function GoalFields({ goal }: { goal?: GoalView }) {
   const prefix = goal?.id ?? "new";
   const [selectedArea, setSelectedArea] = useState(goal?.area ?? "BEWEGING");
+  const [startDate, setStartDate] = useState(goal?.startDate ?? "");
+  const [endDate, setEndDate] = useState(goal?.endDate ?? "");
+  const [openCalendar, setOpenCalendar] = useState<"start" | "end" | null>(null);
   return (
     <>
       <div>
@@ -129,15 +133,45 @@ function GoalFields({ goal }: { goal?: GoalView }) {
           })}
         </div>
       </fieldset>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor={`goal-start-${prefix}`} className={labelClass}>Startdatum <span className="block text-xs font-normal">(optioneel)</span></label>
-          <input id={`goal-start-${prefix}`} type="date" name="startDate" className={inputClass} defaultValue={goal?.startDate ?? ""}/>
+      <div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor={`goal-start-${prefix}`} className={labelClass}>Startdatum <span className="block text-xs font-normal">(optioneel)</span></label>
+            <input type="hidden" name="startDate" value={startDate}/>
+            <input id={`goal-start-${prefix}`} type="date" className={inputClass + " hidden sm:block"}
+              value={startDate} onChange={(event) => setStartDate(event.target.value)}/>
+            <button type="button" id={`goal-start-${prefix}-mobile`}
+              onClick={() => setOpenCalendar((value) => value === "start" ? null : "start")}
+              aria-expanded={openCalendar === "start"} aria-controls={`goal-picker-${prefix}`}
+              aria-label="Kies startdatum" className={inputClass + " min-h-12 text-left sm:hidden"}>
+              {startDate || "Kies datum"}
+            </button>
+          </div>
+          <div>
+            <label htmlFor={`goal-end-${prefix}`} className={labelClass}>Einddatum <span className="block text-xs font-normal">(optioneel)</span></label>
+            <input type="hidden" name="endDate" value={endDate}/>
+            <input id={`goal-end-${prefix}`} type="date" className={inputClass + " hidden sm:block"}
+              min={startDate || undefined} value={endDate} onChange={(event) => setEndDate(event.target.value)}/>
+            <button type="button" id={`goal-end-${prefix}-mobile`}
+              onClick={() => setOpenCalendar((value) => value === "end" ? null : "end")}
+              aria-expanded={openCalendar === "end"} aria-controls={`goal-picker-${prefix}`}
+              aria-label="Kies einddatum" className={inputClass + " min-h-12 text-left sm:hidden"}>
+              {endDate || "Kies datum"}
+            </button>
+          </div>
         </div>
-        <div>
-          <label htmlFor={`goal-end-${prefix}`} className={labelClass}>Einddatum <span className="block text-xs font-normal">(optioneel)</span></label>
-          <input id={`goal-end-${prefix}`} type="date" name="endDate" className={inputClass} defaultValue={goal?.endDate ?? ""}/>
-        </div>
+        {openCalendar && (
+          <div id={`goal-picker-${prefix}`}>
+            <GoalCalendar key={openCalendar} title={openCalendar === "start" ? "startdatum" : "einddatum"}
+              value={openCalendar === "start" ? startDate : endDate}
+              minDate={openCalendar === "end" ? startDate || undefined : undefined}
+              onSelect={openCalendar === "start" ? setStartDate : setEndDate}
+              onClose={() => setOpenCalendar(null)}/>
+          </div>
+        )}
+        {startDate && endDate && endDate < startDate && (
+          <p role="alert" className="mt-2 text-sm text-[#ad4b3c]">De einddatum mag niet vóór de startdatum liggen.</p>
+        )}
       </div>
     </>
   );
