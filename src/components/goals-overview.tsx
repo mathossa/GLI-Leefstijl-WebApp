@@ -330,12 +330,20 @@ export function GoalsOverview({ goals, currentWeek, message }: {
 
           {view?.kind === "new-goal-guided" && (
             <GuidedPlanWizard mode="new-goal" onDirty={setWizardDirty} onSaved={guidedSaved}
-              onQuick={() => open({kind: "new-goal-quick"})}/>
+              onQuick={() => {
+                if (!wizardDirty || window.confirm("Je ingevulde antwoorden gaan verloren. Wil je snel toevoegen?")) {
+                  open({kind: "new-goal-quick"});
+                }
+              }}/>
           )}
           {view?.kind === "new-action-guided" && goal && (
             <GuidedPlanWizard mode="new-action" goalId={goal.id} goalTitle={goal.title}
               onDirty={setWizardDirty} onSaved={guidedSaved}
-              onQuick={() => open({kind: "new-action", goalId: goal.id})}/>
+              onQuick={() => {
+                if (!wizardDirty || window.confirm("Je ingevulde antwoorden gaan verloren. Wil je snel toevoegen?")) {
+                  open({kind: "new-action", goalId: goal.id});
+                }
+              }}/>
           )}
 
           {view?.kind === "new-goal-quick" && (
