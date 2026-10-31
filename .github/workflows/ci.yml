@@ -47,12 +47,16 @@ jobs:
         run: node --test tests/goals-domain.test.mjs
       - name: Verify compact mobile calendar date arithmetic
         run: node --test tests/goal-calendar-dates.test.mjs
+      - name: Validate daily motivation rotation and DST
+        run: node --test tests/motivation-quote-domain.test.mjs
       - name: Validate ISO week labels at New Year and DST
         run: node --test tests/week-labels.test.mjs
       - name: Validate reflection inputs and Amsterdam calendar dates
         run: node --test tests/reflections-domain.test.mjs
       - name: Verify reflection database constraints
         run: node scripts/smoke-reflections-db.mjs
+      - name: Verify motivation quote preference isolation and day snapshots
+        run: node scripts/smoke-motivation-db.mjs
       - name: Verify goal ownership and DB constraints
         run: node scripts/smoke-goals-db.mjs
       - name: Validate administrator display name input
