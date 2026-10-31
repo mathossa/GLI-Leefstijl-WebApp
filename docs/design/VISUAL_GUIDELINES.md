@@ -161,3 +161,7 @@ Het zijn originele, lichtgewicht vectorinterpretaties van de gebruikersreferenti
 ## Correctie kijkrichting klimmer — 31 oktober 2026
 
 Na gebruikersfeedback is de richting van de **kleine logoklimmer** expliciet gecorrigeerd: **naar links (←) opklimmen**, met het oranje rugzakje rechts op zijn rug, een voorwaarts reikende linkerarm en een voorwaarts geplaatste voet naar links. Houd de twee bergvormen, zon, oranje driehoek en alle vijf palet-3-kleuren gelijk. De reeds goedgekeurde **grote dashboardillustratie niet veranderen**. Productieassets zijn `public/brand/mark-left-v3.svg` en `public/brand/app-icon-left-v3.svg`; beide worden via de app en Next Metadata geladen. Eerst visueel beoordelen, dan pas mergen.
+
+## Exacte gebruikersbron voor het icoon — 31 oktober 2026 (vervangt eerdere icooninterpretaties)
+
+**De gebruiker heeft de iconreferentie van 98×86 px expliciet als exact eindbeeld aangewezen.** De huidige icoonbestanden gebruiken die bronpixels ongewijzigd, dus geen interpretatie van de klimmer of bergcontouren: `public/brand/mark-exact-source-v4.svg`, `public/brand/app-icon-exact-source-v4.svg`. Sidebar, mobile header, inlog, favicon en PWA verwijzen naar deze assets. Deze `.svg`-bestanden bevatten een **ingebedde rasterafbeelding**: ze zijn niet daadwerkelijk vectoriseerbaar zonder opnieuw tekenen. Scherpte bij sterk vergroten is daarom beperkt tot de bronresolutie. Alleen het icoon is veranderd; de grote dashboardillustratie en het kleurenpalet zijn niet opnieuw aangepast. Bij beoordeling eerst de afbeelding naast de originele bron leggen.
