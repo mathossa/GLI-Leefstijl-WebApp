@@ -29,6 +29,7 @@ model User {
   reflections   WeeklyReflection[]
   meetingNotes  MeetingNote[]
   meetingPhotos MeetingPhoto[]
+  quotePreference UserQuotePreference?
 
   @@unique([email])
   @@map("user")
@@ -254,3 +255,37 @@ model AdminAudit {
   @@map("admin_audit")
 }
 
+
+ // The shared starter library is seeded once by a migration. Admin CRUD follows in #15.
+model MotivationQuote {
+  id        String   @id @db.VarChar(40)
+  text      String   @db.VarChar(300)
+  category  String?  @db.VarChar(30)
+  isActive  Boolean  @default(true)
+  origin    String   @default("SEED") @db.VarChar(16)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("motivation_quote")
+}
+
+// Snapshots preserve a whole Amsterdam calendar day's quote across edits and restarts.
+model DailyMotivationQuote {
+  day       DateTime @id @db.Date
+  quoteId   String?  @db.VarChar(40)
+  text      String   @db.VarChar(300)
+  createdAt DateTime @default(now())
+
+  @@map("daily_motivation_quote")
+}
+
+// Personal custom text is private to its owner and independent from the shared library.
+model UserQuotePreference {
+  userId     String   @id
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mode       String   @default("AUTO") @db.VarChar(6)
+  customText String?  @db.VarChar(300)
+  updatedAt  DateTime @updatedAt
+
+  @@map("user_quote_preference")
+}
