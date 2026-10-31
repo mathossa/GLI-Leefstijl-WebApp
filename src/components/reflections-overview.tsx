@@ -314,16 +314,6 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
   const set = (key: keyof typeof values, value: string) => {
     setValues((current) => ({ ...current, [key]: value }));
   };
-  const shiftMeetingDate = (days: number) => {
-    setValues((current) => {
-      const base = new Date(current.meetingDate + "T00:00:00.000Z");
-      if (Number.isNaN(base.valueOf())) return current;
-      base.setUTCDate(base.getUTCDate() + days);
-      const shifted = base.toISOString().slice(0, 10);
-      if (shifted < "2000-01-01" || shifted > "2100-12-31") return current;
-      return { ...current, meetingDate: shifted };
-    });
-  };
   return (
     <>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -331,20 +321,6 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
           <label htmlFor={`meeting-date-${prefix}`} className={label}>Datum</label>
           <input type="date" id={`meeting-date-${prefix}`} name="meetingDate" required className={field}
             value={values.meetingDate} onChange={(event) => set("meetingDate", event.target.value)}/>
-          <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Datum snel aanpassen">
-            <button type="button" onClick={() => shiftMeetingDate(-1)}
-              className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">
-              Dag eerder
-            </button>
-            <button type="button" onClick={() => set("meetingDate", today)}
-              className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">
-              Vandaag
-            </button>
-            <button type="button" onClick={() => shiftMeetingDate(1)}
-              className="min-h-10 rounded-xl border border-[#d4e4d3] bg-[#f2f8ee] px-3 text-sm font-medium text-[#2f6348]">
-              Dag later
-            </button>
-          </div>
         </div>
         <div>
           <label htmlFor={`meeting-title-${prefix}`} className={label}>Titel bijeenkomst <span className="font-normal text-[#657a6a]">(verplicht)</span></label>
