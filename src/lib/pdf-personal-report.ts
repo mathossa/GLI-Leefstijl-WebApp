@@ -255,9 +255,13 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
     next();
     text("Mijn leefstijlplan",M,120,25,bold,dark);
     text(`DOEL ${gi+1} VAN ${active.length}`,M,146,10,bold,green);
-    y=168;
+    const gp=actions.reduce((acc,a)=>({
+      done:acc.done+progressFor(a).done,target:acc.target+progressFor(a).target,
+    }),{done:0,target:0});
+    const activityLabel=actions.length===1?"weekactie":"weekacties";
+    text(`${actions.length} ${activityLabel}  -  ${gp.done} van ${gp.target} deze week`,M,164,9.5,regular,grey);
+    y=181;
     continuationGoal=`Doel ${gi+1}: ${goal.title}`;
-    goalSummaryCard(goal,gi,actions);
 
     // The JSON export already includes these guided goal/action answers. Keep
     // the same information in the shareable PDF, directly below each goal.
@@ -266,9 +270,8 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
       {caption:"Waarom is dit doel belangrijk?",value:goal.motivation??""},
       {caption:"Hoe merk ik dat ik mijn doel bereik?",value:goal.progressIndicator??""},
     ];
-    if(goalAnswers.some(field=>field.value.trim())) {
-      narrativeCard("Mijn doel: "+goal.title,goalAnswers,palette.fill,palette.ink);
-    }
+    // Always show the goal, even when its optional wizard answers are empty.
+    narrativeCard("Mijn doel: "+goal.title,goalAnswers,palette.fill,palette.ink);
     for(const action of actions){
       const actionAnswers=[
         {caption:"Wanneer ga ik dit doen?",value:action.whenContext??""},
@@ -278,9 +281,9 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
         {caption:"Wat kan mij tegenhouden?",value:action.obstacle??""},
         {caption:"Plan B als het niet lukt",value:action.fallbackPlan??""},
       ];
-      if(actionAnswers.some(field=>field.value.trim())) {
-        narrativeCard("Mijn actie: "+action.title,actionAnswers,palette.fill,palette.ink);
-      }
+      // Keep actions visible in the full plan even if no answers were given.
+      narrativeCard(`Mijn actie: ${action.title} (${action.targetPerWeek}x per week)`,
+        actionAnswers,palette.fill,palette.ink);
     }
   }
   continuationGoal=null;
