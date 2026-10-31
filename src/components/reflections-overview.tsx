@@ -27,8 +27,8 @@ type Mode =
   | { kind: "meeting"; id: string }
   | { kind: "meeting-edit"; id: string };
 
-const field = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#A7D8D0] bg-white px-3.5 py-3 text-base text-[#153540] focus-visible:border-[#126B68]";
-const label = "block text-sm font-semibold text-[#153540]";
+const field = "mt-1.5 block w-full min-w-0 rounded-xl border border-[#D8E2D7] bg-white px-3.5 py-3 text-base text-[#233D34] focus-visible:border-[#255F50]";
+const label = "block text-sm font-semibold text-[#233D34]";
 const formattedDate = (value: string) => new Intl.DateTimeFormat("nl-NL", {
   timeZone: "UTC", day: "numeric", month: "long", year: "numeric",
 }).format(new Date(value + "T00:00:00Z"));
@@ -76,40 +76,40 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
   return (
     <div className="mx-auto min-w-0 max-w-4xl space-y-6">
       <header className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight text-[#153540]">Reflectie</h1>
-        <p className="text-sm text-[#126B68]">Jouw momenten en inzichten op één plek.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[#233D34]">Reflectie</h1>
+        <p className="text-sm text-[#255F50]">Jouw momenten en inzichten op één plek.</p>
       </header>
-      {message === "opgeslagen" && <p role="status" className="rounded-xl bg-[#E9F6F4] p-3 text-sm text-[#153540]">Wijzigingen opgeslagen.</p>}
+      {message === "opgeslagen" && <p role="status" className="rounded-xl bg-[#EAF0E9] p-3 text-sm text-[#233D34]">Wijzigingen opgeslagen.</p>}
       {message === "ongeldig" && <p role="alert" className="rounded-xl border border-[#e2c99b] bg-[#fff5e4] p-3 text-sm text-[#815d31]">Controleer de invoer of datum.</p>}
 
       <section className="space-y-3" aria-labelledby="this-reflection">
-        <h2 id="this-reflection" className="flex items-center gap-2 text-lg font-bold text-[#153540]">
+        <h2 id="this-reflection" className="flex items-center gap-2 text-lg font-bold text-[#233D34]">
           <BookHeart size={21} aria-hidden="true"/> Deze week
         </h2>
         <button type="button" onClick={() => open({kind:"reflection",weekStart:currentWeek})}
-          className="flex min-h-25 w-full items-center gap-4 rounded-[23px] border border-[#DDE9E8] bg-white p-4 text-left shadow-[0_7px_24px_-22px_rgba(36,70,49,.4)] hover:border-[#A7D8D0] sm:p-5">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#E9F6F4] text-[#153540]"><BookHeart size={23} aria-hidden="true"/></span>
+          className="flex min-h-25 w-full items-center gap-4 rounded-[23px] border border-[#D8E2D7] bg-white p-4 text-left shadow-[0_7px_24px_-22px_rgba(36,70,49,.4)] hover:border-[#D8E2D7] sm:p-5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#EAF0E9] text-[#233D34]"><BookHeart size={23} aria-hidden="true"/></span>
           <span className="min-w-0 flex-1">
-            <span className="block font-bold text-[#153540]">{thisWeek ? "Mijn weekreflectie" : "Even stilstaan"}</span>
-            <span className="mt-1 block text-xs text-[#126B68]">{isoWeekLabel(currentWeek)}</span>
-            {thisWeek && <span className="mt-1.5 block truncate text-sm text-[#126B68]">{summary(thisWeek.wentWell || thisWeek.difficult || thisWeek.nextStep)}</span>}
+            <span className="block font-bold text-[#233D34]">{thisWeek ? "Mijn weekreflectie" : "Even stilstaan"}</span>
+            <span className="mt-1 block text-xs text-[#255F50]">{isoWeekLabel(currentWeek)}</span>
+            {thisWeek && <span className="mt-1.5 block truncate text-sm text-[#255F50]">{summary(thisWeek.wentWell || thisWeek.difficult || thisWeek.nextStep)}</span>}
           </span>
-          <ChevronRight size={20} className="shrink-0 text-[#126B68]" aria-hidden="true"/>
+          <ChevronRight size={20} className="shrink-0 text-[#255F50]" aria-hidden="true"/>
         </button>
       </section>
 
       <section aria-labelledby="week-selection" className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="week-selection" className="text-lg font-bold text-[#153540]">Andere weken</h2>
+          <h2 id="week-selection" className="text-lg font-bold text-[#233D34]">Andere weken</h2>
           <div className="flex items-center gap-1">
             <button type="button" aria-label="Verder terug in de weken"
               onClick={() => weekStrip.current?.scrollBy({ left: 264, behavior: "smooth" })}
-              className="flex size-10 items-center justify-center rounded-xl bg-[#E9F6F4] text-[#153540]">
+              className="flex size-10 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#233D34]">
               <ChevronRight size={19} aria-hidden="true"/>
             </button>
             <button type="button" aria-label="Terug naar recente weken"
               onClick={() => weekStrip.current?.scrollBy({ left: -264, behavior: "smooth" })}
-              className="flex size-10 items-center justify-center rounded-xl bg-[#E9F6F4] text-[#153540]">
+              className="flex size-10 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#233D34]">
               <ChevronLeft size={19} aria-hidden="true"/>
             </button>
           </div>
@@ -118,11 +118,11 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
           role="group" aria-label="Kies een eerdere week">
           {weeks.slice(1).map((week) => (
             <button type="button" key={week} onClick={() => open({ kind: "reflection", weekStart: week })}
-              className="flex min-h-20 min-w-28 shrink-0 snap-start flex-col justify-between gap-2 rounded-2xl border border-[#DDE9E8] bg-white px-3 py-3 text-left transition-colors hover:bg-[#E9F6F4] focus-visible:outline-[#153540]"
+              className="flex min-h-20 min-w-28 shrink-0 snap-start flex-col justify-between gap-2 rounded-2xl border border-[#D8E2D7] bg-white px-3 py-3 text-left transition-colors hover:bg-[#EAF0E9] focus-visible:outline-[#233D34]"
               aria-label={`Reflectie ${isoWeekLabel(week)}`}>
-              <span className="text-xs font-semibold text-[#153540]">{isoWeekLabel(week)}</span>
-              <span className="flex items-center gap-1.5 text-[11px] text-[#126B68]">
-                <span className={`size-2 rounded-full ${recorded.has(week) ? "bg-[#2A9D8F]" : "bg-[#DDF2EE]"}`} aria-hidden="true"/>
+              <span className="text-xs font-semibold text-[#233D34]">{isoWeekLabel(week)}</span>
+              <span className="flex items-center gap-1.5 text-[11px] text-[#255F50]">
+                <span className={`size-2 rounded-full ${recorded.has(week) ? "bg-[#7BA892]" : "bg-[#EAF0E9]"}`} aria-hidden="true"/>
                 {recorded.has(week) ? "Ingevuld" : "Leeg"}
               </span>
             </button>
@@ -132,24 +132,24 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
 
       <section className="space-y-3" aria-labelledby="meeting-heading">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="meeting-heading" className="flex items-center gap-2 text-lg font-bold text-[#153540]">
+          <h2 id="meeting-heading" className="flex items-center gap-2 text-lg font-bold text-[#233D34]">
             <ClipboardPenLine size={20} aria-hidden="true"/> CooL-bijeenkomsten
           </h2>
           <button type="button" onClick={() => open({kind:"meeting-new"})} aria-label="Nieuwe bijeenkomst toevoegen"
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#E9F6F4] text-[#153540]">
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#233D34]">
             <Plus size={21} aria-hidden="true"/>
           </button>
         </div>
-        {meetings.length === 0 && <p className="text-sm text-[#126B68]">Nog geen bijeenkomstnotities.</p>}
+        {meetings.length === 0 && <p className="text-sm text-[#255F50]">Nog geen bijeenkomstnotities.</p>}
         <div className="space-y-2.5">
           {meetings.map((item) => (
             <button type="button" key={item.id} onClick={() => open({kind:"meeting",id:item.id})}
-              className="flex w-full min-w-0 items-center gap-3 rounded-2xl border border-[#DDE9E8] bg-white px-4 py-3.5 text-left">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#E9F6F4] text-[#126B68]"><CalendarDays size={18} aria-hidden="true"/></span>
+              className="flex w-full min-w-0 items-center gap-3 rounded-2xl border border-[#D8E2D7] bg-white px-4 py-3.5 text-left">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#255F50]"><CalendarDays size={18} aria-hidden="true"/></span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-[#153540]">{item.title}</span>
-                <span className="mt-0.5 block text-xs text-[#126B68]">{formattedDate(item.meetingDate)}</span>
-                <span className="mt-1 block truncate text-xs text-[#126B68]">{summary(item.notes)}</span>
+                <span className="block truncate font-semibold text-[#233D34]">{item.title}</span>
+                <span className="mt-0.5 block text-xs text-[#255F50]">{formattedDate(item.meetingDate)}</span>
+                <span className="mt-1 block truncate text-xs text-[#255F50]">{summary(item.notes)}</span>
               </span>
               <ChevronRight size={19} aria-hidden="true"/>
             </button>
@@ -160,17 +160,17 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
       <dialog ref={modal} aria-label={title} onClose={() => setMode(null)}
         onClick={(event) => { if (event.currentTarget === event.target) close(); }}
         className="review-dialog">
-        <div aria-hidden="true" className="mx-auto mb-3 mt-3 h-1.5 w-12 rounded-full bg-[#DDF2EE] sm:hidden"/>
+        <div aria-hidden="true" className="mx-auto mb-3 mt-3 h-1.5 w-12 rounded-full bg-[#EAF0E9] sm:hidden"/>
         <div className="space-y-5 px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-2 sm:px-7 sm:pb-7 sm:pt-7">
           <header className="flex items-start gap-3">
-            {showBack && <button type="button" onClick={back} aria-label="Terug" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#153540]"><ArrowLeft size={20}/></button>}
-            <h2 className="min-w-0 flex-1 break-words pt-1 text-xl font-bold text-[#153540]">{title}</h2>
-            <button type="button" onClick={close} aria-label="Sluiten" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#126B68]"><X size={21}/></button>
+            {showBack && <button type="button" onClick={back} aria-label="Terug" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#233D34]"><ArrowLeft size={20}/></button>}
+            <h2 className="min-w-0 flex-1 break-words pt-1 text-xl font-bold text-[#233D34]">{title}</h2>
+            <button type="button" onClick={close} aria-label="Sluiten" className="flex size-10 shrink-0 items-center justify-center rounded-xl text-[#255F50]"><X size={21}/></button>
           </header>
 
           {mode?.kind === "reflection" && (
             <form key={mode.weekStart} action={saveReflection} className="space-y-4">
-              <p className="text-sm text-[#126B68]">{isoWeekLabel(mode.weekStart)}</p>
+              <p className="text-sm text-[#255F50]">{isoWeekLabel(mode.weekStart)}</p>
               <input name="weekStart" type="hidden" value={mode.weekStart}/>
               {([
                 ["wentWell", "Wat ging goed?", entry?.wentWell],
@@ -186,7 +186,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
             </form>
           )}
           {mode?.kind === "reflection" && entry && (
-            <form action={deleteReflection} className="border-t border-[#DDE9E8] pt-3"
+            <form action={deleteReflection} className="border-t border-[#D8E2D7] pt-3"
               onSubmit={(event) => { if (!window.confirm("Deze weekreflectie verwijderen?")) event.preventDefault(); }}>
               <input type="hidden" name="weekStart" value={entry.weekStart}/>
               <button type="submit" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-sm text-[#b04545]">
@@ -204,25 +204,25 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
 
           {mode?.kind === "meeting" && meeting && (
             <div className="space-y-5">
-              <p className="text-sm text-[#126B68]">{formattedDate(meeting.meetingDate)}</p>
-              {meeting.notes && <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#153540]">{meeting.notes}</p>}
+              <p className="text-sm text-[#255F50]">{formattedDate(meeting.meetingDate)}</p>
+              {meeting.notes && <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#233D34]">{meeting.notes}</p>}
               <section className="space-y-3">
-                <h3 className="text-sm font-bold text-[#153540]">Foto’s van je aantekeningen ({meeting.photos.length}/5)</h3>
+                <h3 className="text-sm font-bold text-[#233D34]">Foto’s van je aantekeningen ({meeting.photos.length}/5)</h3>
                 {meeting.photos.length > 0 && (
                   <ul className="grid grid-cols-2 gap-3">
                     {meeting.photos.map((photo) => (
-                      <li key={photo.id} className="overflow-hidden rounded-2xl border border-[#DDE9E8] bg-white">
+                      <li key={photo.id} className="overflow-hidden rounded-2xl border border-[#D8E2D7] bg-white">
                         <a href={`/api/meeting-photos/${photo.id}`} target="_blank" rel="noopener noreferrer"
                           aria-label={`Bekijk ${photo.fileName}`} className="block">
                           <Image src={`/api/meeting-photos/${photo.id}`} alt={photo.fileName}
                             width={256} height={256} unoptimized
-                            className="h-32 w-full object-contain bg-[#E9F6F4]"/>
+                            className="h-32 w-full object-contain bg-[#EAF0E9]"/>
                         </a>
                         <form action={deleteMeetingPhoto} onSubmit={(event) => {
                           if (!window.confirm("Deze foto verwijderen?")) event.preventDefault();
                         }} className="p-2">
                           <input type="hidden" name="id" value={photo.id}/>
-                          <button type="submit" className="min-h-10 w-full rounded-xl border border-[#DDE9E8] text-xs font-semibold text-[#a53f3e]">
+                          <button type="submit" className="min-h-10 w-full rounded-xl border border-[#D8E2D7] text-xs font-semibold text-[#a53f3e]">
                             <Trash2 size={14} className="mr-1 inline" aria-hidden="true"/> Verwijderen
                           </button>
                         </form>
@@ -231,30 +231,30 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
                   </ul>
                 )}
                 {meeting.photos.length < 5 && (
-                  <form action={uploadMeetingPhoto} className="space-y-2 rounded-2xl bg-[#E9F6F4] p-4">
+                  <form action={uploadMeetingPhoto} className="space-y-2 rounded-2xl bg-[#EAF0E9] p-4">
                     <input type="hidden" name="id" value={meeting.id}/>
-                    <label htmlFor="meeting-new-photo" className="flex items-center gap-2 text-sm font-semibold text-[#153540]">
+                    <label htmlFor="meeting-new-photo" className="flex items-center gap-2 text-sm font-semibold text-[#233D34]">
                       <ImagePlus size={19} aria-hidden="true"/> Foto toevoegen
                     </label>
                     <input id="meeting-new-photo" type="file" name="photo" required
                       accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                      className="block w-full min-w-0 text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-[#153540]"/>
-                    <p className="text-xs text-[#126B68]">Maximaal 8 MB per foto. Alle foto’s zijn privé.</p>
+                      className="block w-full min-w-0 text-xs file:mr-2 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-[#233D34]"/>
+                    <p className="text-xs text-[#255F50]">Maximaal 8 MB per foto. Alle foto’s zijn privé.</p>
                     <Button type="submit" size="sm" className="w-full">Foto bewaren</Button>
                   </form>
                 )}
               </section>
-              {meeting.actionPoints && <div className="rounded-xl bg-[#E9F6F4] p-4">
+              {meeting.actionPoints && <div className="rounded-xl bg-[#EAF0E9] p-4">
                 <h3 className="mb-1 text-sm font-semibold">Actiepunten</h3>
-                <p className="whitespace-pre-wrap text-sm text-[#153540]">{meeting.actionPoints}</p>
+                <p className="whitespace-pre-wrap text-sm text-[#233D34]">{meeting.actionPoints}</p>
               </div>}
               <button type="button" onClick={() => open({kind:"meeting-edit",id:meeting.id})}
-                className="flex min-h-12 w-full items-center justify-center rounded-xl border border-[#DDE9E8] bg-[#E9F6F4] text-sm font-semibold text-[#153540]">
+                className="flex min-h-12 w-full items-center justify-center rounded-xl border border-[#D8E2D7] bg-[#EAF0E9] text-sm font-semibold text-[#233D34]">
                 Bijeenkomst bewerken
               </button>
               <form action={deleteMeeting} onSubmit={(e) => { if (!window.confirm("Deze bijeenkomstnotitie verwijderen?")) e.preventDefault(); }}>
                 <input type="hidden" name="id" value={meeting.id}/>
-                <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#f2d6d1] bg-[#E9F6F4] text-sm font-semibold text-[#ad3e3e]">
+                <button type="submit" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#f2d6d1] bg-[#EAF0E9] text-sm font-semibold text-[#ad3e3e]">
                   <Trash2 size={17} aria-hidden="true"/> Notitie verwijderen
                 </button>
               </form>
@@ -297,20 +297,20 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
         </div>
       </div>
       <div>
-        <label htmlFor={`meeting-notes-${prefix}`} className={label}>Wat neem je mee? <span className="font-normal text-[#126B68]">(optioneel)</span></label>
+        <label htmlFor={`meeting-notes-${prefix}`} className={label}>Wat neem je mee? <span className="font-normal text-[#255F50]">(optioneel)</span></label>
         <textarea id={`meeting-notes-${prefix}`} name="notes" rows={4} maxLength={4000} className={field}
           defaultValue={meeting?.notes ?? ""}/>
       </div>
       <div>
-        <label htmlFor={`meeting-actions-${prefix}`} className={label}>Actiepunten <span className="font-normal text-[#126B68]">(optioneel)</span></label>
+        <label htmlFor={`meeting-actions-${prefix}`} className={label}>Actiepunten <span className="font-normal text-[#255F50]">(optioneel)</span></label>
         <textarea id={`meeting-actions-${prefix}`} name="actionPoints" rows={3} maxLength={2000} className={field}
           defaultValue={meeting?.actionPoints ?? ""}/>
       <div>
-        <label htmlFor={`meeting-photo-${prefix}`} className={label}>Foto van je schrift of papier <span className="font-normal text-[#126B68]">(optioneel)</span></label>
+        <label htmlFor={`meeting-photo-${prefix}`} className={label}>Foto van je schrift of papier <span className="font-normal text-[#255F50]">(optioneel)</span></label>
         <input id={`meeting-photo-${prefix}`} type="file" name="photo"
           accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-          className="mt-2 block w-full min-w-0 text-sm file:mr-2 file:rounded-xl file:border-0 file:bg-[#E9F6F4] file:px-3 file:py-2 file:text-[#153540]"/>
-        <p className="mt-1 text-xs text-[#126B68]">Geen tekst overtypen nodig. Maximaal 8 MB per foto.</p>
+          className="mt-2 block w-full min-w-0 text-sm file:mr-2 file:rounded-xl file:border-0 file:bg-[#EAF0E9] file:px-3 file:py-2 file:text-[#233D34]"/>
+        <p className="mt-1 text-xs text-[#255F50]">Geen tekst overtypen nodig. Maximaal 8 MB per foto.</p>
       </div>
       </div>
     </>
