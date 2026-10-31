@@ -36,7 +36,7 @@ export function SignInForm() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(140deg,#e8f5f2,#f8f7f1_56%,#fff4e6)] px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-[linear-gradient(140deg,#e8f5f2,#f8f7f1_56%,#faf6ee)] px-4 py-12">
       <Card className="w-full max-w-md space-y-6 bg-card px-6 py-8 sm:px-9 sm:py-10">
         <div className="flex items-center gap-3">
           <Image src="/brand/mark.svg" alt="" width={50} height={50} priority/>
