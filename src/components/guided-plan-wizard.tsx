@@ -132,12 +132,12 @@ export function GuidedPlanWizard({ mode, goalId, goalTitle, onDirty, onSaved, on
             className="text-sm font-semibold text-[#327451]" aria-expanded={moreGoal}>
             {moreGoal ? "Datums verbergen" : "Start- of einddatum toevoegen (optioneel)"}
           </button>
-          {moreGoal && <div className="grid grid-cols-2 gap-3">
-            <label className={labelClass}>Startdatum
+          {moreGoal && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className={labelClass + " min-w-0"}>Startdatum
               <input type="date" className={inputClass} value={draft.startDate}
                 onChange={event => update("startDate", event.target.value)}/>
             </label>
-            <label className={labelClass}>Einddatum
+            <label className={labelClass + " min-w-0"}>Einddatum
               <input type="date" className={inputClass} value={draft.endDate}
                 onChange={event => update("endDate", event.target.value)}/>
             </label>
