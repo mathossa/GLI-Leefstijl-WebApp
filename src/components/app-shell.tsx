@@ -38,7 +38,7 @@ export function AppShell({ children, userName, isAdmin }: { children: React.Reac
         <aside className="hidden min-h-screen flex-col border-r border-border bg-[#EAF0E9]/60 px-4 py-7 md:flex">
           <Link href="/dashboard" className="mb-11 flex items-center gap-2.5 rounded-2xl px-2 py-2" aria-label="Mijn Leefstijl, naar overzicht">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-[17px] border border-white bg-[#FAF6EE] shadow-sm">
-              <Image src="/brand/mark-reference-v2.svg" alt="" width={44} height={44} priority/>
+              <Image src="/brand/mark.svg" alt="" width={44} height={44} priority/>
             </span>
             <span className="min-w-0">
               <span className="block text-[17px] font-extrabold tracking-tight text-primary">Mijn Leefstijl</span>
@@ -69,7 +69,7 @@ export function AppShell({ children, userName, isAdmin }: { children: React.Reac
           <header className="sticky top-0 z-20 border-b border-border/90 bg-background/95 px-4 py-3 backdrop-blur-sm sm:px-8 lg:px-12">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
               <Link href="/dashboard" className="flex min-w-0 items-center gap-2 font-bold tracking-tight text-primary md:hidden" aria-label="Mijn Leefstijl, naar overzicht">
-                <Image src="/brand/mark-reference-v2.svg" alt="" width={37} height={37} priority/>
+                <Image src="/brand/mark.svg" alt="" width={37} height={37} priority/>
                 <span className="truncate">Mijn Leefstijl</span>
               </Link>
               <span className="hidden text-sm text-[#536B60] md:block">Jouw plek voor nieuwe stappen</span>
