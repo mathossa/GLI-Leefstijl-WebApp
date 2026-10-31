@@ -50,12 +50,12 @@ export default async function DashboardPage() {
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-3 sm:space-y-6">
       <section aria-labelledby="today-heading" className="brand-hero relative min-w-0 overflow-hidden rounded-[26px] border border-border px-5 py-6 sm:px-8 sm:py-9">
         <div className="relative z-10 max-w-[95%] space-y-2 sm:max-w-[58%]">
-          <p className="text-xs font-semibold text-[#126b68]">{isoWeekLabel(weekStart)}</p>
-          <h1 id="today-heading" className="text-[1.65rem] font-bold leading-tight tracking-tight text-[#0f4c5c] sm:text-4xl">
+          <p className="text-xs font-semibold text-[#255F50]">{isoWeekLabel(weekStart)}</p>
+          <h1 id="today-heading" className="text-[1.65rem] font-bold leading-tight tracking-tight text-[#1F5D50] sm:text-4xl">
             Goed dat je er bent <span aria-hidden="true">👋</span>
           </h1>
-          <p className="text-sm leading-relaxed text-[#536873]">Kleine stappen in je eigen tempo.</p>
-          {goals.length === 0 && <Link href="/dashboard/doelen" className="inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-[#126b68] underline underline-offset-4">Maak je eerste doel <ArrowRight size={16} aria-hidden="true"/></Link>}
+          <p className="text-sm leading-relaxed text-[#536B60]">Kleine stappen in je eigen tempo.</p>
+          {goals.length === 0 && <Link href="/dashboard/doelen" className="inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-[#255F50] underline underline-offset-4">Maak je eerste doel <ArrowRight size={16} aria-hidden="true"/></Link>}
         </div>
         <div className="pointer-events-none absolute -bottom-9 -right-9 hidden w-[44%] max-w-[310px] items-end justify-end opacity-95 sm:flex" aria-hidden="true">
           <Image src="/brand/hero-mountains.svg" alt="" width={720} height={330} className="h-auto w-full" priority/>
@@ -65,45 +65,45 @@ export default async function DashboardPage() {
       <section aria-label="Overzicht van de week" className="grid min-w-0 grid-cols-3 gap-2.5 sm:gap-4">
         <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
           <div className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e9f6f4] text-[#126b68] sm:size-11"><Target size={20}/></span>
+            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#255F50] sm:size-11"><Target size={20}/></span>
             <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{goals.length}</strong>
           </div>
-          <p className="text-[11px] leading-tight text-[#536873] sm:text-xs">Actieve doelen</p>
+          <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Actieve doelen</p>
         </Card>
         <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
           <div className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff4e6] text-[#976011] sm:size-11"><CircleCheck size={20}/></span>
-            <strong className="min-w-0 whitespace-nowrap text-lg font-bold tabular-nums sm:text-2xl">{completed}<span className="text-[10px] text-[#536873] sm:text-xs">/{planned}</span></strong>
+            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF6EE] text-[#8B4B26] sm:size-11"><CircleCheck size={20}/></span>
+            <strong className="min-w-0 whitespace-nowrap text-lg font-bold tabular-nums sm:text-2xl">{completed}<span className="text-[10px] text-[#536B60] sm:text-xs">/{planned}</span></strong>
           </div>
-          <p className="text-[11px] leading-tight text-[#536873] sm:text-xs">Deze week</p>
+          <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Deze week</p>
         </Card>
         <Card className="min-w-0 gap-2 rounded-[21px] p-3.5 sm:gap-3 sm:p-5">
           <div className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#e6f5f3] text-[#0f4c5c] sm:size-11"><TrendingUp size={20}/></span>
+            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#1F5D50] sm:size-11"><TrendingUp size={20}/></span>
             <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{overall === null ? "–" : `${overall}%`}</strong>
           </div>
-          <p className="text-[11px] leading-tight text-[#536873] sm:text-xs">Voortgang</p>
+          <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Voortgang</p>
         </Card>
       </section>
 
       <section aria-labelledby="habits-heading" className="min-w-0">
         <Card className="min-w-0 gap-4 rounded-[26px] p-3.5 sm:p-6">
           <div className="flex min-w-0 items-center justify-between gap-3 px-0.5">
-            <h2 id="habits-heading" className="min-w-0 text-xl font-bold tracking-tight text-[#153540]">Vandaag afvinken</h2>
-            <Link href="/dashboard/doelen" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#126b68] hover:underline sm:text-sm">
+            <h2 id="habits-heading" className="min-w-0 text-xl font-bold tracking-tight text-[#233D34]">Vandaag afvinken</h2>
+            <Link href="/dashboard/doelen" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#255F50] hover:underline sm:text-sm">
               Alle acties <ChevronRight size={16} aria-hidden="true"/>
             </Link>
           </div>
 
           {weekActions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#a7d8d0] bg-[#f6faf9] p-5">
-              <p className="text-sm text-[#355663]">Nog geen weekacties.</p>
-              <Link href="/dashboard/doelen" className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#126b68] underline">Weekactie toevoegen <ArrowRight size={15} aria-hidden="true"/></Link>
+            <div className="rounded-2xl border border-dashed border-[#D8E2D7] bg-[#F4F5EF] p-5">
+              <p className="text-sm text-[#456B5B]">Nog geen weekacties.</p>
+              <Link href="/dashboard/doelen" className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#255F50] underline">Weekactie toevoegen <ArrowRight size={15} aria-hidden="true"/></Link>
             </div>
           ) : (
             <div className="space-y-3">
               {weekActions.map((habit) => (
-                <article key={habit.id} className="min-w-0 space-y-3.5 rounded-[22px] border border-[#dde9e8] bg-white p-3.5 shadow-[0_8px_24px_-23px_rgba(31,69,43,.45)] sm:p-5">
+                <article key={habit.id} className="min-w-0 space-y-3.5 rounded-[22px] border border-[#D8E2D7] bg-white p-3.5 shadow-[0_8px_24px_-23px_rgba(31,93,80,.45)] sm:p-5">
                   <ActionReviewSheet actionTitle={habit.title} goalTitle={habit.detail} entries={habit.entries}/>
                   <QuickCompletion actionId={habit.id} title={habit.title}
                     completed={habit.done} target={habit.target} canUndo={habit.canUndo}/>
@@ -114,8 +114,8 @@ export default async function DashboardPage() {
         </Card>
       </section>
 
-      <Link href="/dashboard/reflectie" className="flex min-h-20 min-w-0 items-center gap-3 rounded-[23px] border border-[#dde9e8] bg-[#e9f6f4] px-5 py-4 text-[#0f4c5c] transition-colors hover:bg-[#dff3ef]">
-        <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#fff4e6] text-[#976011]"><Sun size={22}/></span>
+      <Link href="/dashboard/reflectie" className="flex min-h-20 min-w-0 items-center gap-3 rounded-[23px] border border-[#D8E2D7] bg-[#EAF0E9] px-5 py-4 text-[#1F5D50] transition-colors hover:bg-[#DEE9DE]">
+        <span aria-hidden="true" className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#FAF6EE] text-[#8B4B26]"><Sun size={22}/></span>
         <span className="min-w-0 flex-1 text-base font-bold">Even stilstaan</span>
         <ChevronRight size={20} className="shrink-0" aria-hidden="true"/>
       </Link>
