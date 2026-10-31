@@ -9,7 +9,7 @@
 **Mijn Leefstijl** moet direct voelen als: *“YES, ik kan dit!”*: positief, energiek, volwassen, toegankelijk en uitnodigend. Geen medische instelling, corporate verzekeraar, schoolapp, extreme fitness-/dieetcultuur of generiek wellnessmerk. Niet kinderachtig, overdadig of trendgevoelig. De app moet bruikbaar blijven voor zowel een kleine dagelijkse actie als een langere reflectie.
 
 - **Merkmetafoor**: een abstracte klim / berg / kronkelende route / persoonlijke vooruitgang, gecombineerd met een **subtiele, actieve, minimalistische mensvorm die doelgericht de klim maakt**. Vormtaal: tegengestelde bewegingsrichting/flow van figuur en berglijnen, zodat *overwinnen* en *vooruitkomen* voelbaar zijn.
-- **Geselecteerd**: de abstracte bergvorm van **concept 2B**, nu met **bosgroen, saliegroen en perzik**. Het menselijke figuur staat **rechts van de berglijnen en klimt doelgericht naar links/omhoog, tegen de richting van de neerwaartse lijnen in** (eerste praktijktest toonde een verkeerd geplaatst figuur). Geen stickman die rechts uit beeld wegloopt, of los naast de berg staat.
+- **Geselecteerd**: het beeldmerk uit de uiteindelijke palet-3-mockup. **Twee afzonderlijke oplopende, afgeronde bergvlakken links**, een **kleine perzikkleurige driehoek rechts** en een **kleine klimmer met oranje rugzak tussen berg en driehoek**, met een losse perzikkleurige zon erboven. De klimmer is niet in de berg getekend of liggend op de top. Op de grote dashboardillustratie klimt een klein figuur rechts over de stijgende bergrand.
 - **Logo en illustraties zijn verschillend**: beeldmerk compact en herkenbaar bij 32px; grotere decoratieve illustraties mogen meer details hebben, maar mogen geen extra informatie of acties verbergen.
 - Geen losse blaadjes, medische kruizen, hartjes als primaire branding, generieke zon-aan-de-horizon zonder unieke vorm. De warme perzik zon **mag** deel van Concept 2B blijven, maar is geen verplichte achtergronddecoratie op iedere kaart.
 - Merknaam **Mijn Leefstijl**, optioneel motto **Kleine stappen, groot verschil**; tagline nooit verplicht op kleine schermen.
@@ -145,6 +145,15 @@ De featurebranch `feat/issue-19-concept-2b-restyle` implementeert deze richting 
 
 ## Feedback uit eerste praktijktest (31 oktober 2026)
 
-- Het oorspronkelijke klimmende figuur stond visueel verkeerd (rechts uit de berg vandaan). Gebruik nu een abstract figuur dat **vanaf de rechterkant naar links/omhoog klimt**, tegen de lijnrichting in. Te beoordelen op 32px en dashboardformaat.
-- Het oude blaadje bleef zichtbaar als browserfavicon. Zowel `public/icon.svg` als de **nieuwe URL** `/brand/app-icon-palette-3.svg` zijn bijgewerkt; `src/app/layout.tsx` en `public/manifest.webmanifest` verwijzen naar de nieuwe URL om browsercache van het oude icoon te vermijden.
+- Het oorspronkelijke klimmende figuur stond visueel verkeerd (rechts uit de berg vandaan). De gecorrigeerde doelreferentie toont een **klein figuur met oranje rugzak dat rechts zichtbaar bergop loopt**; het logo gebruikt daarnaast de twee losse bergvormen en perzikkleurige driehoek uit het voorbeeld. Toets herkenbaarheid op 16/32px en dashboardformaat.
+- Het oude blaadje bleef zichtbaar als browserfavicon. Zowel `public/icon.svg` als de **nieuwe URL** `/brand/app-icon-reference-v2.svg` zijn bijgewerkt; `src/app/layout.tsx` en `public/manifest.webmanifest` verwijzen naar de nieuwe URL om browsercache van het oude icoon te vermijden.
 - Palet 3 is definitief gekozen als opvolger van het eerdere 2B-kleurenschema. Alle latere designs volgen de tokens hierboven.
+
+## Logo- en illustratiereview — bijgewerkt 31 oktober 2026
+
+De laatst meegestuurde goedgekeurde *Palette 3 — Rust & Groei* screenshot is de leidende beeldreferentie, boven eerdere 2B-logo-exploraties. De vervangende echte SVG's zijn nu:
+- `public/brand/mark-reference-v2.svg`: **twee losse afgeronde bergvormen, vrije klimmer met oranje rugzak, losse zon en perzik driehoek**; in desktopzijbalk, mobile header en inlog.
+- `public/brand/app-icon-reference-v2.svg`: dezelfde compositie op een linnen achtergrond voor browser-tab/PWA. Ook `public/icon.svg` bijgewerkt en metadata-/manifest-URL vernieuwd om oude faviconcache te doorbreken.
+- `public/brand/hero-reference-v2.svg`: zachtere gelaagde bergen met een duidelijk **bergop lopende figuur rechts**, inclusief oranje rugzak. Geen grote losstaande stickfigure of hard driehoeklandschap.
+
+Het zijn originele, lichtgewicht vectorinterpretaties van de gebruikersreferentie; nog visueel te reviewen door de opdrachtgever. **Palet 3 is onveranderd**.
