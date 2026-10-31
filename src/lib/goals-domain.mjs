@@ -42,12 +42,13 @@ function dateInput(value) {
 export function parseGoalForm(form) {
   const title = bounded(field(form, "title"), 120);
   const motivation = bounded(field(form, "motivation"), 1000, false);
+  const progressIndicator = bounded(field(form, "progressIndicator"), 500, false) || null;
   const area = field(form, "area");
   if (!GOAL_AREAS.some((item) => item.value === area)) throw new FormInputError();
   const startDate = dateInput(field(form, "startDate"));
   const endDate = dateInput(field(form, "endDate"));
   if (startDate && endDate && endDate < startDate) throw new FormInputError();
-  return { title, motivation, area, startDate, endDate };
+  return { title, motivation, progressIndicator, area, startDate, endDate };
 }
 
 /** @param {FormData} form */
@@ -55,7 +56,20 @@ export function parseActionForm(form) {
   const title = bounded(field(form, "title"), 120);
   const raw = field(form, "targetPerWeek");
   if (!/^[1-7]$/.test(raw)) throw new FormInputError();
-  return { title, targetPerWeek: Number(raw) };
+  const scoreInput = form.get("confidenceScore");
+  if (scoreInput !== null && typeof scoreInput !== "string") throw new FormInputError();
+  const score = typeof scoreInput === "string" ? scoreInput.trim() : "";
+  if (score && !/^(?:[1-9]|10)$/.test(score)) throw new FormInputError();
+  const optional = (key, max) => bounded(field(form, key), max, false) || null;
+  return {
+    title, targetPerWeek: Number(raw),
+    whenContext: optional("whenContext", 250),
+    confidenceScore: score ? Number(score) : null,
+    existingStrength: optional("existingStrength", 500),
+    confidenceBooster: optional("confidenceBooster", 500),
+    obstacle: optional("obstacle", 500),
+    fallbackPlan: optional("fallbackPlan", 500),
+  };
 }
 
 /** @param {FormData} form @param {number} target */
