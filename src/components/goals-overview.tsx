@@ -190,7 +190,7 @@ export function GoalsOverview({ goals, currentWeek, message }: {
     router.refresh();
   }
   function back() {
-    if (!view || ["new-goal", "new-goal-quick", "new-goal-guided", "goal"].includes(view.kind)) { close(); return; }
+    if (!view || view.kind === "new-goal" || view.kind === "new-goal-quick" || view.kind === "new-goal-guided" || view.kind === "goal") { close(); return; }
     if (view.kind === "edit-goal" || view.kind === "new-action" || view.kind === "new-action-guided") {
       open({ kind: "goal", goalId: view.goalId });
       return;
