@@ -48,7 +48,7 @@ export default async function DashboardPage() {
   const overall = planned > 0 ? Math.round(completed / planned * 100) : null;
   return (
     <div className="mx-auto min-w-0 max-w-5xl space-y-5 pb-3 sm:space-y-6">
-      <section aria-labelledby="today-heading" className="brand-hero relative min-w-0 overflow-hidden rounded-[26px] border border-border px-5 py-6 sm:px-8 sm:py-9">
+      <section aria-labelledby="today-heading" className="brand-hero relative min-w-0 overflow-hidden rounded-[26px] border border-border px-5 py-6 sm:min-h-[240px] sm:px-8 sm:py-9 lg:min-h-[275px]">
         <div className="relative z-10 max-w-[95%] space-y-2 sm:max-w-[58%]">
           <p className="text-xs font-semibold text-[#255F50]">{isoWeekLabel(weekStart)}</p>
           <h1 id="today-heading" className="text-[1.65rem] font-bold leading-tight tracking-tight text-[#1F5D50] sm:text-4xl">
@@ -57,8 +57,18 @@ export default async function DashboardPage() {
           <p className="text-sm leading-relaxed text-[#536B60]">Kleine stappen in je eigen tempo.</p>
           {goals.length === 0 && <Link href="/dashboard/doelen" className="inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-[#255F50] underline underline-offset-4">Maak je eerste doel <ArrowRight size={16} aria-hidden="true"/></Link>}
         </div>
-        <div className="pointer-events-none absolute -bottom-9 -right-9 hidden w-[44%] max-w-[310px] items-end justify-end opacity-95 sm:flex" aria-hidden="true">
-          <Image src="/brand/hero-reference-v2.svg" alt="" width={720} height={330} className="h-auto w-full" priority/>
+        <div
+          className="pointer-events-none absolute bottom-0 right-0 hidden h-[72%] md:h-[84%] lg:h-full sm:block"
+          aria-hidden="true"
+        >
+          <Image
+            src="/brand/hero-reference-v2.svg"
+            alt=""
+            width={720}
+            height={330}
+            className="block h-full w-auto max-w-none"
+            priority
+          />
         </div>
       </section>
 
