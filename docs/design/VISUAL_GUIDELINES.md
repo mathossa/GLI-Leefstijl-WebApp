@@ -1,63 +1,62 @@
-# Mijn Leefstijl — Design System 2B: Energie & Focus
+# Mijn Leefstijl — De Klim / palet 3: Rust & Groei
 
-> **Status:** Concept 2B **gekozen op 30 oktober 2026**. Deze richtlijn **vervangt** eerdere gekozen Logo Concept B (groen / kronkelpad) en de vorige regels in dit document. De basisapp blijft behouden; implementatie volgt via [issue #19](https://github.com/mathossa/GLI-Leefstijl-WebApp/issues/19). De gekozen beeldreferentie is een **gerenderd concept**, niet een productieklare vector of automatisch juridisch uniek merk.
+> **Status:** De berg-/klimcompositie van concept 2B blijft de basis. **Kleurenpalet 3 — Rust & Groei — gekozen op 31 oktober 2026**, na de eerste praktijktest. Deze keuze vervangt het eerdere bosgroen/salie/perzik van 2B. Issue [#19](https://github.com/mathossa/GLI-Leefstijl-WebApp/issues/19) en draft PR [#26](https://github.com/mathossa/GLI-Leefstijl-WebApp/pull/26) volgen dit palet. De ontwerpbeelden zijn inspiratie, geen productierijpe vectorassets of bewezen uniek logo.
 
-![Gekozen Concept 2B, Energie & Focus](https://raw.githubusercontent.com/mathossa/GLI-Leefstijl-WebApp/docs/gli-approved-visual-reference/docs/design/mijn-leefstijl-concept-2b-referentie.svg)
+![Oorspronkelijke compositiereferentie Concept 2B; kleuren zijn vervangen door palet 3](https://raw.githubusercontent.com/mathossa/GLI-Leefstijl-WebApp/docs/gli-approved-visual-reference/docs/design/mijn-leefstijl-concept-2b-referentie.svg)
 
 ## 1. Ontwerpdoel en merkgevoel
 
 **Mijn Leefstijl** moet direct voelen als: *“YES, ik kan dit!”*: positief, energiek, volwassen, toegankelijk en uitnodigend. Geen medische instelling, corporate verzekeraar, schoolapp, extreme fitness-/dieetcultuur of generiek wellnessmerk. Niet kinderachtig, overdadig of trendgevoelig. De app moet bruikbaar blijven voor zowel een kleine dagelijkse actie als een langere reflectie.
 
 - **Merkmetafoor**: een abstracte klim / berg / kronkelende route / persoonlijke vooruitgang, gecombineerd met een **subtiele, actieve, minimalistische mensvorm die doelgericht de klim maakt**. Vormtaal: tegengestelde bewegingsrichting/flow van figuur en berglijnen, zodat *overwinnen* en *vooruitkomen* voelbaar zijn.
-- **Geselecteerd**: precies de compositie van **Concept 2B** als leidende richting; donkerblauwe bergvorm, turquoise/teal, oranje accent en kleine actieve menselijke figuur **aan rechterzijde van de berg**. Niet terug naar de oudere Concept B met groen/geel of een uitgebreid stick-figure-renplaatje.
+- **Geselecteerd**: de abstracte bergvorm van **concept 2B**, nu met **bosgroen, saliegroen en perzik**. Het menselijke figuur staat **rechts van de berglijnen en klimt doelgericht naar links/omhoog, tegen de richting van de neerwaartse lijnen in** (eerste praktijktest toonde een verkeerd geplaatst figuur). Geen stickman die rechts uit beeld wegloopt, of los naast de berg staat.
 - **Logo en illustraties zijn verschillend**: beeldmerk compact en herkenbaar bij 32px; grotere decoratieve illustraties mogen meer details hebben, maar mogen geen extra informatie of acties verbergen.
-- Geen losse blaadjes, medische kruizen, hartjes als primaire branding, generieke zon-aan-de-horizon zonder unieke vorm. De warme oranje zon **mag** deel van Concept 2B blijven, maar is geen verplichte achtergronddecoratie op iedere kaart.
+- Geen losse blaadjes, medische kruizen, hartjes als primaire branding, generieke zon-aan-de-horizon zonder unieke vorm. De warme perzik zon **mag** deel van Concept 2B blijven, maar is geen verplichte achtergronddecoratie op iedere kaart.
 - Merknaam **Mijn Leefstijl**, optioneel motto **Kleine stappen, groot verschil**; tagline nooit verplicht op kleine schermen.
 
-## 2. Kleuren — geselecteerde 2B-palette
-
-De vijf gekozen merkstalen uit het conceptbord:
+## 2. Definitief gekozen palet 3 — Rust & Groei
 
 | Rol | Naam | Hex | Gebruik |
 |---|---|---|---|
-| **Brand / diepblauw** | Deep teal navy | `#0F4C5C` | woordmerk, primaire CTA, koppen, actieve navigatie |
-| **Brand / teal** | Energetic teal | `#2A9D8F` | merkillustraties, accentvlak, progress-indicatoren |
-| **Brand / zacht mint** | Soft mint | `#A7D8D0` | ondersteunende vlakken, zachte highlights, achtergrond |
-| **Brand / oranje** | Achievement orange | `#FF9F1C` | energiemomenten, mijlpalen, warme illustratieaccenten |
-| **Brand / crème** | Warm cream | `#FFF4E6` | subtiele ondersteunende oppervlakken en empty states |
+| Merk/donker | Bosgroen | `#1F5D50` | woordmerk, knoppen, primaire koppen, actieve navigatie |
+| Merk/middel | Salie | `#7BA892` | bergvormen, voortgang, zachte ornamenten; niet als kleine tekst |
+| Merk/accent | Perzik | `#F4A261` | zon, resultaten, successen, warme highlight |
+| Achtergrond | Linnen | `#FAF6EE` | volledige pagina en groot achtergrondvlak |
+| Merk/licht | Mosgrijs | `#D8E2D7` | subtiele sidebar en outlines/borders |
 
-**Functionele contrast-/surface-tokens (ontwerpvoorstel, te testen):**
+**Toegankelijke ondersteunende rollen:** lichtkaart `#FFFDFA`; donkere tekst `#233D34`; gedempte tekst `#536B60`; interactieve link `#255F50`; lichtsalie `#EAF0E9`; lichtperzik `#FCE8D8`. Primaire knoppen hebben wit op `#1F5D50`; geen witte tekst op salie of perzik.
+
+CSS-tokens in `src/app/globals.css` zijn de implementatiebron:
 ```css
 :root {
-  --background: #f8f7f1;            /* huidige warme basis behouden */
-  --foreground: #153540;            /* donkere primaire tekst */
-  --card: #fffdf9;                  /* warme, bijna witte kaarten */
-  --card-foreground: #153540;
-  --primary: #0f4c5c;               /* solide primaire actie */
+  --background: #faf6ee;
+  --foreground: #233d34;
+  --card: #fffdfa;
+  --card-foreground: #233d34;
+  --primary: #1f5d50;
   --primary-foreground: #ffffff;
-  --secondary: #e9f6f4;             /* lichte teal-tint */
-  --secondary-foreground: #0f4c5c;
-  --muted: #edf4f1;
-  --muted-foreground: #536873;
-  --accent: #fff4e6;                /* warm oranje-gerelateerd vlak */
-  --accent-foreground: #0f4c5c;
-  --border: #dde9e8;
-  --ring: #126b68;                  /* duidelijk zichtbare focus */
-  --brand-teal: #2a9d8f;
-  --brand-mint: #a7d8d0;
-  --brand-orange: #ff9f1c;
-  --link: #126b68;                  /* donkerder dan decoratieve teal */
+  --secondary: #eaf0e9;
+  --secondary-foreground: #1f5d50;
+  --muted: #f0f3ed;
+  --muted-foreground: #536b60;
+  --accent: #fce8d8;
+  --accent-foreground: #1f5d50;
+  --border: #d8e2d7;
+  --ring: #255f50;
+  --brand-sage: #7ba892;
+  --brand-peach: #f4a261;
   --radius: 1.2rem;
 }
 ```
-**Toegankelijkheid:** `#2A9D8F` op off-white haalt slechts ~**3.27:1**; `#FF9F1C` op off-white slechts ~**2.02:1**. Gebruik deze **niet** voor kleine lopende tekst of witte tekst op teal/oranje knoppen. `#126B68` op bijna wit ~**6.21:1**; `#0F4C5C` op bijna wit ~**9.36:1**. Hercontroleer alle uiteindelijke combinaties, disabled states en grafieklabels conform WCAG AA.
 
-Kleurverdeling richtlijn: **65% rustige neutrale oppervlakken / 25% navy-teal / 10% zonnig oranje**. Oranje beloont, benadrukt en maakt blij; niet elke interactie oranje. Statuskleuren voor fouten en waarschuwingen moeten semantisch apart blijven.
+**Contrastcontrole (tegen `#FAF6EE`):** bosgroen ~7,1:1 en linkgroen ~6,9:1, beide geschikt voor gewone tekst. Salie ~2,5:1 en perzik ~1,9:1, dus **niet** geschikt voor kleine tekst. Gebruik ze alleen voor illustraties, vlakken of voldoende groot, niet-tekstueel decoratief accent. Controleer uiteindelijke UI met WCAG AA (4,5:1 normale tekst).
+
+**Kleurverdeling:** rustige lichte linnen/witte oppervlakken domineren; donkergroen voor belangrijke acties, salie voor progressie en perzik als spaarzaam beloningsaccent. Vermijd een dashboard dat volledig lichtgroen is.
 
 ## 3. Typografie, vormen, animaties
 
 - Behoud huidige **Inter/system sans**, typography scale, prettige regels en afgeronde lettervorm; liever geen externe font-download of visueel zware display-fonts.
-- Koppen navy, royaal en goed scanbaar, zonder ALLES IN CAPS in de inhoud. In het merkbeeld mogen enkele subtiele uppercase eyebrow-labels.
+- Koppen bosgroen, royaal en goed scanbaar, zonder ALLES IN CAPS in de inhoud. In het merkbeeld mogen enkele subtiele uppercase eyebrow-labels.
 - Kaarten: afgerond **20–24px**, subtiele border `#DDE9E8`, zachte schaduw of geen schaduw. Geen dikke kleurvlakken rond alle kaarten. Inputs `12–14px` radius.
 - Touch targets **minimaal 44×44 CSS px** waar praktisch; form-controls op iPhone minimaal **16px font-size** om automatisch inzoomen te voorkomen. Grote voldoende zichtbare labels en focus-indicators.
 - Microinteracties spaarzaam, 120–200 ms; één vriendelijk voltooiingssignaal, geen verwarrende animaties/loopende confetti. `prefers-reduced-motion` respecteren.
@@ -66,31 +65,31 @@ Kleurverdeling richtlijn: **65% rustige neutrale oppervlakken / 25% navy-teal / 
 ## 4. Layout en schermen
 
 ### App-shell & navigatie
-- `src/components/app-shell.tsx`: vervang het huidige Leaf-merk door **Concept 2B**-icon; mobiel compacte brand + naam, desktop woordmerk. Behoud huidige desktop sidebar en mobiele bottom navigation; kleur actieve item in navy/teal en niet in klassiek groen. Respecteer `safe-area-inset-bottom` op iOS.
+- `src/components/app-shell.tsx`: vervang het huidige Leaf-merk door **Concept 2B**-icon; mobiel compacte brand + naam, desktop woordmerk. Behoud huidige desktop sidebar en mobiele bottom navigation; kleur actieve item in bosgroen/salie en niet in klassiek groen. Respecteer `safe-area-inset-bottom` op iOS.
 - Merkdetails op inloggen/onboarding, adminomgeving, favicon/PWA en waar zinvol export-PDF; admin blijft functioneel en rustig, zonder decoratieve grote banners.
 
 ### Vandaag / dashboard
 - Eerste blik moet persoonlijk, licht en energiek zijn; compacte hero met **één** abstracte 2B-illustratie-accent, weeklabel, tekst en hooguit één directe CTA. Op mobiel blijven dagacties bij voorkeur zonder veel scrollen zichtbaar.
-- Overzichtskaarten (doelen, acties, voortgang) behouden, maar navy voor nadruk, teal voor voortgang en oranje alleen voor echt positief resultaat.
+- Overzichtskaarten (doelen, acties, voortgang) behouden, maar bosgroen voor nadruk, salie voor voortgang en perzik alleen voor echt positief resultaat.
 - Acties: snelle check-in heeft voorrang op grafische decoratie; afgeronde rijen, direct leesbare status, geen extra klik om alleen iets af te vinken.
 - Motivatiequote (#15) krijgt een nette, rustige card die past bij 2B; geen tekst-op-sierbeeld dat moeilijk leesbaar is.
 
 ### Doelen / weekacties / wizard (#20)
-- Eén hoofdkleur voor primaire actie; doelen-/actiewizard in dezelfde stijlfamilie. Stappenindicator in teal, oranje alleen bij positief feedbackmoment.
+- Eén hoofdkleur voor primaire actie; doelen-/actiewizard in dezelfde stijlfamilie. Stappenindicator in salie, perzik alleen bij positief feedbackmoment.
 - Compacte informatiehiërarchie: titel, doel, kleine voortgangsbalk, vervolgstap; geen steeds wisselende grote thematische illustraties. Lege status mag met kleine abstracte klim-route-illustratie.
 - Afgeronde formulieren en bottom sheets moeten **ruimte-efficiënt, snel en duidelijk** blijven.
 
 ### Reflecties / bijeenkomsten / notities
-- Zachte teal of mint bij reflectie en energie/herstel, warme oranje subtiele bekrachtiging bij iets dat goed ging.
+- Zachte salie of mosgrijs bij reflectie en energie/herstel, warme perzik subtiele bekrachtiging bij iets dat goed ging.
 - Notities en foto’s blijven eerste klas inhoud; geen grote artwork boven editor of invoervelden. Weekkeuze en datumkiezer blijven snel, direct en betrouwbaar.
 - Op fout geen verlies van ingevoerde tekst; voorkom vertragende datum-popovers en onnodige extra knoppen (functioneel herstel waar nodig als afzonderlijk bugfix-issue).
 
 ### Inzichten / voortgang
-- Hergebruik bestaande wekelijkse/maandelijkse weergave. Gebruik deep navy + teal in grafieken; oranje markeert concrete successen, niet alle datapunten.
+- Hergebruik bestaande wekelijkse/maandelijkse weergave. Gebruik bosgroen + salie in grafieken; perzik markeert concrete successen, niet alle datapunten.
 - Toon cijfers en labels naast visuele indicatoren; kleur mag nooit de enige statusdrager zijn.
 
 ### Auth, beheer & exports
-- Inlogkaart met klein beeldmerk, warme off-white omgeving en teal/navy CTA; niet onnodig uitwaaieren.
+- Inlogkaart met klein beeldmerk, warme off-white omgeving en salie/bosgroen CTA; niet onnodig uitwaaieren.
 - Admin-info volledig en leesbaar, extra illustraties alleen waar ze duidelijk bijdragen.
 - PDF-export ontwerp B: volg merkpalette en woordmerk binnen bestaande printlayout, zonder dat meerpagina's, 3+ doelen, 7+ acties of lange notities breken.
 
@@ -100,7 +99,7 @@ Kleurverdeling richtlijn: **65% rustige neutrale oppervlakken / 25% navy-teal / 
 |---|---|
 | `src/app/globals.css` | centraliseer tokens; verwijder zoveel mogelijk hardcoded legacy greens per scherm |
 | `src/components/ui/card.tsx` | warme card, subtiele border, uniforme radius |
-| `src/components/ui/button.tsx` | primary navy, secondary licht-teal, focusring, heldere active/disabled/loading |
+| `src/components/ui/button.tsx` | primary bosgroen, secondary licht-salie, focusring, heldere active/disabled/loading |
 | `src/components/app-shell.tsx` | 2B-branding, actieve nav, mobile/desktop consistent |
 | `src/app/dashboard/page.tsx` | compacte hero, goal metrics, afvinken, rustige progress |
 | `src/components/goals-overview.tsx` | doelkaarten, registraties, wizard consistent |
@@ -113,7 +112,7 @@ Geen nieuwe dashboardarchitectuur, geen eigen design-framework, geen extra runti
 
 ## 6. Asset- en logo-specificatie
 
-- Het huidige [2B-conceptboard](https://github.com/mathossa/GLI-Leefstijl-WebApp/blob/docs/gli-approved-visual-reference/docs/design/mijn-leefstijl-concept-2b-referentie.svg) is de primaire **visuele referentie**, niet een echte vectorbron: de SVG bevat een ingesloten raster-preview.
+- Het huidige [oorspronkelijke compositie-conceptboard](https://github.com/mathossa/GLI-Leefstijl-WebApp/blob/docs/gli-approved-visual-reference/docs/design/mijn-leefstijl-concept-2b-referentie.svg) is de primaire **visuele referentie**, niet een echte vectorbron: de SVG bevat een ingesloten raster-preview.
 - Herteken het **actieve abstracte klimfiguur tegen de stroming van de berglijnen in**, niet als iemand bovenop/naast de berg die al klaar is. Ritme en eenvoud primeren over anatomische details.
 - Vectorizeer **origineel en schoon** (strakke paths; geen screenshot-trace als eindproduct). Ontwerp ook een vereenvoudigde **16/32px micro-icon variant** (zon optioneel teruggebracht tot stip, lijnen en details waar nodig schrappen).
 - Varianten: `mark.svg` (square), `wordmark.svg` (horizontaal), monochroom, dark-on-light, light-on-dark; PNG sizes voor favicon/Apple touch/PWA indien van toepassing.
@@ -143,3 +142,9 @@ Elke fase testbaar, feature-branch + PR; merge alleen na review en groene CI. Ge
 ## Implementatie — featurebranch
 
 De featurebranch `feat/issue-19-concept-2b-restyle` implementeert deze richting via echte lokale SVG-assets (`public/brand/mark.svg`, `public/brand/hero-mountains.svg`), het app-icoon, de globale CSS-design tokens, shell/navigatie en de bestaande schermcomponenten. De vectoren zijn originele implementaties van de gekozen conceptvorm en **nog ter visuele review**; overname van de raster-conceptboard als productieasset is vermeden. Bestaande domeinlogica en dataflows blijven intact. Uitgebreidere logo-uniqueness review en test op fysieke iPhone volgen apart vóór publieke zakelijke distributie.
+
+## Feedback uit eerste praktijktest (31 oktober 2026)
+
+- Het oorspronkelijke klimmende figuur stond visueel verkeerd (rechts uit de berg vandaan). Gebruik nu een abstract figuur dat **vanaf de rechterkant naar links/omhoog klimt**, tegen de lijnrichting in. Te beoordelen op 32px en dashboardformaat.
+- Het oude blaadje bleef zichtbaar als browserfavicon. Zowel `public/icon.svg` als de **nieuwe URL** `/brand/app-icon-palette-3.svg` zijn bijgewerkt; `src/app/layout.tsx` en `public/manifest.webmanifest` verwijzen naar de nieuwe URL om browsercache van het oude icoon te vermijden.
+- Palet 3 is definitief gekozen als opvolger van het eerdere 2B-kleurenschema. Alle latere designs volgen de tokens hierboven.
