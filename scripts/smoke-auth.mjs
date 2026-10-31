@@ -130,7 +130,11 @@ try {
     await connection.query(
       'INSERT INTO "goal" ("id","userId","title","motivation","progressIndicator","area","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,NOW())',
       [id, userId, title,
-        userId === adminId ? "CI-ADMIN-WHY" : "CI-MEMBER-WHY",
+        userId === adminId
+          ? title === "CI-ADMIN-VOEDING-GOAL"
+            ? "CI-ADMIN-WHY;\r\nCI-ADMIN-SECOND-LINE;\r\nCI-ADMIN-THIRD-LINE"
+            : "CI-ADMIN-WHY"
+          : "CI-MEMBER-WHY",
         userId === adminId ? "CI-ADMIN-SUCCESS" : null,
         "BEWEGING"],
     );
@@ -266,6 +270,13 @@ for (const cookie of [adminCookie, memberCookie]) {
       "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"]) {
       assert.ok(printed.includes(field), "PDF is missing guided answer: " + field);
     }
+    // A pasted Windows multiline answer must create separate PDF lines, not
+    // literal question marks after punctuation (e.g. "voelen;?").
+    assert.ok(printed.includes("CI-ADMIN-WHY;"), "PDF must keep first CRLF paragraph line");
+    assert.ok(printed.includes("CI-ADMIN-SECOND-LINE;"), "PDF must keep second CRLF line");
+    assert.ok(printed.includes("CI-ADMIN-THIRD-LINE"), "PDF must keep third CRLF line");
+    assert.ok(!printed.includes("CI-ADMIN-WHY;?"), "CR must not appear as ? before the linebreak");
+    assert.ok(!printed.includes("CI-ADMIN-SECOND-LINE;?"), "CR must not appear as ? before the linebreak");
     assert.ok(!printed.includes("CI-MEMBER-WHY"), "PDF must not leak another user's motivation");
   } else {
     assert.ok(printed.includes("CI-MEMBER-WHY"), "Member PDF must include own motivation");
