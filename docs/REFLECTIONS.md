@@ -72,3 +72,10 @@ Er zijn geen externe analyticsdiensten, medische aannames of nieuwe grafieklibra
 - Niet-relevante bijzinnen, `Over dit verslag` en lege reflectiesecties zijn verwijderd. De export bevat een compacte samenvatting, geen medische conclusies.
 - Dezelfde centrale `isoWeekLabel`-helper toont **`Week NN · ISO-jaar`** in Vandaag, Mijn doelen, Reflectie, Inzichten en de PDF. ISO-weekjaar volgt de donderdagregel, ook wanneer bijvoorbeeld 30 december al bij week 1 van het nieuwe jaar hoort.
 - CI controleert week 53, jaarwisselingen, zomer-/wintertijd en een synthetische PDF met drie actieve doelen en zeven acties; de echte PDF-response wordt geopend met `pdf-lib`.
+
+## Uitgebreide PDF: ingevulde vragen en antwoorden
+
+- Direct na de voortgangskaarten van elk actief doel toont de PDF ook de **ingevulde** CooL-vragen en antwoorden. Op doelniveau: **waarom/motivatie** en **hoe merk ik dat ik mijn doel bereik?**. Per actieve actie: **wanneer**, **haalbaarheid (1–10)**, **wat helpt al**, **wat verhoogt mijn vertrouwen**, **obstakels** en **plan B**.
+- Niet ingevulde optionele velden krijgen geen lege kaarten; het rapport blijft leesbaar. Antwoorden kunnen over meerdere vervolgkaarten/pagina's doorlopen, met dezelfde pastelkleur als het bijbehorende doel. Gegevens uit gearchiveerde doelen en acties blijven in de volledige JSON-export, niet in dit actuele deelbare plan.
+- De PDF hergebruikt de bestaande gebruikersgebonden JSON-exportdata en `pdf-lib`; geen migratie, nieuwe dependency of extra persoonsgegevens nodig. Privéfoto's blijven buiten de PDF.
+- De HTTP-smoketest gebruikt uitsluitend fictieve antwoorden, controleert alle vragen inclusief **haalbaarheid** en **plan B**, en bevestigt dat gegevens van het tweede testaccount niet in de PDF van het eerste verschijnen.
