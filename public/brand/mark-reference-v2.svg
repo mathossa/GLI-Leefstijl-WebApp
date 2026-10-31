@@ -1,11 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 188 140" role="img" aria-labelledby="title">
-<title id="title">Mijn Leefstijl — De Klim</title>
-<!-- Minimalist two mountains, summit, and small hiker, based on approved Palette 3 mockup. -->
+<title id="title">Mijn Leefstijl — De Klim, klimmer beweegt naar links</title>
 <path d="M6 123 56 53 Q63 43 71 53 L88 79 63 123Z" fill="#7BA892"/>
 <path d="M70 123 106 49 Q113 37 120 49 L142 82 97 123Z" fill="#1F5D50"/>
 <path d="M125 123 154 94 182 123Z" fill="#F4A261"/>
 <circle cx="158" cy="25" r="11.5" fill="#F4A261"/>
-<circle cx="156" cy="56" r="5.7" fill="#1F5D50"/>
-<path d="M156 65 Q151 76 150 90 M153 72 144 81 142 89 M150 90 160 101 160 112 M150 90 143 102" fill="none" stroke="#1F5D50" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="158" y="70" width="10" height="19" rx="5" transform="rotate(-25 163 79.5)" fill="#F4A261"/>
+<!-- LEFT-FACING CLIMBER: raised lead arm and lead foot reach left; orange backpack on right. -->
+<circle cx="151" cy="59" r="5.8" fill="#1F5D50"/>
+<path d="M151 69 Q145 76 143 88" fill="none" stroke="#1F5D50" stroke-width="8" stroke-linecap="round"/>
+<path d="M148 74 136 76 128 68" fill="none" stroke="#1F5D50" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M149 77 159 83" fill="none" stroke="#1F5D50" stroke-width="5" stroke-linecap="round"/>
+<path d="M143 88 134 98 124 101 119 99" fill="none" stroke="#1F5D50" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M143 88 153 99 159 111 165 113" fill="none" stroke="#1F5D50" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="154" y="70" width="12" height="21" rx="6" transform="rotate(-18 160 80.5)" fill="#F4A261"/>
 </svg>
