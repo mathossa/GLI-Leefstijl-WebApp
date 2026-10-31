@@ -58,7 +58,7 @@ export default async function DashboardPage() {
           {goals.length === 0 && <Link href="/dashboard/doelen" className="inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-[#255F50] underline underline-offset-4">Maak je eerste doel <ArrowRight size={16} aria-hidden="true"/></Link>}
         </div>
         <div className="pointer-events-none absolute -bottom-9 -right-9 hidden w-[44%] max-w-[310px] items-end justify-end opacity-95 sm:flex" aria-hidden="true">
-          <Image src="/brand/hero-mountains.svg" alt="" width={720} height={330} className="h-auto w-full" priority/>
+          <Image src="/brand/hero-reference-v2.svg" alt="" width={720} height={330} className="h-auto w-full" priority/>
         </div>
       </section>
 
