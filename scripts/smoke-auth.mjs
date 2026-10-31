@@ -206,7 +206,9 @@ assert.equal(adminExport.goals.filter(g => g.status === "ACTIVE").length, 3, "PD
 assert.equal(adminExport.goals.flatMap(g => g.actions).length, 7, "PDF fixture includes seven actions");
 assert.equal(adminExport.reflections[0].wentWell, "CI-PRIVATE-REFLECTION");
 assert.equal(adminExport.meetings[0].notes, "CI-PRIVATE-MEETING-NOTE");
-assert.equal(adminExport.goals[0].motivation, "CI-ADMIN-WHY");
+assert.ok(adminExport.goals.some(goal => goal.motivation === "CI-ADMIN-WHY"));
+assert.ok(adminExport.goals.some(goal => goal.motivation === "CI-ADMIN-WHY;\r\nCI-ADMIN-SECOND-LINE;\r\nCI-ADMIN-THIRD-LINE"),
+  "JSON export must preserve original Windows newlines without modifying user text");
 assert.equal(adminExport.goals[0].progressIndicator, "CI-ADMIN-SUCCESS");
 assert.equal(adminExport.goals[0].actions[0].confidenceScore, 8);
 assert.equal(adminExport.goals[0].actions[0].fallbackPlan, "CI-ACTION-PLAN-B");
