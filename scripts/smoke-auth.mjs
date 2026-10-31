@@ -7,7 +7,7 @@ import { mkdir, writeFile, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import sharp from "sharp";
 import pg from "pg";
-import { PDFDocument } from "pdf-lib";
+import { PDFArray, PDFDocument } from "pdf-lib";
 
 const base = process.env.BETTER_AUTH_URL || "http://127.0.0.1:3000";
 const origin = new URL(base).origin;
@@ -38,6 +38,24 @@ function drawnPdfText(bytes) {
     return [...content.matchAll(/<([0-9a-fA-F]+)>\s*Tj/g)]
       .map((item) => Buffer.from(item[1], "hex").toString("latin1"));
   }).join("\n");
+}
+// Inspect pages separately to ensure the overview and each complete goal plan
+// have distinct pages. Reuses the existing test PDF parser; no extra dependency.
+function drawnPdfPageText(report) {
+  return report.getPages().map(page => {
+    const contents = page.node.Contents();
+    if (!contents) return "";
+    const refs = contents instanceof PDFArray ? contents.asArray() : [contents];
+    return refs.flatMap(ref => {
+      const stream = report.context.lookup(ref);
+      if (!stream || typeof stream.getContents !== "function") return [];
+      let decoded;
+      try { decoded = inflateSync(Buffer.from(stream.getContents())).toString("latin1"); }
+      catch { return []; }
+      return [...decoded.matchAll(/<([0-9a-fA-F]+)>\s*Tj/g)]
+        .map(match => Buffer.from(match[1], "hex").toString("latin1"));
+    }).join("\n");
+  });
 }
 function expectsRedirect(response) {
   assert.ok([302,303,307,308].includes(response.status), `Expected redirect, received ${response.status}`);
@@ -219,8 +237,23 @@ for (const cookie of [adminCookie, memberCookie]) {
   const report = await PDFDocument.load(pdfBytes);
   assert.ok(report.getPageCount() >= 1, "PDF must have pages");
   const printed = drawnPdfText(pdfBytes);
+  const pages = drawnPdfPageText(report);
+  assert.ok(pages[0].includes("Jouw leefstijl"), "First page must start with an overview");
+  assert.ok(!pages[0].includes("WAAROM IS DIT DOEL"), "Overview page must not contain detailed answers");
   if (cookie === adminCookie) {
-    assert.ok(report.getPageCount() >= 2, "Three-goal PDF report must paginate with reflections");
+    assert.ok(report.getPageCount() >= 5, "Three goals require overview, three plan pages and reflection page");
+    const goalNames = ["CI-ADMIN-PRIVATE-GOAL", "CI-ADMIN-SLAAP-GOAL", "CI-ADMIN-VOEDING-GOAL"];
+    for (let index = 0; index < goalNames.length; index++) {
+      assert.ok(pages[0].includes(goalNames[index]), "Overview must list every active goal");
+      assert.ok(pages[index + 1].includes(`DOEL ${index + 1} VAN 3`), "Each goal must begin on a new plan page");
+      assert.ok(pages[index + 1].includes(goalNames[index]), "Plan page must show its own goal");
+      assert.ok(pages[index + 1].includes("CI-ADMIN-WHY"), "Each goal plan must include its motivation");
+      for (let other = 0; other < goalNames.length; other++) {
+        if (other !== index) assert.ok(!pages[index + 1].includes(goalNames[other]),
+          "Different goals must not share a detailed plan page");
+      }
+    }
+    assert.ok(pages.slice(4).some(p => p.includes("Terugblik & reflectie")), "Reflection must follow complete plans");
     for (const field of ["CI-ADMIN-WHY", "CI-ADMIN-SUCCESS", "8 / 10",
       "CI-ACTION-WHEN", "CI-ACTION-STRENGTH", "CI-ACTION-BOOSTER",
       "CI-ACTION-OBSTACLE", "CI-ACTION-PLAN-B"]) {
