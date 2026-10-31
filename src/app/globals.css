@@ -95,3 +95,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
     box-shadow: 0 22px 90px rgb(31 93 80 / 20%);
   }
 }
+/* iOS Safari auto-zooms when a focused form control renders below 16px.
+   Keep normal pinch-zoom accessible; only raise the input text size. */
+@media (max-width: 639px) {
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+  textarea:not([readonly]),
+  select:not([multiple]) {
+    font-size: 16px;
+  }
+}
