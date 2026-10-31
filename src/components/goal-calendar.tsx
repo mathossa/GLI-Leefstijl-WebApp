@@ -57,7 +57,7 @@ export function GoalCalendar({ title, value, minDate, onSelect, onClose }: {
 
   return (
     <div ref={panel} role="group" aria-label={`Kalender voor ${title}`}
-      onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }}
+      onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); } }}
       className="mt-3 rounded-2xl border border-[#dce7dc] bg-[#fcfefa] p-3 shadow-sm sm:hidden">
       <div className="mb-3 flex items-center justify-between gap-2">
         <button type="button" onClick={() => moveMonth(-1)} aria-label="Vorige maand"
