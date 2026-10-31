@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { isoWeekLabel } from "@/lib/week-labels.mjs";
 import Image from "next/image";
 import { ArrowLeft, BookHeart, CalendarDays, ChevronLeft, ChevronRight, ClipboardPenLine, Plus, ImagePlus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { saveReflection, deleteReflection, createMeeting, updateMeeting, deleteMeeting, uploadMeetingPhoto, deleteMeetingPhoto } from "@/app/dashboard/reflectie/actions";
+import { saveReflection, deleteReflection, createMeeting, updateMeeting, deleteMeeting, uploadMeetingPhoto, deleteMeetingPhoto, type ReflectionFormState } from "@/app/dashboard/reflectie/actions";
 
 export type ReflectionView = {
   weekStart: string;
@@ -169,21 +169,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
           </header>
 
           {mode?.kind === "reflection" && (
-            <form key={mode.weekStart} action={saveReflection} className="space-y-4">
-              <p className="text-sm text-[#255F50]">{isoWeekLabel(mode.weekStart)}</p>
-              <input name="weekStart" type="hidden" value={mode.weekStart}/>
-              {([
-                ["wentWell", "Wat ging goed?", entry?.wentWell],
-                ["difficult", "Wat was lastig?", entry?.difficult],
-                ["nextStep", "Wat is je volgende stap?", entry?.nextStep],
-              ] as const).map(([fieldName, prompt, value]) => (
-                <div key={fieldName}>
-                  <label className={label} htmlFor={fieldName}>{prompt}</label>
-                  <textarea id={fieldName} name={fieldName} maxLength={1500} rows={3} className={field} defaultValue={value ?? ""}/>
-                </div>
-              ))}
-              <Button className="h-12 w-full" type="submit">Reflectie opslaan</Button>
-            </form>
+            <ReflectionForm key={mode.weekStart} weekStart={mode.weekStart} entry={entry ?? undefined}/>
           )}
           {mode?.kind === "reflection" && entry && (
             <form action={deleteReflection} className="border-t border-[#D8E2D7] pt-3"
@@ -195,12 +181,7 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
             </form>
           )}
 
-          {mode?.kind === "meeting-new" && (
-            <form action={createMeeting} className="space-y-4">
-              <MeetingFields/>
-              <Button type="submit" className="h-12 w-full">Bijeenkomst opslaan</Button>
-            </form>
-          )}
+          {mode?.kind === "meeting-new" && <MeetingForm key="new"/>}
 
           {mode?.kind === "meeting" && meeting && (
             <div className="space-y-5">
@@ -261,17 +242,58 @@ export function ReflectionsOverview({ currentWeek, reflections, meetings, messag
             </div>
           )}
 
-          {mode?.kind === "meeting-edit" && meeting && (
-            <form action={updateMeeting} className="space-y-4">
-              <input type="hidden" name="id" value={meeting.id}/>
-              <MeetingFields meeting={meeting}/>
-              <Button className="h-12 w-full" type="submit">Wijzigingen opslaan</Button>
-            </form>
-          )}
+          {mode?.kind === "meeting-edit" && meeting && <MeetingForm key={meeting.id} meeting={meeting}/>}
+
         </div>
       </dialog>
 
     </div>
+  );
+}
+
+const initialFormState: ReflectionFormState = { error: null };
+
+// Controlled textareas keep all answers in React state, even if React resets a
+// submitted form after a Server Action returns a validation error.
+function ReflectionForm({ weekStart, entry }: { weekStart: string; entry?: ReflectionView }) {
+  const [state, submit, pending] = useActionState(saveReflection, initialFormState);
+  const [wentWell, setWentWell] = useState(entry?.wentWell ?? "");
+  const [difficult, setDifficult] = useState(entry?.difficult ?? "");
+  const [nextStep, setNextStep] = useState(entry?.nextStep ?? "");
+  return (
+    <form action={submit} className="space-y-4">
+      <p className="text-sm text-[#5e7866]">{isoWeekLabel(weekStart)}</p>
+      <input name="weekStart" type="hidden" value={weekStart}/>
+      {([
+        ["wentWell", "Wat ging goed?", wentWell, setWentWell],
+        ["difficult", "Wat was lastig?", difficult, setDifficult],
+        ["nextStep", "Wat is je volgende stap?", nextStep, setNextStep],
+      ] as const).map(([name, prompt, value, setValue]) => (
+        <div key={name}>
+          <label className={label} htmlFor={name}>{prompt}</label>
+          <textarea id={name} name={name} maxLength={1500} rows={3}
+            className={field} value={value} onChange={(event) => setValue(event.target.value)}/>
+        </div>
+      ))}
+      {state.error && <p role="alert" className="rounded-xl border border-[#e2c99b] bg-[#fff5e4] p-3 text-sm text-[#815d31]">{state.error}</p>}
+      <Button className="h-12 w-full" type="submit" disabled={pending}>
+        {pending ? "Opslaan…" : "Reflectie opslaan"}
+      </Button>
+    </form>
+  );
+}
+
+function MeetingForm({ meeting }: { meeting?: MeetingView }) {
+  const [state, submit, pending] = useActionState(meeting ? updateMeeting : createMeeting, initialFormState);
+  return (
+    <form action={submit} className="space-y-4">
+      {meeting && <input type="hidden" name="id" value={meeting.id}/>}
+      <MeetingFields meeting={meeting}/>
+      {state.error && <p role="alert" className="rounded-xl border border-[#e2c99b] bg-[#fff5e4] p-3 text-sm text-[#815d31]">{state.error}</p>}
+      <Button type="submit" disabled={pending} className="h-12 w-full">
+        {pending ? "Opslaan…" : meeting ? "Wijzigingen opslaan" : "Bijeenkomst opslaan"}
+      </Button>
+    </form>
   );
 }
 
@@ -282,32 +304,44 @@ function MeetingFields({ meeting }: { meeting?: MeetingView }) {
   }).formatToParts(new Date());
   const part = (name: string) => now.find((v) => v.type === name)?.value;
   const today = [part("year"),part("month"),part("day")].join("-");
+  const [values, setValues] = useState({
+    meetingDate: meeting?.meetingDate ?? today,
+    title: meeting?.title ?? "",
+    notes: meeting?.notes ?? "",
+    actionPoints: meeting?.actionPoints ?? "",
+  });
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const set = (key: keyof typeof values, value: string) => {
+    setValues((current) => ({ ...current, [key]: value }));
+  };
   return (
     <>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label htmlFor={`meeting-date-${prefix}`} className={label}>Datum</label>
           <input type="date" id={`meeting-date-${prefix}`} name="meetingDate" required className={field}
-            defaultValue={meeting?.meetingDate ?? today}/>
+            value={values.meetingDate} onChange={(event) => set("meetingDate", event.target.value)}/>
         </div>
         <div>
-          <label htmlFor={`meeting-title-${prefix}`} className={label}>Titel bijeenkomst</label>
+          <label htmlFor={`meeting-title-${prefix}`} className={label}>Titel bijeenkomst <span className="font-normal text-[#657a6a]">(verplicht)</span></label>
           <input id={`meeting-title-${prefix}`} name="title" maxLength={120} required className={field}
-            defaultValue={meeting?.title ?? ""} placeholder="Bijvoorbeeld: CooL bijeenkomst 3"/>
+            value={values.title} onChange={(event) => set("title", event.target.value)} placeholder="Bijvoorbeeld: CooL bijeenkomst 3"/>
         </div>
       </div>
       <div>
         <label htmlFor={`meeting-notes-${prefix}`} className={label}>Wat neem je mee? <span className="font-normal text-[#255F50]">(optioneel)</span></label>
         <textarea id={`meeting-notes-${prefix}`} name="notes" rows={4} maxLength={4000} className={field}
-          defaultValue={meeting?.notes ?? ""}/>
+          value={values.notes} onChange={(event) => set("notes", event.target.value)}/>
       </div>
       <div>
         <label htmlFor={`meeting-actions-${prefix}`} className={label}>Actiepunten <span className="font-normal text-[#255F50]">(optioneel)</span></label>
         <textarea id={`meeting-actions-${prefix}`} name="actionPoints" rows={3} maxLength={2000} className={field}
-          defaultValue={meeting?.actionPoints ?? ""}/>
+          value={values.actionPoints} onChange={(event) => set("actionPoints", event.target.value)}/>
       <div>
         <label htmlFor={`meeting-photo-${prefix}`} className={label}>Foto van je schrift of papier <span className="font-normal text-[#255F50]">(optioneel)</span></label>
-        <input id={`meeting-photo-${prefix}`} type="file" name="photo"
+        <input id={`meeting-photo-${prefix}`} type="file"
+          name={hasPhoto ? "photo" : undefined}
+          onChange={(event) => setHasPhoto(Boolean(event.currentTarget.files?.length))}
           accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
           className="mt-2 block w-full min-w-0 text-sm file:mr-2 file:rounded-xl file:border-0 file:bg-[#EAF0E9] file:px-3 file:py-2 file:text-[#233D34]"/>
         <p className="mt-1 text-xs text-[#255F50]">Geen tekst overtypen nodig. Maximaal 8 MB per foto.</p>
