@@ -21,7 +21,7 @@ const grey = rgb(83/255,107/255,96/255), sage = rgb(123/255,168/255,146/255);
 const cream = rgb(250/255,246/255,238/255), white = rgb(1,253/255,250/255);
 const line = rgb(216/255,226/255,215/255), mint = rgb(216/255,226/255,215/255);
 const lime = rgb(234/255,240/255,233/255), peach = rgb(252/255,232/255,216/255);
-const lilac = rgb(240/255,234/255,249/255), butter = rgb(244/255,162/255,97/255);
+const lilac = rgb(240/255,234/255,249/255);
 const pink = rgb(252/255,234/255,229/255), blue = rgb(234/255,241/255,253/255);
 const variants = [
   { fill:lime, ink:green }, { fill:peach, ink:dark },
