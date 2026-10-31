@@ -74,23 +74,23 @@ export default async function DashboardPage() {
 
       <section aria-label="Overzicht van de week" className="grid min-w-0 grid-cols-3 gap-2.5 sm:gap-4">
         <Card className="min-w-0 gap-1.5 rounded-[19px] p-3 sm:gap-3 sm:rounded-[21px] sm:p-5">
-          <div className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#255F50] sm:size-11"><Target size={20}/></span>
-            <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{goals.length}</strong>
+          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+            <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#255F50] sm:size-11"><Target size={20}/></span>
+            <strong className="min-w-0 text-lg font-bold tabular-nums sm:text-2xl">{goals.length}</strong>
           </div>
           <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Actieve doelen</p>
         </Card>
         <Card className="min-w-0 gap-1.5 rounded-[19px] p-3 sm:gap-3 sm:rounded-[21px] sm:p-5">
-          <div className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF6EE] text-[#8B4B26] sm:size-11"><CircleCheck size={20}/></span>
+          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+            <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#FAF6EE] text-[#8B4B26] sm:size-11"><CircleCheck size={20}/></span>
             <strong className="min-w-0 whitespace-nowrap text-lg font-bold tabular-nums sm:text-2xl">{completed}<span className="text-[10px] text-[#536B60] sm:text-xs">/{planned}</span></strong>
           </div>
           <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Deze week</p>
         </Card>
         <Card className="min-w-0 gap-1.5 rounded-[19px] p-3 sm:gap-3 sm:rounded-[21px] sm:p-5">
-          <div className="flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#1F5D50] sm:size-11"><TrendingUp size={20}/></span>
-            <strong className="min-w-0 text-xl font-bold tabular-nums sm:text-2xl">{overall === null ? "–" : `${overall}%`}</strong>
+          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+            <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#EAF0E9] text-[#1F5D50] sm:size-11"><TrendingUp size={20}/></span>
+            <strong className="min-w-0 text-lg font-bold tabular-nums sm:text-2xl">{overall === null ? "–" : `${overall}%`}</strong>
           </div>
           <p className="text-[11px] leading-tight text-[#536B60] sm:text-xs">Voortgang</p>
         </Card>
