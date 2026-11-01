@@ -11,6 +11,16 @@ import {
 
 type Result = { ok: true; message: string } | { ok: false; message: string };
 type QuoteRow = { id: string; text: string; normalizedText: string; category: string | null; isActive: boolean; deletedAt: Date | null };
+type ImportPlanRow = {
+  line: number;
+  operation: "create" | "update" | "skip" | "error";
+  reason?: string;
+  id?: string;
+  text?: string;
+  normalizedText?: string;
+  category?: string | null;
+  isActive?: boolean;
+};
 
 function errorMessage(error: unknown) {
   if (error instanceof QuoteInputError) return error.message;
@@ -87,7 +97,7 @@ async function buildImportPreview(content: string, format: "csv" | "json") {
   const existing: QuoteRow[] = await prisma.motivationQuote.findMany({
     select: { id: true, text: true, normalizedText: true, category: true, isActive: true, deletedAt: true },
   });
-  const plan = planQuoteImport(rows, existing);
+  const plan: ImportPlanRow[] = planQuoteImport(rows, existing);
   const hash = createHash("sha256").update(JSON.stringify(plan)).digest("hex");
   return { plan, hash, total: existing.length };
 }
@@ -131,7 +141,7 @@ export async function confirmAdminQuoteImport(
       const existing = await tx.motivationQuote.findMany({
         select: { id: true, text: true, normalizedText: true, category: true, isActive: true, deletedAt: true },
       });
-      const plan = planQuoteImport(records, existing);
+      const plan: ImportPlanRow[] = planQuoteImport(records, existing);
       const hash = createHash("sha256").update(JSON.stringify(plan)).digest("hex");
       if (hash !== previewHash) throw new QuoteInputError("Bibliotheek of bestand is gewijzigd. Bekijk de import opnieuw.");
       if (plan.some(row => row.operation === "error")) throw new QuoteInputError("Corrigeer eerst alle ongeldige regels.");
@@ -140,17 +150,20 @@ export async function confirmAdminQuoteImport(
       let created = 0, updated = 0;
       for (const row of plan) {
         if (row.operation === "skip") continue;
+        if (row.operation === "error" || !row.text || !row.normalizedText || typeof row.isActive !== "boolean") {
+          throw new QuoteInputError("Import bevat ongeldige regels.");
+        }
         const id = row.id || randomUUID();
         if (row.operation === "create") {
           await tx.motivationQuote.create({ data: {
             id, text: row.text, normalizedText: normalizedQuote(row.text),
-            category: row.category, isActive: row.isActive, origin: "ADMIN",
+            category: row.category ?? null, isActive: row.isActive, origin: "ADMIN",
           } });
           created++;
         } else if (row.operation === "update") {
           await tx.motivationQuote.update({ where: { id }, data: {
             text: row.text, normalizedText: normalizedQuote(row.text),
-            category: row.category, isActive: row.isActive,
+            category: row.category ?? null, isActive: row.isActive,
           } });
           updated++;
         }
