@@ -63,6 +63,8 @@ jobs:
         run: node --test tests/admin-user-validation.test.mjs
       - name: SMTP encryption and relay input safety tests
         run: node --experimental-strip-types --test tests/admin-smtp.test.mjs
+      - name: Regression tests for trusted proxy IP, upload paths and transaction retries
+        run: node --experimental-strip-types --test tests/auth-proxy-ip.test.mjs tests/private-photo-path.test.mjs tests/transaction-retry.test.mjs
       - name: Verify SMTP DB constraints and test cooldown
         run: node scripts/smoke-admin-db.mjs
       - name: Inventory all dependency licenses
@@ -86,6 +88,7 @@ jobs:
             sleep 1
           done
           node scripts/smoke-auth.mjs
+          node scripts/smoke-security-review.mjs
       - name: Publish dependency license inventory
         if: always()
         uses: actions/upload-artifact@v4

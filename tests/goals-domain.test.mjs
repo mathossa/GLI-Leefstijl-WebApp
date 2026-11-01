@@ -10,6 +10,19 @@ const form = (values) => {
   for (const [key, value] of Object.entries(values)) data.set(key, String(value));
   return data;
 };
+
+test("malformed optional fields cannot silently erase stored answers", () => {
+  for (const field of ["motivation", "progressIndicator", "startDate"]) {
+    const data = new FormData();
+    data.set("title", "Fictief doel");
+    data.set("area", "SLAAP");
+    data.set(field, new Blob(["not text"]), "invalid.txt");
+    assert.throws(() => parseGoalForm(data), FormInputError);
+  }
+  for (const value of [null, 12, {}, []]) {
+    assert.throws(() => ownedWhere("user-a", value), FormInputError);
+  }
+});
 const goal = (overrides = {}) => form({
   title: "Een rustig ochtendritme", motivation: "Meer ruimte voor mezelf",
   area: "SLAAP", startDate: "", endDate: "", ...overrides,

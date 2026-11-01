@@ -18,7 +18,8 @@ export class FormInputError extends Error {
 /** @param {FormData} form @param {string} key */
 function field(form, key) {
   const value = form.get(key);
-  return typeof value === "string" ? value.trim() : "";
+  if (value !== null && typeof value !== "string") throw new FormInputError();
+  return (value ?? "").trim();
 }
 
 /** @param {string} value @param {number} max @param {boolean} [required] */
@@ -97,7 +98,7 @@ export function amsterdamMonday(instant = new Date()) {
 
 /** @param {string} userId @param {string} id */
 export function ownedWhere(userId, id) {
-  if (!userId || !id || id.length > 128) throw new FormInputError();
+  if (typeof userId !== "string" || !userId || typeof id !== "string" || !id || id.length > 128) throw new FormInputError();
   return { id, userId };
 }
 

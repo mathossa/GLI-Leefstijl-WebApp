@@ -11,8 +11,6 @@ type Data = Awaited<ReturnType<typeof exportPersonalData>>;
 type Color = ReturnType<typeof rgb>;
 type Goal = Data["goals"][number];
 type Action = Goal["actions"][number];
-type Reflection = Data["reflections"][number];
-type Meeting = Data["meetings"][number];
 
 const W = 595.28, H = 841.89, M = 42, CW = W - M * 2;
 // Palet 3 - Rust & Groei; match the app's approved visual guidelines.
@@ -71,7 +69,15 @@ function recorded(week: { completedCount: number; note: string | null; entries: 
   return week.completedCount>0 || !!week.note?.trim() || week.entries.length>0;
 }
 
+let markPngPromise: Promise<Buffer> | undefined;
+function brandMarkPng() {
+  return markPngPromise ??= readFile(join(process.cwd(), "public/brand/mark-user-v6.svg"))
+    .then((svg) => sharp(svg).resize({ width: 320 }).png().toBuffer())
+    .catch((error) => { markPngPromise = undefined; throw error; });
+}
+
 export async function createPersonalPdf(data: Data, name: string): Promise<Uint8Array> {
+  void name; // The approved report does not print identifying profile data.
   const document = await PDFDocument.create();
   document.setTitle("Mijn Leefstijl | Persoonlijk overzicht");
   document.setAuthor("Mijn Leefstijl");
@@ -80,8 +86,7 @@ export async function createPersonalPdf(data: Data, name: string): Promise<Uint8
   const bold = await document.embedFont(StandardFonts.HelveticaBold);
   // Reuse the exact vector mountain/climber mark from the approved app branch.
   // sharp is already installed for private meeting-photo processing.
-  const markSvg = await readFile(join(process.cwd(), "public/brand/mark-user-v6.svg"));
-  const markPng = await sharp(markSvg).resize({width: 320}).png().toBuffer();
+  const markPng = await brandMarkPng();
   const mark = await document.embedPng(markPng);
   let page!: PDFPage, y = 0;
   const text = (value: unknown, x: number, top: number, size=10, font=regular, ink:Color=dark) => {

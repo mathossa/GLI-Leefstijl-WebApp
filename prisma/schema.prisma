@@ -84,6 +84,17 @@ model Verification {
   @@map("verification")
 }
 
+// Generated with Better Auth 1.7.14's official CLI (database rateLimit storage).
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@index([lastRequest])
+  @@map("rateLimit")
+}
+
 enum GoalArea {
   BEWEGING
   VOEDING

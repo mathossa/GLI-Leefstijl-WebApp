@@ -1,7 +1,6 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Check, RotateCcw } from "lucide-react";
 import { logCompletion, undoLastCompletion } from "@/app/dashboard/doelen/actions";
 
@@ -12,7 +11,6 @@ export function QuickCompletion({ actionId, title, completed, target, canUndo }:
   target: number;
   canUndo: boolean;
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [count, optimisticChange] = useOptimistic(
@@ -31,7 +29,6 @@ export function QuickCompletion({ actionId, title, completed, target, canUndo }:
           ? await logCompletion(actionId)
           : await undoLastCompletion(actionId);
         if (!result.ok) setError(result.reason ?? "De registratie kon niet worden bijgewerkt.");
-        else router.refresh();
       } catch {
         setError("De registratie kon niet worden bijgewerkt. Probeer opnieuw.");
       }

@@ -28,7 +28,8 @@ export default async function GoalsPage({
             orderBy: { weekStart: "desc" },
             take: 8,
             include: {
-              entries: { orderBy: { createdAt: "desc" }, take: 8 },
+              entries: { where: { userId: user.id }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 8,
+                select: { id: true, createdAt: true, rating: true, note: true } },
             },
           },
         },
