@@ -49,6 +49,8 @@ jobs:
         run: node --test tests/goal-calendar-dates.test.mjs
       - name: Validate daily motivation rotation and DST
         run: node --test tests/motivation-quote-domain.test.mjs
+      - name: Validate quote CSV/JSON import and duplicate planning
+        run: node --test tests/admin-quotes.test.mjs
       - name: Validate ISO week labels at New Year and DST
         run: node --test tests/week-labels.test.mjs
       - name: Validate reflection inputs and Amsterdam calendar dates
@@ -57,6 +59,8 @@ jobs:
         run: node scripts/smoke-reflections-db.mjs
       - name: Verify motivation quote preference isolation and day snapshots
         run: node scripts/smoke-motivation-db.mjs
+      - name: Verify quote admin database changes and audit
+        run: node scripts/smoke-admin-quotes-db.mjs
       - name: Verify goal ownership and DB constraints
         run: node scripts/smoke-goals-db.mjs
       - name: Validate administrator display name input

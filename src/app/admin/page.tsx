@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, LockKeyhole } from "lucide-react";
+import { ArrowLeft, BookOpenText, ChevronRight, LockKeyhole } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -30,13 +30,23 @@ export default async function AdminPage() {
         <h1 className="text-3xl font-bold tracking-tight">Beheer</h1>
         <p className="text-sm text-muted-foreground">Ingelogd als {session.user.name}. Alleen beheerders kunnen hier instellingen wijzigen.</p>
       </header>
+      <Link href="/admin/quotes" className="flex min-h-20 items-center gap-3 rounded-2xl border border-[#D8E2D7] bg-[#EAF0E9] p-4 text-[#1F5D50] transition-colors hover:bg-[#DEE9DE]">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#FFFDFA]" aria-hidden="true">
+          <BookOpenText size={22}/>
+        </span>
+        <span className="min-w-0 flex-1">
+          <strong className="block text-base">Motivatiequotes beheren</strong>
+          <span className="text-sm text-[#536B60]">Toevoegen, bewerken, activeren en importeren</span>
+        </span>
+        <ChevronRight className="shrink-0" size={20} aria-hidden="true"/>
+      </Link>
       <Card className="space-y-5"><AdminUsers currentUserId={session.user.id} /></Card>
       <Card className="space-y-5"><AdminSmtpForm settings={settings} /></Card>
       <Card className="space-y-3">
         <h2 className="text-lg font-semibold">Instellingenlog</h2>
         {logs.length === 0 ? <p className="text-sm text-muted-foreground">Nog geen beheeracties vastgelegd.</p> :
           <ul className="space-y-2 text-sm">{logs.map(row => <li key={row.id} className="flex flex-wrap justify-between gap-2 border-b pb-2 last:border-0">
-            <span>{row.action === "smtp.settings.saved" ? "SMTP-instellingen gewijzigd" : row.action === "smtp.test.sent" ? "Testmail verzonden" : row.action === "smtp.test.failed" ? "Testmail mislukt" : row.action === "admin.user.deleted" ? "Gebruiker verwijderd" : "SMTP-test aangevraagd"}</span>
+            <span>{row.action === "smtp.settings.saved" ? "SMTP-instellingen gewijzigd" : row.action === "smtp.test.sent" ? "Testmail verzonden" : row.action === "smtp.test.failed" ? "Testmail mislukt" : row.action === "admin.user.deleted" ? "Gebruiker verwijderd" : row.action.startsWith("quotes.") ? "Quote-bibliotheek: " + row.action.replace("quotes.", "") : "SMTP-test aangevraagd"}{row.targetId && <span className="ml-2 text-xs text-muted-foreground">({row.targetId})</span>}</span>
             <time className="text-xs text-muted-foreground" dateTime={row.createdAt.toISOString()}>{row.createdAt.toLocaleString("nl-NL",{timeZone:"Europe/Amsterdam"})}</time>
           </li>)}</ul>}
         <p className="flex items-center gap-2 text-xs text-muted-foreground"><LockKeyhole size={14}/> Het log bevat alleen actie, actor-ID en tijdstip; nooit wachtwoorden.</p>
