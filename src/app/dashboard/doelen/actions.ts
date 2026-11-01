@@ -188,13 +188,11 @@ export async function updateHabitAction(form: FormData) {
       });
       if (!current) throw new FormInputError();
       // Freeze THIS week's original target. Revisions take effect next Monday.
-      await tx.habitWeekProgress.upsert({
-        where: { actionId_weekStart: { actionId: id, weekStart }, userId: user.id },
-        update: {},
-        create: {
-          actionId: id, userId: user.id, weekStart,
-          targetCount: current.targetPerWeek, completedCount: 0,
-        },
+      // Prisma's emulated upsert can race on a first snapshot. Use native
+      // INSERT ON CONFLICT DO NOTHING, keeping the original target unchanged.
+      await tx.habitWeekProgress.createMany({
+        data: { actionId: id, userId: user.id, weekStart, targetCount: current.targetPerWeek },
+        skipDuplicates: true,
       });
       const updated = await tx.habitAction.updateMany({
         where: { ...ownedWhere(user.id, id), archivedAt: null },
@@ -229,12 +227,14 @@ export async function logCompletion(actionId: string): Promise<{ ok: boolean; re
         select: { targetPerWeek: true },
       });
       if (!action) throw new FormInputError();
-      const week = await tx.habitWeekProgress.upsert({
-        where: { actionId_weekStart: { actionId, weekStart }, userId: user.id },
-        update: {},
-        create: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek, completedCount: 0 },
-        select: { id: true, targetCount: true },
+      await tx.habitWeekProgress.createMany({
+        data: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek },
+        skipDuplicates: true,
       });
+      const week = await tx.habitWeekProgress.findFirst({
+        where: { actionId, userId: user.id, weekStart }, select: { id: true, targetCount: true },
+      });
+      if (!week) throw new FormInputError();
       // Atomic conditional increment prevents exceeding the weekly target.
       const changed = await tx.habitWeekProgress.updateMany({
         where: { id: week.id, userId: user.id, completedCount: { lt: week.targetCount } },
@@ -260,15 +260,19 @@ export async function saveWeekReflection(form: FormData) {
     const raw = form.get("note");
     if (typeof raw !== "string" || raw.trim().length > 500) throw new FormInputError();
     const weekStart = amsterdamMonday();
-    const action = await prisma.habitAction.findFirst({
-      where: { ...ownedWhere(user.id, actionId), archivedAt: null, goal: { status: "ACTIVE" } },
-      select: { targetPerWeek: true },
-    });
-    if (!action) throw new FormInputError();
-    await prisma.habitWeekProgress.upsert({
-      where: { actionId_weekStart: { actionId, weekStart }, userId: user.id },
-      create: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek, note: raw.trim() || null },
-      update: { note: raw.trim() || null },
+    await serializableTransaction(async (tx) => {
+      const action = await tx.habitAction.findFirst({
+        where: { ...ownedWhere(user.id, actionId), archivedAt: null, goal: { status: "ACTIVE" } },
+        select: { targetPerWeek: true },
+      });
+      if (!action) throw new FormInputError();
+      await tx.habitWeekProgress.createMany({
+        data: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek },
+        skipDuplicates: true,
+      });
+      await tx.habitWeekProgress.updateMany({
+        where: { actionId, userId: user.id, weekStart }, data: { note: raw.trim() || null },
+      });
     });
   });
 }
