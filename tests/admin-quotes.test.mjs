@@ -56,7 +56,7 @@ test("preview distinguishes create/update/unchanged and soft-deleted duplicates"
     {id:"removed-01",text:"Verwijderd"},
   ]),"json");
   const plan=planQuoteImport(entries,existing);
-  assert.deepEqual(plan.map(x=>x.operation),["skip","create","skip","error"]);
+  assert.deepEqual(plan.map(x=>x.operation),["skip","create","error","error"]);
   assert.match(plan[3].reason,/verwijderd/);
 });
 
