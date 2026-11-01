@@ -15,12 +15,12 @@ const adminPassword = process.env.CI_ADMIN_PASSWORD;
 assert.ok(adminPassword, "CI_ADMIN_PASSWORD must be provided by CI");
 
 async function get(path, cookie = "") {
-  return fetch(origin + path, { redirect: "manual", headers: cookie ? { cookie } : {} });
+  return fetch(origin + path, { redirect: "manual", headers: { "x-real-ip": "127.0.0.1", ...(cookie ? { cookie } : {}) } });
 }
 async function post(path, body, cookie = "") {
   return fetch(origin + path, {
     method: "POST", redirect: "manual",
-    headers: { "content-type": "application/json", origin, ...(cookie ? { cookie } : {}) },
+    headers: { "content-type": "application/json", origin, "x-real-ip": "127.0.0.1", ...(cookie ? { cookie } : {}) },
     body: JSON.stringify(body),
   });
 }

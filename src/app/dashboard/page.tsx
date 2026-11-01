@@ -16,9 +16,11 @@ export const metadata: Metadata = { title: "Vandaag" };
 export default async function DashboardPage() {
   const { user } = await requireSession();
   const weekStart = amsterdamMonday();
-  const motivation = await getUserMotivation(user.id);
+
   // The user's own active goals and weekly snapshots, never shared demo data.
-  const goals = await prisma.goal.findMany({
+  const [motivation, goals] = await Promise.all([
+    getUserMotivation(user.id),
+    prisma.goal.findMany({
     where: { userId: user.id, status: "ACTIVE" },
     orderBy: { createdAt: "desc" },
     select: {
@@ -30,13 +32,14 @@ export default async function DashboardPage() {
           id: true, title: true, targetPerWeek: true,
           weeks: { where: { userId: user.id, weekStart }, take: 1, select: {
             targetCount: true, completedCount: true,
-            entries: { orderBy: { createdAt: "desc" }, take: 8,
+            entries: { where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 8,
               select: { id: true, createdAt: true, rating: true, note: true } },
           } },
         },
       },
     },
-  });
+    }),
+  ]);
   const weekActions = goals.flatMap((goal) => goal.actions.map((action) => ({
     id: action.id, title: action.title, detail: goal.title,
     done: action.weeks[0]?.completedCount ?? 0,

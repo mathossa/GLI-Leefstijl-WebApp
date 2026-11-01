@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useRef, useState, useTransition, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { Pencil, Sparkles, X } from "lucide-react";
 import { saveMotivationPreference } from "@/app/dashboard/motivation-actions";
 
@@ -13,7 +12,6 @@ export function MotivationQuote({ quote, mode, customText }: {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const inputId = useId();
-  const router = useRouter();
   const [selected, setSelected] = useState<"AUTO" | "CUSTOM">(mode);
   const [draft, setDraft] = useState(customText);
   const [error, setError] = useState("");
@@ -38,7 +36,6 @@ export function MotivationQuote({ quote, mode, customText }: {
           return;
         }
         dialog.current?.close();
-        router.refresh();
       } catch {
         setError("Opslaan lukte niet. Probeer het opnieuw.");
       }

@@ -3,10 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { serializableTransaction } from "@/lib/transactions";
 import { requireSession } from "@/lib/session";
 import { FormInputError } from "@/lib/goals-domain.mjs";
 import { MeetingInputError, parseOwnedId, parseReflectionWeek, parseReflection, parseMeeting } from "@/lib/reflections-domain.mjs";
-import { validatePhoto, storeMeetingPhoto, deletePhotoFile } from "@/lib/private-meeting-photos";
+import { validatePhoto, saveMeetingWithPhoto, deletePhotoFile } from "@/lib/private-meeting-photos";
 
 const route = "/dashboard/reflectie";
 
@@ -86,8 +87,10 @@ export async function createMeeting(_previous: ReflectionFormState, form: FormDa
   return completeForm(async () => {
     const data = parseMeeting(form);
     const image = await validatePhoto(form.get("photo"));
-    const meeting = await prisma.meetingNote.create({ data: { userId: user.id, ...data } });
-    if (image) await storeMeetingPhoto(user.id, meeting.id, image);
+    await saveMeetingWithPhoto(user.id, image, async (tx) => {
+      const meeting = await tx.meetingNote.create({ data: { userId: user.id, ...data }, select: { id: true } });
+      return meeting.id;
+    });
   }, meetingErrorMessage);
 }
 
@@ -97,11 +100,11 @@ export async function updateMeeting(_previous: ReflectionFormState, form: FormDa
     const id = parseOwnedId(form);
     const data = parseMeeting(form);
     const image = await validatePhoto(form.get("photo"));
-    const result = await prisma.meetingNote.updateMany({
-      where: { id, userId: user.id }, data,
+    await saveMeetingWithPhoto(user.id, image, async (tx) => {
+      const result = await tx.meetingNote.updateMany({ where: { id, userId: user.id }, data });
+      if (result.count !== 1) throw new FormInputError();
+      return id;
     });
-    if (result.count !== 1) throw new FormInputError();
-    if (image) await storeMeetingPhoto(user.id, id, image);
   }, meetingErrorMessage);
 }
 
@@ -109,12 +112,15 @@ export async function deleteMeeting(form: FormData) {
   const { user } = await requireSession();
   return complete(async () => {
     const id = parseOwnedId(form);
-    const photos = await prisma.meetingPhoto.findMany({
-      where: { userId: user.id, meetingId: id }, select: { id: true },
+    const photos = await serializableTransaction(async (tx) => {
+      const photos = await tx.meetingPhoto.findMany({
+        where: { userId: user.id, meetingId: id }, select: { id: true },
+      });
+      const result = await tx.meetingNote.deleteMany({ where: { id, userId: user.id } });
+      if (result.count !== 1) throw new FormInputError();
+      return photos;
     });
-    const result = await prisma.meetingNote.deleteMany({ where: { id, userId: user.id } });
-    if (result.count !== 1) throw new FormInputError();
-    for (const photo of photos) await deletePhotoFile(user.id, photo.id);
+    await Promise.all(photos.map((photo) => deletePhotoFile(user.id, photo.id)));
   });
 }
 
@@ -122,13 +128,13 @@ export async function uploadMeetingPhoto(form: FormData) {
   const { user } = await requireSession();
   return complete(async () => {
     const id = parseOwnedId(form);
-    const image = await validatePhoto(form.get("photo"));
-    if (!image) throw new FormInputError();
     const meeting = await prisma.meetingNote.findFirst({
       where: { id, userId: user.id }, select: { id: true },
     });
     if (!meeting) throw new FormInputError();
-    await storeMeetingPhoto(user.id, id, image);
+    const image = await validatePhoto(form.get("photo"));
+    if (!image) throw new FormInputError();
+    await saveMeetingWithPhoto(user.id, image, async () => id);
   });
 }
 

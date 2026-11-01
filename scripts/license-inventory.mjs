@@ -1,6 +1,5 @@
 // Deterministic lockfile license inventory without downloading another CLI.
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 const lock = JSON.parse(readFileSync(new URL("../package-lock.json", import.meta.url), "utf8"));
 const list = [];
 const invalid = [];

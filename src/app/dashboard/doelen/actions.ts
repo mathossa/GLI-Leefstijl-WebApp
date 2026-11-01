@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { serializableTransaction } from "@/lib/transactions";
 import { requireSession } from "@/lib/session";
 import {
   amsterdamMonday, FormInputError, MAX_ACTIVE_ACTIONS, MAX_ACTIVE_GOALS,
@@ -34,13 +35,13 @@ export async function createGoal(form: FormData) {
   const { user } = await requireSession();
   return finish(async () => {
     const input = parseGoalForm(form);
-    await prisma.$transaction(async (tx) => {
+    await serializableTransaction(async (tx) => {
       const count = await tx.goal.count({ where: { userId: user.id, status: "ACTIVE" } });
       if (count >= MAX_ACTIVE_GOALS) throw new FormInputError();
       await tx.goal.create({
         data: { userId: user.id, ...input, area: input.area as "BEWEGING" | "VOEDING" | "SLAAP" | "ONTSPANNING" | "SOCIAAL" | "ANDERS" },
       });
-    }, { isolationLevel: "Serializable" });
+    });
   });
 }
 
@@ -89,7 +90,7 @@ export async function createGuidedPlan(form: FormData): Promise<GuidedPlanResult
       actionInput = parseActionForm(actionForm);
     }
 
-    const savedGoalId = await prisma.$transaction(async (tx) => {
+    const savedGoalId = await serializableTransaction(async (tx) => {
       let id = goalId;
       if (goalInput) {
         const count = await tx.goal.count({ where: { userId: user.id, status: "ACTIVE" } });
@@ -116,7 +117,7 @@ export async function createGuidedPlan(form: FormData): Promise<GuidedPlanResult
         await tx.habitAction.create({ data: { userId: user.id, goalId: id, ...actionInput } });
       }
       return id;
-    }, { isolationLevel: "Serializable" });
+    });
 
     revalidatePath("/dashboard/doelen");
     revalidatePath("/dashboard");
@@ -159,7 +160,7 @@ export async function createHabitAction(form: FormData) {
   return finish(async () => {
     const goalId = idFrom(form, "goalId");
     const input = parseActionForm(form);
-    await prisma.$transaction(async (tx) => {
+    await serializableTransaction(async (tx) => {
       const goal = await tx.goal.findFirst({
         where: { ...ownedWhere(user.id, goalId), status: "ACTIVE" },
         select: { id: true },
@@ -170,7 +171,7 @@ export async function createHabitAction(form: FormData) {
       });
       if (count >= MAX_ACTIVE_ACTIONS) throw new FormInputError();
       await tx.habitAction.create({ data: { userId: user.id, goalId, ...input } });
-    }, { isolationLevel: "Serializable" });
+    });
   });
 }
 
@@ -180,27 +181,25 @@ export async function updateHabitAction(form: FormData) {
     const id = idFrom(form, "actionId");
     const input = parseActionForm(form);
     const weekStart = amsterdamMonday();
-    await prisma.$transaction(async (tx) => {
+    await serializableTransaction(async (tx) => {
       const current = await tx.habitAction.findFirst({
         where: { ...ownedWhere(user.id, id), archivedAt: null, goal: { status: "ACTIVE" } },
         select: { targetPerWeek: true },
       });
       if (!current) throw new FormInputError();
       // Freeze THIS week's original target. Revisions take effect next Monday.
-      await tx.habitWeekProgress.upsert({
-        where: { actionId_weekStart: { actionId: id, weekStart }, userId: user.id },
-        update: {},
-        create: {
-          actionId: id, userId: user.id, weekStart,
-          targetCount: current.targetPerWeek, completedCount: 0,
-        },
+      // Prisma's emulated upsert can race on a first snapshot. Use native
+      // INSERT ON CONFLICT DO NOTHING, keeping the original target unchanged.
+      await tx.habitWeekProgress.createMany({
+        data: { actionId: id, userId: user.id, weekStart, targetCount: current.targetPerWeek },
+        skipDuplicates: true,
       });
       const updated = await tx.habitAction.updateMany({
         where: { ...ownedWhere(user.id, id), archivedAt: null },
         data: input,
       });
       if (updated.count !== 1) throw new FormInputError();
-    }, { isolationLevel: "Serializable" });
+    });
   });
 }
 
@@ -222,18 +221,20 @@ export async function logCompletion(actionId: string): Promise<{ ok: boolean; re
   try {
     if (!actionId || actionId.length > 128) throw new FormInputError();
     const weekStart = amsterdamMonday();
-    await prisma.$transaction(async (tx) => {
+    await serializableTransaction(async (tx) => {
       const action = await tx.habitAction.findFirst({
         where: { ...ownedWhere(user.id, actionId), archivedAt: null, goal: { status: "ACTIVE" } },
         select: { targetPerWeek: true },
       });
       if (!action) throw new FormInputError();
-      const week = await tx.habitWeekProgress.upsert({
-        where: { actionId_weekStart: { actionId, weekStart }, userId: user.id },
-        update: {},
-        create: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek, completedCount: 0 },
-        select: { id: true, targetCount: true },
+      await tx.habitWeekProgress.createMany({
+        data: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek },
+        skipDuplicates: true,
       });
+      const week = await tx.habitWeekProgress.findFirst({
+        where: { actionId, userId: user.id, weekStart }, select: { id: true, targetCount: true },
+      });
+      if (!week) throw new FormInputError();
       // Atomic conditional increment prevents exceeding the weekly target.
       const changed = await tx.habitWeekProgress.updateMany({
         where: { id: week.id, userId: user.id, completedCount: { lt: week.targetCount } },
@@ -241,7 +242,7 @@ export async function logCompletion(actionId: string): Promise<{ ok: boolean; re
       });
       if (changed.count !== 1) throw new FormInputError();
       await tx.habitWeekEntry.create({ data: { userId: user.id, weekId: week.id } });
-    }, { isolationLevel: "Serializable" });
+    });
   } catch (error) {
     if (error instanceof FormInputError) return { ok: false, reason: "Deze actie is niet beschikbaar of je weekdoel is al bereikt." };
     throw error;
@@ -259,15 +260,19 @@ export async function saveWeekReflection(form: FormData) {
     const raw = form.get("note");
     if (typeof raw !== "string" || raw.trim().length > 500) throw new FormInputError();
     const weekStart = amsterdamMonday();
-    const action = await prisma.habitAction.findFirst({
-      where: { ...ownedWhere(user.id, actionId), archivedAt: null, goal: { status: "ACTIVE" } },
-      select: { targetPerWeek: true },
-    });
-    if (!action) throw new FormInputError();
-    await prisma.habitWeekProgress.upsert({
-      where: { actionId_weekStart: { actionId, weekStart }, userId: user.id },
-      create: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek, note: raw.trim() || null },
-      update: { note: raw.trim() || null },
+    await serializableTransaction(async (tx) => {
+      const action = await tx.habitAction.findFirst({
+        where: { ...ownedWhere(user.id, actionId), archivedAt: null, goal: { status: "ACTIVE" } },
+        select: { targetPerWeek: true },
+      });
+      if (!action) throw new FormInputError();
+      await tx.habitWeekProgress.createMany({
+        data: { actionId, userId: user.id, weekStart, targetCount: action.targetPerWeek },
+        skipDuplicates: true,
+      });
+      await tx.habitWeekProgress.updateMany({
+        where: { actionId, userId: user.id, weekStart }, data: { note: raw.trim() || null },
+      });
     });
   });
 }
@@ -301,7 +306,7 @@ export async function undoLastCompletion(actionId: string): Promise<{ ok: boolea
   try {
     if (!actionId || actionId.length > 128) throw new FormInputError();
     const weekStart = amsterdamMonday();
-    await prisma.$transaction(async (tx) => {
+    await serializableTransaction(async (tx) => {
       const week = await tx.habitWeekProgress.findFirst({
         where: { userId: user.id, actionId, weekStart, action: { userId: user.id, archivedAt: null, goal: { status: "ACTIVE" } } },
         select: { id: true },
@@ -319,7 +324,7 @@ export async function undoLastCompletion(actionId: string): Promise<{ ok: boolea
         data: { completedCount: { decrement: 1 } },
       });
       if (changed.count !== 1) throw new FormInputError();
-    }, { isolationLevel: "Serializable" });
+    });
   } catch (error) {
     if (error instanceof FormInputError) return { ok: false, reason: "De laatste registratie kon niet worden teruggedraaid." };
     throw error;

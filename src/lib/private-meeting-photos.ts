@@ -1,9 +1,11 @@
 import "server-only";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import sharp from "sharp";
-import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
+import { serializableTransaction } from "@/lib/transactions";
+import { privatePhotoFolder } from "@/lib/user-photo-cleanup";
 import { FormInputError } from "@/lib/goals-domain.mjs";
 
 export const MAX_MEETING_PHOTOS = 5;
@@ -12,24 +14,9 @@ const allowedTypes = new Set([
   "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif",
 ]);
 
-function privateRoot() {
-  const folder = resolve(process.env.PRIVATE_UPLOAD_DIR ?? join(process.cwd(), ".private-uploads"));
-  // Never expose uploaded health or personal notes through Next's public directory.
-  if (folder === resolve(process.cwd(), "public") ||
-      folder.startsWith(resolve(process.cwd(), "public") + "/")) {
-    throw new Error("PRIVATE_UPLOAD_DIR must not be inside /public");
-  }
-  return folder;
-}
-
-function userFolder(userId: string) {
-  const hash = createHash("sha256").update(userId).digest("hex");
-  return join(privateRoot(), hash);
-}
-
 function storagePath(userId: string, photoId: string) {
   if (!/^[a-f0-9-]{36}$/.test(photoId)) throw new FormInputError();
-  return join(userFolder(userId), photoId + ".webp");
+  return join(privatePhotoFolder(userId), photoId + ".webp");
 }
 
 export async function photoBytes(userId: string, photoId: string) {
@@ -74,23 +61,39 @@ export async function validatePhoto(input: FormDataEntryValue | null): Promise<{
   }
 }
 
-export async function storeMeetingPhoto(
+/** Stage bytes once, then commit the meeting and photo metadata together.
+ * The retryable transaction contains only database work, never file writes.
+ */
+export async function saveMeetingWithPhoto(
   userId: string,
-  meetingId: string,
-  image: { buffer: Buffer; originalName: string },
+  image: { buffer: Buffer; originalName: string } | null,
+  save: (tx: Prisma.TransactionClient) => Promise<string>,
 ) {
-  const count = await prisma.meetingPhoto.count({ where: { userId, meetingId } });
-  if (count >= MAX_MEETING_PHOTOS) throw new FormInputError();
   const id = randomUUID();
-  const folder = userFolder(userId);
-  await mkdir(folder, { recursive: true, mode: 0o700 });
-  await writeFile(storagePath(userId, id), image.buffer, { flag: "wx", mode: 0o600 });
+  if (image) {
+    await mkdir(privatePhotoFolder(userId), { recursive: true, mode: 0o700 });
+    await writeFile(storagePath(userId, id), image.buffer, { flag: "wx", mode: 0o600 });
+  }
   try {
-    await prisma.meetingPhoto.create({
-      data: { id, userId, meetingId, fileName: image.originalName },
+    return await serializableTransaction(async (tx) => {
+      const meetingId = await save(tx);
+      if (image) {
+        // Validate ownership here as well as in callers. Serializable isolation
+        // prevents concurrent uploads from passing the same count check.
+        const meeting = await tx.meetingNote.findFirst({
+          where: { id: meetingId, userId }, select: { id: true },
+        });
+        if (!meeting) throw new FormInputError();
+        const count = await tx.meetingPhoto.count({ where: { userId, meetingId } });
+        if (count >= MAX_MEETING_PHOTOS) throw new FormInputError();
+        await tx.meetingPhoto.create({
+          data: { id, userId, meetingId, fileName: image.originalName },
+        });
+      }
+      return meetingId;
     });
   } catch (error) {
-    await deletePhotoFile(userId, id);
+    if (image) await deletePhotoFile(userId, id);
     throw error;
   }
 }

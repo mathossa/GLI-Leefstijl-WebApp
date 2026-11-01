@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useId, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ChevronRight, Frown, Meh, MessageCircle, Smile, X } from "lucide-react";
 import { saveEntryFeedback, type EntryFeedbackState } from "@/app/dashboard/doelen/actions";
 import { Button } from "@/components/ui/button";
@@ -77,15 +76,13 @@ export function ActionReviewSheet({ actionTitle, goalTitle, entries }: {
   entries: EntryView[];
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const router = useRouter();
   const titleId = useId();
   const [entryId, setEntryId] = useState(entries[0]?.id ?? "");
 
   const selected = entries.find(entry => entry.id === entryId) ?? entries[0];
   const onSaved = useCallback(() => {
     dialog.current?.close();
-    router.refresh();
-  }, [router]);
+  }, []);
 
   function open() {
     setEntryId(entries[0]?.id ?? "");

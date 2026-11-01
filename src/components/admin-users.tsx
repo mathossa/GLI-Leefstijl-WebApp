@@ -114,7 +114,8 @@ export function AdminUsers({ currentUserId }: { currentUserId: string }) {
       if (response.error) throw new Error();
       setName(""); setEmail(""); setPassword("");
       setNotice("Gebruiker toegevoegd. Deel het wachtwoord alleen via een veilig kanaal.");
-      setOffset(0); await refresh();
+      if (offset === 0) await refresh();
+      else { setLoading(true); setOffset(0); }
     } catch { setError("Aanmaken mislukt. Controleer e-mailadres en wachtwoord (minimaal 12 tekens)."); }
     finally { setBusy(false); }
   }

@@ -8,6 +8,13 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+  // Nginx Proxy Manager overwrites X-Real-IP. Do not trust a client-supplied
+  // X-Forwarded-For chain; it can otherwise disable per-IP throttling.
+  advanced: { ipAddress: { ipAddressHeaders: ["x-real-ip"] } },
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+  },
   emailAndPassword: {
     enabled: true,
     disableSignUp: true, // Enforced at the API; hiding sign-up UI is not sufficient.
