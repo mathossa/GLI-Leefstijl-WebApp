@@ -81,7 +81,7 @@ export function AdminQuotesManager({ initialQuotes, counts }: { initialQuotes: Q
     setReadingFile(true);
     try {
       const content = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
-      const source = { content, format: suffix };
+      const source: { content: string; format: "csv" | "json" } = { content, format: suffix as "csv" | "json" };
       const result = await previewAdminQuoteImport(source.content, source.format);
       setPreview(result);
       if (result.ok) setImportSource(source);
