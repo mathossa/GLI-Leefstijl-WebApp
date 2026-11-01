@@ -249,6 +249,7 @@ model AdminAudit {
   id        String   @id @default(cuid())
   actorId   String
   action    String   @db.VarChar(80)
+  targetId  String?  @db.VarChar(128)
   createdAt DateTime @default(now())
 
   @@index([createdAt])
@@ -256,12 +257,14 @@ model AdminAudit {
 }
 
 
- // The shared starter library is seeded once by a migration. Admin CRUD follows in #15.
+ // Shared quote library. The starter seed is inserted by migration; admins maintain it afterwards.
 model MotivationQuote {
   id        String   @id @db.VarChar(40)
   text      String   @db.VarChar(300)
+  normalizedText String @unique @db.VarChar(300)
   category  String?  @db.VarChar(30)
   isActive  Boolean  @default(true)
+  deletedAt DateTime?
   origin    String   @default("SEED") @db.VarChar(16)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
