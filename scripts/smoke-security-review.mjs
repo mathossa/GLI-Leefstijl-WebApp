@@ -38,6 +38,12 @@ async function action(name, args, cookie, fields) {
   return { response, text };
 }
 
+async function concurrent(count, task) {
+  // Finish every request before finally deleting fixtures, including on failure.
+  const results = await Promise.allSettled(Array.from({ length: count }, (_, i) => task(i)));
+  for (const result of results) if (result.status === "rejected") throw result.reason;
+}
+
 await db.connect();
 let userId, photoFolder;
 try {
@@ -72,7 +78,7 @@ try {
   const meeting = (await db.query('SELECT id FROM meeting_note WHERE "userId"=$1 AND title=$2', [userId, title])).rows[0];
   assert.ok(meeting, "Meeting with photo must be saved through the real server action: " + savedMeeting.text);
   // Concurrent requests must share the same five-photo quota.
-  await Promise.all(Array.from({ length: 7 }, () => action("uploadMeetingPhoto", ["$K1"], member, { id: meeting.id, photo: fake })));
+  await concurrent(7, () => action("uploadMeetingPhoto", ["$K1"], member, { id: meeting.id, photo: fake }));
   const count = await db.query('SELECT COUNT(*)::int AS total FROM meeting_photo WHERE "userId"=$1 AND "meetingId"=$2', [userId, meeting.id]);
   assert.equal(count.rows[0].total, 5, "Simultaneous uploads must never exceed the quota");
   assert.equal((await readdir(photoFolder)).length, 5, "Rejected uploads must leave no staged files");
@@ -87,12 +93,13 @@ try {
   const goalId = randomUUID(), habitId = randomUUID();
   await db.query('INSERT INTO goal (id,"userId",title,motivation,area,"updatedAt") VALUES ($1,$2,\'CI Review\',\'\',\'BEWEGING\',NOW())', [goalId,userId]);
   await db.query('INSERT INTO habit_action (id,"userId","goalId",title,"targetPerWeek","updatedAt") VALUES ($1,$2,$3,\'CI Review Action\',3,NOW())', [habitId,userId,goalId]);
-  await Promise.all(Array.from({ length: 5 }, () => action("logCompletion", [habitId], member)));
+  await concurrent(5, () => action("logCompletion", [habitId], member));
   const week = (await db.query('SELECT id,"completedCount" FROM habit_week_progress WHERE "userId"=$1 AND "actionId"=$2 AND "weekStart"=$3', [userId,habitId,amsterdamMonday()])).rows[0];
   assert.equal(week.completedCount, 3);
   assert.equal((await db.query('SELECT COUNT(*)::int AS total FROM habit_week_entry WHERE "userId"=$1 AND "weekId"=$2', [userId,week.id])).rows[0].total, 3);
   // Calling the same action without a session cannot mutate the owner's totals.
   await action("undoLastCompletion", [habitId], "");
+  await action("undoLastCompletion", [habitId], cookie);
   assert.equal((await db.query('SELECT "completedCount" FROM habit_week_progress WHERE id=$1', [week.id])).rows[0].completedCount, 3);
 
   // Keep X-Real-IP constant while rotating a forged forwarded chain.

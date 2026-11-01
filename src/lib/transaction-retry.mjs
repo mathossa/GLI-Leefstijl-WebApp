@@ -10,7 +10,12 @@ export async function retryTransaction(work) {
   for (let attempt = 0; ; attempt++) {
     try { return await work(); }
     catch (error) {
-      if (error?.code !== "P2034" || attempt >= 3) throw error;
+      // Prisma 7's pg adapter may surface a commit conflict directly rather
+      // than wrapping it as P2034. Both indicate a rolled-back transaction.
+      const adapterConflict = error?.name === "DriverAdapterError"
+        && error.cause?.kind === "TransactionWriteConflict"
+        && ["40001", "40P01"].includes(error.cause.originalCode);
+      if ((error?.code !== "P2034" && !adapterConflict) || attempt >= 3) throw error;
       await delay(20 * 2 ** attempt + Math.floor(Math.random() * 20));
     }
   }
